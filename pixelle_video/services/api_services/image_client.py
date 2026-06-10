@@ -38,19 +38,27 @@ class ImageClient:
             local_proxy=dashscope_local_proxy,
         )
 
-        # Initialize Seedream Client
-        self.seedream_client = SeedreamClient(
-            api_key=ark_api_key or Config.ARK_API_KEY,
-            base_url=ark_base_url or Config.ARK_BASE_URL,
-            local_proxy=ark_local_proxy,
-        )
+        # Initialize Seedream Client (only if ARK API key is configured)
+        _seedream_key = ark_api_key or Config.ARK_API_KEY
+        if _seedream_key:
+            self.seedream_client = SeedreamClient(
+                api_key=_seedream_key,
+                base_url=ark_base_url or Config.ARK_BASE_URL,
+                local_proxy=ark_local_proxy,
+            )
+        else:
+            self.seedream_client = None
 
-        # Initialize GPT Image Client
-        self.gpt_client = ImageGPT(
-            api_key=gpt_api_key or Config.OPENAI_API_KEY,
-            base_url=gpt_base_url or Config.OPENAI_BASE_URL,
-            local_proxy=local_proxy or Config.LOCAL_PROXY
-        )
+        # Initialize GPT Image Client (only if API key is configured)
+        _gpt_key = gpt_api_key or Config.OPENAI_API_KEY
+        if _gpt_key:
+            self.gpt_client = ImageGPT(
+                api_key=_gpt_key,
+                base_url=gpt_base_url or Config.OPENAI_BASE_URL,
+                local_proxy=local_proxy or Config.LOCAL_PROXY
+            )
+        else:
+            self.gpt_client = None
 
         # Initialize Image Processor for downloads
         self.image_processor = ImageProcessor()
@@ -155,6 +163,12 @@ class ImageClient:
 
         if is_seedream:
             # --- Seedream Logic ---
+            if self.seedream_client is None:
+                raise RuntimeError(
+                    "Seedream image generation requires an ARK API key. "
+                    "Please configure ARK API Key in Settings → API Media → ARK, "
+                    "or switch to a DashScope model."
+                )
             try:
                 logging.info(f"ImageClient requesting Seedream: {model}")
 
@@ -174,13 +188,18 @@ class ImageClient:
 
         elif is_sora:
             # --- GPT/Sora Logic ---
+            if self.gpt_client is None:
+                raise RuntimeError(
+                    "OpenAI image generation requires an API key. "
+                    "Please configure OpenAI API Key in Settings → API Media → OpenAI, "
+                    "or switch to a DashScope/Seedream model."
+                )
             try:
                 logging.info(f"ImageClient requesting GPT/Sora: {model}")
                 if image_paths:
                     logging.warning("Sora/GPT model only supports Text-to-Image. Ignoring reference images.")
-                
+
                 # OpenAI uses 'x' separator, e.g. 1024x1024
-                # Attempt to map size if needed or just replace '*'
                 gpt_size = size.replace('*', 'x') if size else "1024x1024"
 
                 path = self.gpt_client.generate_image(
@@ -189,7 +208,7 @@ class ImageClient:
                     model=model,
                     save_dir=save_dir
                 )
-                
+
                 if path and os.path.exists(path):
                     generated_local_paths.append(path)
                 else:

@@ -62,18 +62,19 @@ class SeedreamClient:
 
         if not self.api_key:
             logging.warning(
-                "SeedreamClient missing api_key. Set ARK_API_KEY."
+                "SeedreamClient missing api_key. Set ARK_API_KEY. Seedream will be disabled."
             )
+            self.client = None
+        else:
+            client_kwargs = {
+                "base_url": self.base_url,
+                "api_key": self.api_key,
+                "timeout": timeout,
+            }
+            if self.local_proxy:
+                client_kwargs["http_client"] = httpx.Client(proxy=self.local_proxy, timeout=timeout)
 
-        client_kwargs = {
-            "base_url": self.base_url,
-            "api_key": self.api_key,
-            "timeout": timeout,
-        }
-        if self.local_proxy:
-            client_kwargs["http_client"] = httpx.Client(proxy=self.local_proxy, timeout=timeout)
-
-        self.client = OpenAI(**client_kwargs)
+            self.client = OpenAI(**client_kwargs)
 
     def generate_image(
         self,

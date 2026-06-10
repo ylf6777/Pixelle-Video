@@ -4,6 +4,8 @@ chcp 65001 >nul 2>&1
 echo 🚀 Starting Pixelle-Video Web UI...
 echo.
 
+set PYTHONUTF8=1
+set PYTHONIOENCODING=utf-8
 uv run streamlit run web/app.py
 
 if errorlevel 1 (

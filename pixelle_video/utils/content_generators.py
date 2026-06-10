@@ -126,7 +126,7 @@ async def generate_narrations_from_topic(
     response = await llm_service(
         prompt=prompt,
         temperature=0.8,
-        max_tokens=2000
+        max_tokens=10000
     )
     
     logger.debug(f"LLM response: {response[:200]}...")
@@ -184,7 +184,7 @@ async def generate_narrations_from_content(
     response = await llm_service(
         prompt=prompt,
         temperature=0.8,
-        max_tokens=2000
+        max_tokens=10000
     )
     
     # Parse JSON
