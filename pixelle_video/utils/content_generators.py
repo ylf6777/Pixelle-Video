@@ -500,3 +500,67 @@ def _parse_json(text: str) -> dict:
     
     # If all fails, raise error
     raise json.JSONDecodeError("No valid JSON found", text, 0)
+
+
+async def generate_scene_breakdown(
+    llm_service,
+    article: str,
+) -> list[dict]:
+    """将文章拆为分镜，每项含旁白和按字数分配的画面提示词。
+    分镜数量由AI根据文章长度和内容复杂度自动决定。
+
+    多图规则（内嵌在提示词中）：
+    - 旁白≤30字 → 1幅画面
+    - 31-60字 → 2幅画面（引入+展开）
+    - 61-100字 → 3幅画面（引入+展开+收尾）
+    - >100字 → 4幅画面
+
+    返回: [{"narration": "旁白", "image_prompts": ["画面1", "画面2", ...]}, ...]
+    """
+    prompt = f"""你是专业分镜师兼口播文案。把下面文章拆成若干个分镜，分镜数量根据文章长度和内容复杂度自动决定。
+
+【旁白-插画匹配规则】
+
+1. 每条分镜先写旁白，再根据旁白字数配画面：
+   - 旁白≤30字：配 1 幅画面
+   - 旁白31-60字：配 2 幅画面（第1幅引入场景，第2幅展开内容）
+   - 旁白61-100字：配 3 幅画面（引入→展开→收尾升华）
+   - 旁白>100字：配 4 幅画面
+
+2. 多幅画面要求：
+   - 所有画面围绕同一条旁白的核心主题
+   - 风格统一、色调一致、同一人物形象
+   - 构图有变化：远景→中景→特写，避免单调
+
+3. 画面提示词要求：
+   - 用中文，日式漫画分镜风格，画面中有对话气泡
+   - 中国场景和人物，crayon doodle scrapbook 风格
+
+4. 旁白要求：
+   - 长度由内容自然决定，不设限制，分镜时长跟随旁白长度
+   - 所有旁白连起来是一篇完整流畅的口播稿，有开头有过渡有结尾
+   - 像朋友聊天，自然口语
+
+5. 只返回 JSON 数组：
+[{{"narration": "旁白1", "image_prompts": ["画面1"]}}, {{"narration": "旁白2", "image_prompts": ["画面1", "画面2"]}}]
+
+文章：
+{article}"""
+
+    response = await llm_service(prompt=prompt, temperature=0.7, max_tokens=8192)
+    result = _parse_json(response)
+
+    if isinstance(result, dict):
+        result = result.get("scenes") or result.get("data") or []
+    if not isinstance(result, list):
+        raise ValueError("LLM 未返回分镜数组")
+
+    for item in result:
+        if "image_prompts" not in item:
+            item["image_prompts"] = [item.get("image_prompt", item.get("narration", ""))]
+        if isinstance(item["image_prompts"], str):
+            item["image_prompts"] = [item["image_prompts"]]
+        if "narration" not in item:
+            item["narration"] = item.get("text", "")
+
+    return result

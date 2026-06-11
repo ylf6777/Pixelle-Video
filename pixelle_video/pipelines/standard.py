@@ -196,8 +196,17 @@ class StandardPipeline(LinearVideoPipeline):
                         extra_info=message
                     )
                 
-                # Generate base image prompts
-                base_image_prompts = await generate_image_prompts(
+                # 检测「画面|旁白」格式，有则直接拆分，不调LLM
+                if all('|' in n for n in ctx.narrations):
+                    image_parts, narration_parts = [], []
+                    for n in ctx.narrations:
+                        parts = n.split('|', 1)
+                        image_parts.append(parts[0].strip())
+                        narration_parts.append(parts[1].strip() if len(parts) > 1 else parts[0].strip())
+                    ctx.narrations = narration_parts
+                    base_image_prompts = image_parts
+                else:
+                    base_image_prompts = await generate_image_prompts(
                     self.llm,
                     narrations=ctx.narrations,
                     min_words=min_words,
@@ -270,7 +279,8 @@ class StandardPipeline(LinearVideoPipeline):
             media_workflow=ctx.params.get("media_workflow"),
             api_video_params=ctx.params.get("api_video_params"),
             frame_template=ctx.params.get("frame_template") or "1080x1920/default.html",
-            template_params=ctx.params.get("template_params")
+            template_params=ctx.params.get("template_params"),
+            reference_images=ctx.params.get("reference_images")
         )
         
         # Create storyboard

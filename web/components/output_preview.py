@@ -65,13 +65,125 @@ def render_single_output(pixelle_video, video_params):
     
     with st.container(border=True):
         st.markdown(f"**{tr('section.video_generation')}**")
-        
-        # Check if system is configured
+
         if not config_manager.validate():
             st.warning(tr("settings.not_configured"))
-        
+
+        # ================================================================
+        # 两步交互：AI生成 → 编辑确认 → 生成视频
+        # ================================================================
+        confirmed = st.session_state.get("st_confirmed", False)
+        scenes_key = "st_scenes"
+
+        # AI 生成分镜（固定脚本模式下显示，生成模式下也显示）
+        if text.strip():
+            st.markdown("---")
+            st.markdown("**📋 分镜内容管理**")
+
+            if st.button("🤖 AI 分析生成分镜", use_container_width=True, key="ai_gen_scenes"):
+                with st.spinner("AI 分析文章中..."):
+                    try:
+                        from pixelle_video.utils.content_generators import generate_scene_breakdown
+                        scenes = run_async(generate_scene_breakdown(
+                            pixelle_video.llm, text
+                        ))
+                        st.session_state[scenes_key] = scenes
+                        st.session_state["st_confirmed"] = False
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"AI 分析失败: {e}")
+
+        # 显示可编辑的分镜内容
+        scenes = st.session_state.get(scenes_key, [])
+        if scenes:
+            st.markdown("---")
+            st.caption("以下内容可自由修改，修改后点「确认内容」")
+            ref_key = "st_refs"
+            if ref_key not in st.session_state:
+                st.session_state[ref_key] = {}
+
+            edited = []
+            for i, s in enumerate(scenes):
+                st.markdown(f"**分镜 {i+1}**")
+                c1, c2 = st.columns([1, 1])
+                with c1:
+                    ips = s.get("image_prompts", [s.get("image_prompt", "")])
+                    if isinstance(ips, str):
+                        ips = [ips]
+                    ip_text = ips[0] if ips else ""
+                    ip = st.text_area(f"画面提示词", ip_text, height=80,
+                                      key=f"st_ip_{i}", label_visibility="collapsed",
+                                      placeholder=f"分镜{i+1}画面提示词")
+                with c2:
+                    nr = st.text_area(f"旁白", s.get("narration", ""), height=80,
+                                      key=f"st_nr_{i}", label_visibility="collapsed",
+                                      placeholder=f"分镜{i+1}旁白")
+
+                # 参考图上传
+                ref_col, del_col = st.columns([4, 1])
+                with ref_col:
+                    uploaded = st.file_uploader(
+                        "📷 参考图（可选）", type=["jpg", "jpeg", "png", "webp"],
+                        key=f"st_upload_{i}", label_visibility="collapsed",
+                        help="上传参考图以融入插画创作")
+                    if uploaded and uploaded.size <= 10 * 1024 * 1024:
+                        import base64
+                        img_bytes = uploaded.read()
+                        b64 = base64.b64encode(img_bytes).decode()
+                        mime = uploaded.type
+                        st.session_state[ref_key][str(i)] = f"data:{mime};base64,{b64}"
+                    elif uploaded:
+                        st.error("图片不能超过 10MB")
+
+                with del_col:
+                    if str(i) in st.session_state[ref_key]:
+                        import uuid, base64
+                        ref_data = st.session_state[ref_key][str(i)]
+                        # 预览缩略图
+                        st.image(ref_data, width=60, caption="参考图")
+                        if st.button("✕", key=f"st_delref_{i}", help="删除参考图"):
+                            del st.session_state[ref_key][str(i)]
+                            st.rerun()
+
+                edited.append({
+                    "image_prompt": ip, "narration": nr,
+                    "reference_image": st.session_state[ref_key].get(str(i))
+                })
+
+            cA, cB = st.columns([1, 1])
+            with cA:
+                if st.button("✅ 确认内容", use_container_width=True, type="primary", key="confirm_scenes"):
+                    if all(e["image_prompt"].strip() and e["narration"].strip() for e in edited):
+                        assembled = "\n\n".join(
+                            f"{e['image_prompt']} | {e['narration']}" for e in edited
+                        )
+                        st.session_state["st_confirmed"] = True
+                        st.session_state["st_assembled"] = assembled
+                        st.session_state["st_ref_images"] = {
+                            i: e["reference_image"] for i, e in enumerate(edited)
+                            if e.get("reference_image")
+                        }
+                        st.success(f"已确认 {len(edited)} 个分镜")
+                        st.rerun()
+                    else:
+                        st.error("每个分镜都需要填写画面提示词和旁白")
+            with cB:
+                if st.button("🔄 重置", use_container_width=True, key="reset_scenes"):
+                    st.session_state.pop(scenes_key, None)
+                    st.session_state["st_confirmed"] = False
+                    st.rerun()
+
+            # 确认后显示可用的生成按钮
+            if confirmed:
+                assembled = st.session_state.get("st_assembled", "")
+                text = assembled  # 覆盖原始 text
+                st.success(f"✅ 已确认 {len(edited)} 个分镜，可以生成视频了")
+                st.caption(f"已组装 {len(edited)} 段，每段格式：画面提示词｜旁白")
+
         # Generate Button
-        if st.button(tr("btn.generate"), type="primary", use_container_width=True):
+        if st.button("🎬 生成视频" if confirmed else tr("btn.generate"),
+                     type="primary", use_container_width=True,
+                     disabled=bool(scenes) and not confirmed):
             # Validate system configuration
             if not config_manager.validate():
                 st.error(tr("settings.not_configured"))
@@ -151,6 +263,8 @@ def render_single_output(pixelle_video, video_params):
                     "media_width": st.session_state.get('template_media_width'),
                     "media_height": st.session_state.get('template_media_height'),
                 }
+                # 参考图
+                video_params["reference_images"] = st.session_state.get("st_ref_images", {})
                 # Add TTS parameters based on mode
                 video_params["tts_inference_mode"] = tts_mode
                 if tts_mode == "local":

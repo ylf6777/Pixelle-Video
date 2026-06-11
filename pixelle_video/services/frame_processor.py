@@ -220,15 +220,19 @@ class FrameProcessor:
         if media_type == "video" and workflow_name.startswith("api/"):
             await self._prepare_api_video_inputs(frame, config, api_video_params)
 
+        # 参考图：如有则注入为 image_path，融合到生成中
+        ref_images = getattr(config, 'reference_images', None) or {}
+        ref_img = ref_images.get(frame.index)
+
         media_params = {
             "prompt": frame.image_prompt,
-            "workflow": config.media_workflow,  # Pass workflow from config (None = use default)
+            "workflow": config.media_workflow,
             "media_type": media_type,
             "width": config.media_width,
             "height": config.media_height,
             "output_path": output_path,
-            "image_path": frame.image_path,
-            "index": frame.index + 1,  # 1-based index for workflow
+            "image_path": frame.image_path or ref_img,
+            "index": frame.index + 1,
         }
         media_params.update(api_video_params)
         
