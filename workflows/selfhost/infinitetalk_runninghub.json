@@ -1,0 +1,796 @@
+{
+  "390": {
+    "class_type": "LTX2_NAG",
+    "inputs": {
+      "nag_cond_video": [
+        "164",
+        1
+      ],
+      "nag_alpha": 0.4000000000000001,
+      "inplace": true,
+      "nag_cond_audio": [
+        "164",
+        1
+      ],
+      "nag_scale": 15.000000000000004,
+      "nag_tau": 4.000000000000001,
+      "model": [
+        "291",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "LTX2 NAG"
+    }
+  },
+  "153": {
+    "class_type": "CFGGuider",
+    "inputs": {
+      "negative": [
+        "164",
+        1
+      ],
+      "cfg": 1,
+      "model": [
+        "312",
+        0
+      ],
+      "positive": [
+        "164",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "CFG引导"
+    }
+  },
+  "154": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+      "sampler_name": "euler"
+    },
+    "_meta": {
+      "title": "K采样器选择"
+    }
+  },
+  "155": {
+    "class_type": "LTXAVTextEncoderLoader",
+    "inputs": {
+      "ckpt_name": "ltx-2.3-22b-dev.safetensors",
+      "text_encoder": "gemma_3_12B_it.safetensors",
+      "device": "default"
+    },
+    "_meta": {
+      "title": "LTXV Audio Text Encoder Loader"
+    }
+  },
+  "430": {
+    "class_type": "ImageResizeKJv2",
+    "inputs": {
+      "crop_position": "center",
+      "image": [
+        "415",
+        0
+      ],
+      "pad_color": "0, 0, 0",
+      "divisible_by": 16,
+      "width": [
+        "416",
+        0
+      ],
+      "keep_proportion": "resize",
+      "upscale_method": "lanczos",
+      "device": "cpu",
+      "height": [
+        "416",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Resize Image v2"
+    }
+  },
+  "234": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+      "overlap": 64,
+      "tile_size": 768,
+      "temporal_overlap": 8,
+      "vae": [
+        "184",
+        2
+      ],
+      "samples": [
+        "245",
+        0
+      ],
+      "temporal_size": 4096
+    },
+    "_meta": {
+      "title": "VAE分块解码"
+    }
+  },
+  "399": {
+    "class_type": "NormalizeAudioLoudness",
+    "inputs": {
+      "lufs": -27,
+      "audio": [
+        "444",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Normalize Audio Loudness"
+    }
+  },
+  "312": {
+    "class_type": "LTX2SamplingPreviewOverride",
+    "inputs": {
+      "preview_rate": 8,
+      "model": [
+        "390",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "LTX2 Sampling Preview Override"
+    }
+  },
+  "238": {
+    "class_type": "BasicScheduler",
+    "inputs": {
+      "scheduler": "simple",
+      "denoise": 1,
+      "model": [
+        "390",
+        0
+      ],
+      "steps": 4
+    },
+    "_meta": {
+      "title": "基础调度器"
+    }
+  },
+  "317": {
+    "class_type": "SimpleMath+",
+    "inputs": {
+      "a": [
+        "430",
+        1
+      ],
+      "value": "a/2"
+    },
+    "_meta": {
+      "title": "简易运算"
+    }
+  },
+  "438": {
+    "class_type": "DF_Int_to_Float",
+    "inputs": {
+      "Value": [
+        "412",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Int to Float"
+    }
+  },
+  "318": {
+    "class_type": "SimpleMath+",
+    "inputs": {
+      "a": [
+        "430",
+        2
+      ],
+      "value": "a/2"
+    },
+    "_meta": {
+      "title": "简易运算"
+    }
+  },
+  "161": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+      "guider": [
+        "153",
+        0
+      ],
+      "latent_image": [
+        "166",
+        0
+      ],
+      "noise": [
+        "178",
+        0
+      ],
+      "sigmas": [
+        "238",
+        0
+      ],
+      "sampler": [
+        "154",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "自定义采样器(高级)"
+    }
+  },
+  "162": {
+    "class_type": "EmptyLTXVLatentVideo",
+    "inputs": {
+      "batch_size": 1,
+      "width": [
+        "317",
+        0
+      ],
+      "length": [
+        "387",
+        0
+      ],
+      "height": [
+        "318",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "EmptyLTXVLatentVideo"
+    }
+  },
+  "164": {
+    "class_type": "LTXVConditioning",
+    "inputs": {
+      "negative": [
+        "165",
+        0
+      ],
+      "positive": [
+        "169",
+        0
+      ],
+      "frame_rate": [
+        "438",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "LTXVConditioning"
+    }
+  },
+  "165": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "text": "subtitles, text, watermark, overlay text, lower thirds,blurry, out of focus, overexposed, underexposed, low contrast, washed out colors, excessive noise, grainy texture, poor lighting, flickering, motion blur, distorted proportions, unnatural skin tones, deformed facial features, asymmetrical face, missing facial features, extra limbs, disfigured hands, wrong hand count, artifacts around text, unreadable text on shirt or hat, incorrect lettering on cap (“PNTR”), incorrect t-shirt slogan (“JUST DO IT”), missing microphone, misplaced microphone, inconsistent perspective, camera shake, incorrect depth of field, background too sharp, background clutter, distracting reflections, harsh shadows, inconsistent lighting direction, color banding, cartoonish rendering, 3D CGI look, unrealistic materials, uncanny valley effect, incorrect ethnicity, wrong gender, exaggerated expressions, smiling, laughing, exaggerated sadness, wrong gaze direction, eyes looking at camera, mismatched lip sync, silent or muted audio, distorted voice, robotic voice, echo, background noise, off-sync audio, missing sniff sounds, incorrect dialogue, added dialogue, repetitive speech, jittery movement, awkward pauses, incorrect timing, unnatural transitions, inconsistent framing, tilted camera, missing door or shelves, missing shallow depth of field, flat lighting, inconsistent tone, cinematic oversaturation, stylized filters, or AI artifacts.",
+      "clip": [
+        "155",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "CLIP文本编码器"
+    }
+  },
+  "242": {
+    "class_type": "LTXVAudioVAEEncode",
+    "inputs": {
+      "audio": [
+        "399",
+        0
+      ],
+      "audio_vae": [
+        "171",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "LTXV Audio VAE Encode"
+    }
+  },
+  "166": {
+    "class_type": "LTXVConcatAVLatent",
+    "inputs": {
+      "audio_latent": [
+        "248",
+        0
+      ],
+      "video_latent": [
+        "304",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "LTXVConcatAVLatent"
+    }
+  },
+  "245": {
+    "class_type": "LTXVSeparateAVLatent",
+    "inputs": {
+      "av_latent": [
+        "292",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "LTXVSeparateAVLatent"
+    }
+  },
+  "169": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "text": [
+        "420",
+        0
+      ],
+      "clip": [
+        "155",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "CLIP文本编码器"
+    }
+  },
+  "444": {
+    "class_type": "MelBandRoFormerSampler",
+    "inputs": {
+      "model": [
+        "445",
+        0
+      ],
+      "audio": [
+        "417",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Mel-Band RoFormer Sampler"
+    }
+  },
+  "445": {
+    "class_type": "MelBandRoFormerModelLoader",
+    "inputs": {
+      "model_name": "MelBandRoFormer_comfy/MelBandRoformer_fp16.safetensors"
+    },
+    "_meta": {
+      "title": "Mel-Band RoFormer Model Loader"
+    }
+  },
+  "248": {
+    "class_type": "SetLatentNoiseMask",
+    "inputs": {
+      "samples": [
+        "242",
+        0
+      ],
+      "mask": [
+        "249",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "设置Latent噪波遮罩"
+    }
+  },
+  "446": {
+    "class_type": "LayerUtility: PurgeVRAM",
+    "inputs": {
+      "purge_models": true,
+      "purge_cache": true,
+      "anything": [
+        "171",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "LayerUtility: Purge VRAM"
+    }
+  },
+  "249": {
+    "class_type": "SolidMask",
+    "inputs": {
+      "width": [
+        "317",
+        0
+      ],
+      "value": 0,
+      "height": [
+        "318",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "纯块遮罩"
+    }
+  },
+  "448": {
+    "class_type": "LayerUtility: PurgeVRAM",
+    "inputs": {
+      "purge_models": true,
+      "purge_cache": true,
+      "anything": [
+        "184",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "LayerUtility: Purge VRAM"
+    }
+  },
+  "449": {
+    "class_type": "LayerUtility: PurgeVRAM",
+    "inputs": {
+      "purge_models": true,
+      "purge_cache": true,
+      "anything": [
+        "155",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "LayerUtility: Purge VRAM"
+    }
+  },
+  "329": {
+    "class_type": "ResizeImagesByLongerEdge",
+    "inputs": {
+      "images": [
+        "430",
+        0
+      ],
+      "longer_edge": 1980
+    },
+    "_meta": {
+      "title": "Resize Images by Longer Edge (DEPRECATED)"
+    }
+  },
+  "291": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+      "lora_name": "ltx-2.3-22b-distilled-lora-384.safetensors",
+      "strength_model": 0.5,
+      "model": [
+        "184",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "LoRA加载器(仅模型)"
+    }
+  },
+  "171": {
+    "class_type": "LTXVAudioVAELoader",
+    "inputs": {
+      "ckpt_name": "ltx-2.3-22b-dev.safetensors"
+    },
+    "_meta": {
+      "title": "Load LTXV Audio VAE"
+    }
+  },
+  "292": {
+    "class_type": "KSampler",
+    "inputs": {
+      "scheduler": "simple",
+      "negative": [
+        "296",
+        1
+      ],
+      "denoise": 0.4,
+      "latent_image": [
+        "293",
+        0
+      ],
+      "seed": 95646895930502,
+      "cfg": 1,
+      "sampler_name": "euler",
+      "model": [
+        "312",
+        0
+      ],
+      "positive": [
+        "296",
+        0
+      ],
+      "steps": 4
+    },
+    "_meta": {
+      "title": "K采样器"
+    }
+  },
+  "293": {
+    "class_type": "LTXVConcatAVLatent",
+    "inputs": {
+      "audio_latent": [
+        "248",
+        0
+      ],
+      "video_latent": [
+        "335",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "LTXVConcatAVLatent"
+    }
+  },
+  "295": {
+    "class_type": "LatentUpscaleModelLoader",
+    "inputs": {
+      "model_name": "ltx-2.3-spatial-upscaler-x2-1.1.safetensors"
+    },
+    "_meta": {
+      "title": "Load Latent Upscale Model"
+    }
+  },
+  "296": {
+    "class_type": "LTXVCropGuides",
+    "inputs": {
+      "negative": [
+        "164",
+        1
+      ],
+      "latent": [
+        "297",
+        0
+      ],
+      "positive": [
+        "164",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "LTXVCropGuides"
+    }
+  },
+  "450": {
+    "class_type": "LayerUtility: PurgeVRAM",
+    "inputs": {
+      "purge_models": true,
+      "purge_cache": true,
+      "anything": [
+        "234",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "LayerUtility: Purge VRAM"
+    }
+  },
+  "297": {
+    "class_type": "LTXVSeparateAVLatent",
+    "inputs": {
+      "av_latent": [
+        "161",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "LTXVSeparateAVLatent"
+    }
+  },
+  "178": {
+    "class_type": "RandomNoise",
+    "inputs": {
+      "noise_seed": 131
+    },
+    "_meta": {
+      "title": "随机噪波"
+    }
+  },
+  "335": {
+    "class_type": "LTXVImgToVideoInplace",
+    "inputs": {
+      "bypass": [
+        "386",
+        0
+      ],
+      "image": [
+        "329",
+        0
+      ],
+      "strength": 1,
+      "latent": [
+        "336",
+        0
+      ],
+      "vae": [
+        "184",
+        2
+      ]
+    },
+    "_meta": {
+      "title": "LTXVImgToVideoInplace"
+    }
+  },
+  "412": {
+    "class_type": "Int",
+    "inputs": {
+      "value": "30"
+    },
+    "_meta": {
+      "title": "整数"
+    }
+  },
+  "336": {
+    "class_type": "LTXVLatentUpsampler",
+    "inputs": {
+      "upscale_model": [
+        "295",
+        0
+      ],
+      "vae": [
+        "184",
+        2
+      ],
+      "samples": [
+        "297",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "LTXVLatentUpsampler"
+    }
+  },
+  "413": {
+    "class_type": "VHS_VideoCombine",
+    "inputs": {
+      "images": [
+        "234",
+        0
+      ],
+      "pix_fmt": "yuv420p",
+      "format": "video/h264-mp4",
+      "frame_rate": [
+        "438",
+        0
+      ],
+      "pingpong": false,
+      "save_output": true,
+      "filename_prefix": "ltx23-org-i2v",
+      "loop_count": 0,
+      "save_metadata": true,
+      "crf": 19,
+      "trim_to_audio": false,
+      "no_preview": false,
+      "audio": [
+        "417",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "合并为视频"
+    }
+  },
+  "414": {
+    "class_type": "PrimitiveInt",
+    "inputs": {
+      "value": 15
+    },
+    "_meta": {
+      "title": "生成秒数（建议不超过45秒）"
+    }
+  },
+  "415": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "a3ff0878c5add031ba3d0e5cf9d871329e5b451c8ab2ad9f02c9fe162705586c.png"
+    },
+    "_meta": {
+      "title": "加载图像"
+    }
+  },
+  "416": {
+    "class_type": "PrimitiveInt",
+    "inputs": {
+      "value": 1280
+    },
+    "_meta": {
+      "title": "最大分辨率"
+    }
+  },
+  "417": {
+    "class_type": "LoadAudio",
+    "inputs": {
+      "audio": "a7f3a0a913a8383d26c0f69b30fb5e4b1f60c18afd9841c743e205aea0f6368c.mp3",
+      "audioUI": ""
+    },
+    "_meta": {
+      "title": "加载音频"
+    }
+  },
+  "418": {
+    "class_type": "PrimitiveStringMultiline",
+    "inputs": {
+      "value": "人物面向镜头深情的说话。"
+    },
+    "_meta": {
+      "title": "动作提示词"
+    }
+  },
+  "184": {
+    "class_type": "CheckpointLoaderSimple",
+    "inputs": {
+      "ckpt_name": "ltx-2.3-22b-dev.safetensors"
+    },
+    "_meta": {
+      "title": "Checkpoint加载器(简易)"
+    }
+  },
+  "386": {
+    "class_type": "PrimitiveBoolean",
+    "inputs": {
+      "value": false
+    },
+    "_meta": {
+      "title": "t2v"
+    }
+  },
+  "387": {
+    "class_type": "SimpleMath+",
+    "inputs": {
+      "a": [
+        "414",
+        0
+      ],
+      "b": [
+        "438",
+        0
+      ],
+      "value": "a*b+2"
+    },
+    "_meta": {
+      "title": "简易运算"
+    }
+  },
+  "420": {
+    "class_type": "JoinStrings",
+    "inputs": {
+      "delimiter": "",
+      "string1": [
+        "421",
+        0
+      ],
+      "string2": [
+        "418",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "合并字符串"
+    }
+  },
+  "421": {
+    "class_type": "PrimitiveStringMultiline",
+    "inputs": {
+      "value": "no text,clean video.\n"
+    },
+    "_meta": {
+      "title": "text"
+    }
+  },
+  "304": {
+    "class_type": "LTXVImgToVideoInplace",
+    "inputs": {
+      "bypass": [
+        "386",
+        0
+      ],
+      "image": [
+        "329",
+        0
+      ],
+      "strength": 1,
+      "latent": [
+        "162",
+        0
+      ],
+      "vae": [
+        "184",
+        2
+      ]
+    },
+    "_meta": {
+      "title": "LTXVImgToVideoInplace"
+    }
+  }
+}

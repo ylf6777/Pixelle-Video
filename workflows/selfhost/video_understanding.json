@@ -1,0 +1,85 @@
+{
+  "1": {
+    "class_type": "AILab_QwenVL",
+    "inputs": {
+      "keep_model_loaded": true,
+      "model_name": "Qwen3-VL-8B-Instruct",
+      "seed": 651231625435860,
+      "max_tokens": 1024,
+      "custom_prompt": "",
+      "video": [
+        "19",
+        0
+      ],
+      "preset_prompt": "Describe this video in detail.",
+      "quantization": "None (FP16)"
+    },
+    "_meta": {
+      "title": "QwenVL"
+    }
+  },
+  "14": {
+    "class_type": "VHS_LoadVideo",
+    "inputs": {
+      "custom_height": 0,
+      "force_rate": 0,
+      "custom_width": 0,
+      "select_every_nth": 2,
+      "frame_load_cap": 0,
+      "format": "AnimateDiff",
+      "video": "8b5dc2736493cb962a74752f3acf7390b42920668a1bfcabe52d2424456e9dcf.mp4",
+      "skip_first_frames": 0,
+      "force_size": "Disabled"
+    },
+    "_meta": {
+      "title": "$video.video"
+    }
+  },
+  "17": {
+    "class_type": "easy saveText",
+    "inputs": {
+      "file_name": "",
+      "file_extension": "txt",
+      "text": [
+        "1",
+        0
+      ],
+      "overwrite": true,
+      "output_file_path": ""
+    },
+    "_meta": {
+      "title": "Save Text"
+    }
+  },
+  "18": {
+    "class_type": "easy showAnything",
+    "inputs": {
+      "text": "This is a promotional product video for an American vintage-style winter down jacket.\n\nThe main visual focuses on a man modeling the brown, hooded jacket with a visible front zipper and pockets. He has a stylish look: wearing dark sunglasses, a black beanie hat, and layered clothing including a high-neck shirt underneath the jacket. The background suggests an indoor setting decorated with rustic or hunting-themed elements — specifically, deer head taxidermy mounted on the wall behind him, along with other wooden furniture pieces that contribute to a warm, cozy ambiance suitable for showcasing winter apparel.\n\nThroughout the video, text overlays provide detailed information about the product:\n\n- **Product Name**: “美式复古绒冬季羽绒服” (American Vintage Down Jacket)\n- **Brand/Collection**: JAYLENO NEW COLLECTION, featuring their logo.\n- **Fabric Composition**: 90% polyester fiberfill and 10% duck feather/down blend; also mentions \"new standard goose feathers\" as filler material.\n- **Size Chart**: Available sizes range from M through 4XL, each corresponding to specific measurements of chest width, shoulder breadth, sleeve length, and body height ranges—indicating customization options for different builds.\n- **Care Instructions**: Advises washing at temperatures around 30°C using cold water separation methods while avoiding prolonged soaking, machine drying, direct sunlight exposure, etc., which ensures longevity without compromising quality during wear cycles over time.\n- **Design Features & Style Description**:\n    - Emphasizes its suitability for both casual outdoor activities like hiking/skiing/traveling and urban environments where it can serve multiple purposes such as commuting/workwear/street fashion accessories due to versatile styling capabilities across various settings.\n    - Highlights functional aspects like warmth retention even under harsh weather conditions thanks to superior insulation properties provided by advanced filling techniques employed within construction processes involving specialized materials designed primarily towards enhancing thermal efficiency levels achieved via optimized structure design principles applied throughout manufacturing stages aimed at maximizing comfort zone coverage zones experienced when worn daily life scenarios encountered regularly outside homes offices schools campuses malls parks cafes restaurants hotels airports train stations bus terminals subway stops shopping centers exhibition halls theaters cinemas stadiums arenas gyms pools spas saunas lounges bistros pubs bars clubs nightclubs discos karaoke rooms dance studios yoga retreats meditation spaces wellness centers massage parlors nail salons hairdresser shops beauty supply stores cosmetic clinics dermatology practices optometry services eyewear retailers pharmacy outlets medical laboratories diagnostic imaging facilities emergency departments urgent care units outpatient surgery suites rehabilitation wards physical therapy clinics occupational health programs vocational training academies language institutes educational institutions universities colleges technical schools trade guilds professional associations industry groups business networks corporate headquarters executive suites boardrooms meeting chambers conference halls auditoriums lecture theatres seminar rooms classrooms labs workshops research centers innovation hubs incubators accelerators venture capital firms private equity funds hedge funds investment banks asset managers wealth advisors financial planners insurance brokers real estate agents property developers contractors architects engineers designers artists musicians performers entertainers athletes coaches trainers instructors educators librarians archivists curators conservators historians anthropologists sociologists psychologists psychiatrists neurologists cardiologists gastroenterologists pulmonologists nephrologists endocrinologists rheumatologists allergists immunologists infectious disease specialists oncologists radiologists pathologists surgeons obstetricians gynecologists pediatricians family medicine practitioners internal medicine physicians general practice doctors nurse practitioners physician assistants certified nursing staff registered nurses licensed practical nurses home healthcare aides personal caregivers domestic helpers housekeepers maids nannies babysitters au pairs childminders daycare providers preschool teachers elementary schoolteachers middle school teachers high school teachers college professors university lecturers graduate students postdoctoral fellows researchers scientists technicians analysts statisticians economists accountants auditors actuaries consultants lawyers paralegals legal secretaries interpreters translators editors proofreaders copywriters content creators graphic designers web developers software engineers database administrators network security experts cybersecurity professionals IT support personnel helpdesk operators customer service representatives call center agents telemarketers salespeople marketers advertising executives public relations officers communications directors media producers journalists reporters correspondents anchors hosts presenters commentators broadcasters radio personalities podcast hosts vloggers streamers influencers social media managers digital marketing strategists SEO specialists PPC advertisers UX/UI designers UI/UX testers QA/QC inspectors project coordinators operations supervisors logistics managers warehouse workers drivers couriers delivery persons retail clerks cashiers stockroom attendants janitorial staff maintenance crew groundskeeping teams landscaping crews gardeners florists chefs bakers pastry cooks sous chefs line cooks prep cooks dishwashers waitstaff servers bartenders mixologists cocktail shakers barbacks bottle openers sommeliers wine stewards coffee makers tea brewers beverage dispensers snack vendors food truck owners restaurant owners hoteliers resort managers concierge desk employees bellhops doormen porters valets taxi drivers Uber/Lyft riders ride-share drivers limousine chauffeurs shuttle drivers airport ground handlers baggage handlers customs officials immigration officers border patrol agents police officers firefighters paramedics EMTs EMS dispatchers ambulance medics first responders rescue team members lifeguards swimmers divers scuba instructors snorkel gear suppliers diving equipment manufacturers marine biologists oceanographers meteorologists climatologists geophysicists seismologists volcanologists glaci",
+      "anything": [
+        "1",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Show Any"
+    }
+  },
+  "19": {
+    "class_type": "ImageResize+",
+    "inputs": {
+      "multiple_of": 0,
+      "image": [
+        "14",
+        0
+      ],
+      "interpolation": "nearest",
+      "condition": "downscale if bigger",
+      "method": "keep proportion",
+      "width": 1080,
+      "height": 1080
+    },
+    "_meta": {
+      "title": "🔧 Image Resize"
+    }
+  }
+}

@@ -1,12 +1,104 @@
 {
-  "3": {
+  "88": {
+    "class_type": "Int",
     "inputs": {
-      "seed": 388600705609480,
-      "steps": 4,
+      "value": 768
+    },
+    "_meta": {
+      "title": "$width.value"
+    }
+  },
+  "67": {
+    "class_type": "LoraLoader",
+    "inputs": {
+      "lora_name": "Qwen-Image-Lightning-8steps-V1.0.safetensors",
+      "strength_model": 1.0000000000000002,
+      "model": [
+        "37",
+        0
+      ],
+      "clip": [
+        "38",
+        0
+      ],
+      "strength_clip": 1
+    },
+    "_meta": {
+      "title": "Load LoRA"
+    }
+  },
+  "89": {
+    "class_type": "Int",
+    "inputs": {
+      "value": 1024
+    },
+    "_meta": {
+      "title": "$height.value"
+    }
+  },
+  "58": {
+    "class_type": "EmptySD3LatentImage",
+    "inputs": {
+      "batch_size": 1,
+      "width": [
+        "88",
+        0
+      ],
+      "height": [
+        "89",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "EmptySD3LatentImage"
+    }
+  },
+  "37": {
+    "class_type": "UNETLoader",
+    "inputs": {
+      "weight_dtype": "default",
+      "unet_name": "qwen_image_fp8_e4m3fn.safetensors"
+    },
+    "_meta": {
+      "title": "Load Diffusion Model"
+    }
+  },
+  "38": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+      "type": "qwen_image",
+      "device": "default"
+    },
+    "_meta": {
+      "title": "Load CLIP"
+    }
+  },
+  "39": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "qwen_image_vae.safetensors"
+    },
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "3": {
+    "class_type": "KSampler",
+    "inputs": {
+      "scheduler": "beta",
+      "negative": [
+        "7",
+        0
+      ],
+      "denoise": 1,
+      "latent_image": [
+        "58",
+        0
+      ],
+      "seed": 210460488554342,
       "cfg": 1,
       "sampler_name": "euler",
-      "scheduler": "beta",
-      "denoise": 1,
       "model": [
         "86",
         0
@@ -15,21 +107,14 @@
         "6",
         0
       ],
-      "negative": [
-        "7",
-        0
-      ],
-      "latent_image": [
-        "58",
-        0
-      ]
+      "steps": 8
     },
-    "class_type": "KSampler",
     "_meta": {
       "title": "KSampler"
     }
   },
   "6": {
+    "class_type": "CLIPTextEncode",
     "inputs": {
       "text": "",
       "clip": [
@@ -37,12 +122,12 @@
         1
       ]
     },
-    "class_type": "CLIPTextEncode",
     "_meta": {
       "title": "$prompt.text"
     }
   },
   "7": {
+    "class_type": "CLIPTextEncode",
     "inputs": {
       "text": "NSFW",
       "clip": [
@@ -50,75 +135,28 @@
         1
       ]
     },
-    "class_type": "CLIPTextEncode",
     "_meta": {
       "title": "CLIP Text Encode (Negative Prompt)"
     }
   },
   "8": {
+    "class_type": "VAEDecode",
     "inputs": {
-      "samples": [
-        "3",
-        0
-      ],
       "vae": [
         "39",
         0
+      ],
+      "samples": [
+        "3",
+        0
       ]
     },
-    "class_type": "VAEDecode",
     "_meta": {
       "title": "VAE Decode"
     }
   },
-  "37": {
-    "inputs": {
-      "unet_name": "qwen_image_fp8_e4m3fn.safetensors",
-      "weight_dtype": "default"
-    },
-    "class_type": "UNETLoader",
-    "_meta": {
-      "title": "Load Diffusion Model"
-    }
-  },
-  "38": {
-    "inputs": {
-      "clip_name": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
-      "type": "qwen_image",
-      "device": "default"
-    },
-    "class_type": "CLIPLoader",
-    "_meta": {
-      "title": "Load CLIP"
-    }
-  },
-  "39": {
-    "inputs": {
-      "vae_name": "qwen_image_vae.safetensors"
-    },
-    "class_type": "VAELoader",
-    "_meta": {
-      "title": "Load VAE"
-    }
-  },
-  "58": {
-    "inputs": {
-      "width": [
-        "90",
-        0
-      ],
-      "height": [
-        "91",
-        0
-      ],
-      "batch_size": 1
-    },
-    "class_type": "EmptySD3LatentImage",
-    "_meta": {
-      "title": "EmptySD3LatentImage"
-    }
-  },
   "60": {
+    "class_type": "SaveImage",
     "inputs": {
       "filename_prefix": "ComfyUI",
       "images": [
@@ -126,31 +164,12 @@
         0
       ]
     },
-    "class_type": "SaveImage",
     "_meta": {
       "title": "Save Image"
     }
   },
-  "67": {
-    "inputs": {
-      "lora_name": "Qwen-Image-Lightning-4steps-V1.0.safetensors",
-      "strength_model": 1.0000000000000002,
-      "strength_clip": 1,
-      "model": [
-        "37",
-        0
-      ],
-      "clip": [
-        "38",
-        0
-      ]
-    },
-    "class_type": "LoraLoader",
-    "_meta": {
-      "title": "Load LoRA"
-    }
-  },
   "86": {
+    "class_type": "ModelSamplingAuraFlow",
     "inputs": {
       "shift": 3.1000000000000005,
       "model": [
@@ -158,27 +177,8 @@
         0
       ]
     },
-    "class_type": "ModelSamplingAuraFlow",
     "_meta": {
       "title": "ModelSamplingAuraFlow"
-    }
-  },
-  "90": {
-    "inputs": {
-      "value": 768
-    },
-    "class_type": "easy int",
-    "_meta": {
-      "title": "$width.value"
-    }
-  },
-  "91": {
-    "inputs": {
-      "value": 1024
-    },
-    "class_type": "easy int",
-    "_meta": {
-      "title": "$height.value"
     }
   }
 }

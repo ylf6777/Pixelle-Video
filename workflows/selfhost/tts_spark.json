@@ -1,0 +1,48 @@
+{
+  "2": {
+    "class_type": "SaveAudioMP3",
+    "inputs": {
+      "filename_prefix": "audio/ComfyUI",
+      "audio": [
+        "6",
+        0
+      ],
+      "audioUI": "",
+      "quality": "V0"
+    },
+    "_meta": {
+      "title": "Save Audio (MP3)"
+    }
+  },
+  "6": {
+    "class_type": "SparkTTSRun",
+    "inputs": {
+      "top_p": 0.95,
+      "gender": "male",
+      "seed": 633558737004853,
+      "max_new_tokens": 3000,
+      "top_k": 50,
+      "unload_model": false,
+      "temperature": 0.8,
+      "text": [
+        "7",
+        0
+      ],
+      "pitch": "moderate",
+      "do_sample": true,
+      "speed": "moderate"
+    },
+    "_meta": {
+      "title": "Spark TTS Run"
+    }
+  },
+  "7": {
+    "class_type": "PrimitiveStringMultiline",
+    "inputs": {
+      "value": "这是一段测试音频"
+    },
+    "_meta": {
+      "title": "$text.value!"
+    }
+  }
+}

@@ -1,0 +1,143 @@
+{
+  "1": {
+    "class_type": "KSampler",
+    "inputs": {
+      "scheduler": "karras",
+      "negative": [
+        "9",
+        0
+      ],
+      "denoise": 1,
+      "latent_image": [
+        "13",
+        0
+      ],
+      "seed": 223881026199254,
+      "cfg": 8,
+      "sampler_name": "dpmpp_2m",
+      "model": [
+        "7",
+        0
+      ],
+      "positive": [
+        "8",
+        0
+      ],
+      "steps": 20
+    },
+    "_meta": {
+      "title": "KSampler"
+    }
+  },
+  "13": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+      "batch_size": 1,
+      "width": [
+        "15",
+        0
+      ],
+      "height": [
+        "16",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Empty Latent Image"
+    }
+  },
+  "15": {
+    "class_type": "Int",
+    "inputs": {
+      "value": 512
+    },
+    "_meta": {
+      "title": "$width.value"
+    }
+  },
+  "16": {
+    "class_type": "Int",
+    "inputs": {
+      "value": 512
+    },
+    "_meta": {
+      "title": "$height.value"
+    }
+  },
+  "17": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "vae": [
+        "7",
+        2
+      ],
+      "samples": [
+        "1",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "7": {
+    "class_type": "CheckpointLoaderSimple",
+    "inputs": {
+      "ckpt_name": "写实RealitiesEdgeXL-TURBOV7.safetensors"
+    },
+    "_meta": {
+      "title": "Load Checkpoint"
+    }
+  },
+  "18": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "filename_prefix": "ComfyUI",
+      "images": [
+        "17",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Save Image"
+    }
+  },
+  "8": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "text": [
+        "20",
+        0
+      ],
+      "clip": [
+        "7",
+        1
+      ]
+    },
+    "_meta": {
+      "title": "CLIP Text Encode (Prompt)"
+    }
+  },
+  "9": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "text": "",
+      "clip": [
+        "7",
+        1
+      ]
+    },
+    "_meta": {
+      "title": "CLIP Text Encode (Prompt)"
+    }
+  },
+  "20": {
+    "class_type": "PrimitiveStringMultiline",
+    "inputs": {
+      "value": ""
+    },
+    "_meta": {
+      "title": "$prompt.value!"
+    }
+  }
+}

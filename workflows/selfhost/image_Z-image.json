@@ -1,0 +1,163 @@
+{
+  "99": {
+    "class_type": "KSampler",
+    "inputs": {
+      "scheduler": "simple",
+      "negative": [
+        "100",
+        0
+      ],
+      "denoise": 1,
+      "latent_image": [
+        "98",
+        0
+      ],
+      "seed": 1035569638132074,
+      "cfg": 1,
+      "sampler_name": "euler",
+      "model": [
+        "94",
+        0
+      ],
+      "positive": [
+        "91",
+        0
+      ],
+      "steps": 14
+    },
+    "_meta": {
+      "title": "KSampler"
+    }
+  },
+  "100": {
+    "class_type": "ConditioningZeroOut",
+    "inputs": {
+      "conditioning": [
+        "91",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "ConditioningZeroOut"
+    }
+  },
+  "111": {
+    "class_type": "Text _O",
+    "inputs": {
+      "text": "dog"
+    },
+    "_meta": {
+      "title": "$prompt.text!"
+    }
+  },
+  "104": {
+    "class_type": "Int",
+    "inputs": {
+      "value": 768
+    },
+    "_meta": {
+      "title": "$width.value"
+    }
+  },
+  "105": {
+    "class_type": "Int",
+    "inputs": {
+      "value": 1024
+    },
+    "_meta": {
+      "title": "$height.value"
+    }
+  },
+  "8": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "vae": [
+        "95",
+        0
+      ],
+      "samples": [
+        "99",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "91": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "text": [
+        "111",
+        0
+      ],
+      "clip": [
+        "93",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "CLIP Text Encode (Prompt)"
+    }
+  },
+  "60": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "filename_prefix": "ComfyUI",
+      "images": [
+        "8",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Save Image"
+    }
+  },
+  "93": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "qwen_3_4b.safetensors",
+      "type": "qwen_image",
+      "device": "default"
+    },
+    "_meta": {
+      "title": "Load CLIP"
+    }
+  },
+  "94": {
+    "class_type": "UNETLoader",
+    "inputs": {
+      "weight_dtype": "default",
+      "unet_name": "z_image_turbo_bf16.safetensors"
+    },
+    "_meta": {
+      "title": "Load Diffusion Model"
+    }
+  },
+  "95": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "ae.safetensors"
+    },
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "98": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+      "batch_size": 1,
+      "width": [
+        "104",
+        0
+      ],
+      "height": [
+        "105",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Empty Latent Image"
+    }
+  }
+}

@@ -1,76 +1,51 @@
 {
   "1": {
+    "class_type": "EdgeTTS",
     "inputs": {
+      "voice": "[Chinese] zh-CN Yunjian",
       "text": [
         "3",
         0
       ],
-      "voice": [
-        "5",
-        0
-      ],
+      "pitch": 0,
       "speed": [
         "8",
         0
-      ],
-      "pitch": 0
+      ]
     },
-    "class_type": "EdgeTTS",
     "_meta": {
       "title": "Edge TTS 🔊"
     }
   },
   "3": {
-    "inputs": {
-      "value": "床前明月光，疑是地上霜。"
-    },
     "class_type": "PrimitiveStringMultiline",
+    "inputs": {
+      "value": "你好"
+    },
     "_meta": {
       "title": "$text.value!"
     }
   },
   "4": {
+    "class_type": "SaveAudioMP3",
     "inputs": {
       "filename_prefix": "audio/ComfyUI",
-      "quality": "V0",
-      "audioUI": "",
       "audio": [
         "1",
         0
-      ]
+      ],
+      "audioUI": "",
+      "quality": "V0"
     },
-    "class_type": "SaveAudioMP3",
     "_meta": {
       "title": "Save Audio (MP3)"
     }
   },
-  "5": {
-    "inputs": {
-      "text": "[Chinese] zh-CN Yunjian",
-      "anything": [
-        "7",
-        0
-      ]
-    },
-    "class_type": "easy showAnything",
-    "_meta": {
-      "title": "Show Any"
-    }
-  },
-  "7": {
-    "inputs": {
-      "value": "[Chinese] zh-CN Yunjian"
-    },
-    "class_type": "PrimitiveStringMultiline",
-    "_meta": {
-      "title": "$voice.value"
-    }
-  },
   "8": {
-    "inputs": {
-      "value": 1
-    },
     "class_type": "easy float",
+    "inputs": {
+      "value": 1.0000000000000002
+    },
     "_meta": {
       "title": "$speed.value"
     }

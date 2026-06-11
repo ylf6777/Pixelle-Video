@@ -1,0 +1,179 @@
+{
+  "77": {
+    "class_type": "Text _O",
+    "inputs": {
+      "text": ""
+    },
+    "_meta": {
+      "title": "$prompt.text!"
+    }
+  },
+  "57": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "vae": [
+        "62",
+        0
+      ],
+      "samples": [
+        "60",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "58": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "filename_prefix": "ComfyUI",
+      "images": [
+        "57",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Save Image"
+    }
+  },
+  "69": {
+    "class_type": "EmptyFlux2LatentImage",
+    "inputs": {
+      "batch_size": 1,
+      "width": 1024,
+      "height": 1024
+    },
+    "_meta": {
+      "title": "Empty Flux 2 Latent"
+    }
+  },
+  "70": {
+    "class_type": "LayerUtility: PurgeVRAM",
+    "inputs": {
+      "purge_models": true,
+      "purge_cache": true,
+      "anything": [
+        "57",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "LayerUtility: Purge VRAM"
+    }
+  },
+  "60": {
+    "class_type": "KSampler",
+    "inputs": {
+      "scheduler": "simple",
+      "negative": [
+        "63",
+        0
+      ],
+      "denoise": 1,
+      "latent_image": [
+        "69",
+        0
+      ],
+      "seed": 1125189904469679,
+      "cfg": 1,
+      "sampler_name": "euler",
+      "model": [
+        "72",
+        0
+      ],
+      "positive": [
+        "64",
+        0
+      ],
+      "steps": 20
+    },
+    "_meta": {
+      "title": "KSampler"
+    }
+  },
+  "71": {
+    "class_type": "PathchSageAttentionKJ",
+    "inputs": {
+      "sage_attention": "auto",
+      "model": [
+        "61",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Patch Sage Attention KJ"
+    }
+  },
+  "61": {
+    "class_type": "UNETLoader",
+    "inputs": {
+      "weight_dtype": "default",
+      "unet_name": "flux2_dev_fp8mixed.safetensors"
+    },
+    "_meta": {
+      "title": "Load Diffusion Model"
+    }
+  },
+  "72": {
+    "class_type": "ModelPatchTorchSettings",
+    "inputs": {
+      "enable_fp16_accumulation": true,
+      "model": [
+        "71",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Model Patch Torch Settings"
+    }
+  },
+  "62": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "flux2-vae.safetensors"
+    },
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "63": {
+    "class_type": "ConditioningZeroOut",
+    "inputs": {
+      "conditioning": [
+        "64",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "ConditioningZeroOut"
+    }
+  },
+  "64": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "text": [
+        "77",
+        0
+      ],
+      "clip": [
+        "65",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "CLIP Text Encode (Prompt)"
+    }
+  },
+  "65": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "mistral_3_small_flux2_fp8.safetensors",
+      "type": "flux2",
+      "device": "default"
+    },
+    "_meta": {
+      "title": "Load CLIP"
+    }
+  }
+}

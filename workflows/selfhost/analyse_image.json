@@ -1,62 +1,77 @@
 {
-  "5": {
+  "12": {
+    "class_type": "ImageResize+",
     "inputs": {
-      "image": "IMG_20250829_201936.jpg"
+      "multiple_of": 0,
+      "image": [
+        "5",
+        0
+      ],
+      "interpolation": "nearest",
+      "condition": "downscale if bigger",
+      "method": "keep proportion",
+      "width": 1080,
+      "height": 1080
     },
+    "_meta": {
+      "title": "🔧 Image Resize"
+    }
+  },
+  "5": {
     "class_type": "LoadImage",
+    "inputs": {
+      "image": "9856f16f65302be39cfb1b82ae8d9127a68170ed39835488d2c86eeb17f38115.JPG"
+    },
     "_meta": {
       "title": "$image.image"
     }
   },
   "6": {
+    "class_type": "easy showAnything",
     "inputs": {
-      "text": "A small, fluffy ginger kitten with large, wide green eyes sits upright on a glossy white tiled floor, its paws planted firmly as it stares intently forward, exuding an air of innocent curiosity; beside it rests a colorful striped cat tunnel in hues of red, blue, purple, and green, while soft indoor light reflects off the polished surface around it, illuminating the scene with gentle warmth and creating subtle highlights on the kitten’s fur and whiskers — capturing a quiet moment of stillness within a cozy home setting.",
+      "text": "This is a charming and well-composed photograph of a white cat, likely a Devon Rex or Cornish Rex given its distinctive features, sitting indoors.\n\n**The Cat:**\n*   **Appearance:** The cat has pristine white fur with a slightly curly texture on its body, especially noticeable around the tail and hindquarters.\n*   **Face & Ears:** It possesses large, pointed ears that are upright and alert, revealing pink inner ear tissue. Its face is small and expressive, featuring wide-set, round green eyes that gaze directly at the camera with an intense, almost judgmental look. A tiny pink nose sits between them.\n*   **Pose:** The cat is seated upright, appearing very still and posed for the photo. One front paw rests lightly forward while the other supports it behind, giving it a formal posture.\n\n**Clothing:**\n*   The most striking feature is the light blue, ribbed knit sweater the cat is wearing. It's styled like a turtleneck pullover, snugly fitting around its neck and torso without being restrictive. The vertical ribs add visual interest to the garment.\n\n**Setting & Composition:**\n*   The background consists of two walls meeting at a corner — one wall is painted beige/tan on the left side where the cat’s head is positioned, and another plain off-white wall forms the right side. This creates a simple backdrop that highlights the subject.\n*   Soft lighting illuminates the scene from the front-left, casting gentle shadows along the cat’s back and against the right-hand wall.\n*   At the bottom edge of the frame, just beneath the cat’s paws, there appears to be a black-and-white patterned surface (perhaps fabric), adding a subtle textural contrast.\n*   The overall mood is cozy and endearing, capturing a moment of quiet dignity as if the feline model knows exactly how photogenic they are.\n\nIn summary, the image portrays a stylish, fluffy white cat dressed adorably in a soft-blue sweater, looking regally serious as it poses by a room corner.",
       "anything": [
-        "7",
+        "9",
         0
       ]
     },
-    "class_type": "easy showAnything",
     "_meta": {
       "title": "Show Any"
     }
   },
   "7": {
+    "class_type": "easy saveText",
     "inputs": {
-      "model_name": "Qwen3-VL-8B-Instruct",
-      "quantization": "None (FP16)",
-      "attention_mode": "auto",
-      "preset_prompt": "🖼️ Detailed Description",
-      "custom_prompt": "",
-      "max_tokens": 512,
-      "keep_model_loaded": true,
-      "seed": 3731918183,
-      "image": [
-        "8",
+      "file_name": "",
+      "file_extension": "txt",
+      "text": [
+        "9",
         0
-      ]
+      ],
+      "overwrite": true,
+      "output_file_path": ""
     },
-    "class_type": "AILab_QwenVL",
     "_meta": {
-      "title": "QwenVL"
+      "title": "Save Text"
     }
   },
-  "8": {
+  "9": {
+    "class_type": "AILab_QwenVL",
     "inputs": {
-      "width": 1080,
-      "height": 1080,
-      "interpolation": "nearest",
-      "method": "keep proportion",
-      "condition": "downscale if bigger",
-      "multiple_of": 0,
+      "keep_model_loaded": true,
       "image": [
-        "5",
+        "12",
         0
-      ]
+      ],
+      "model_name": "Qwen3-VL-8B-Instruct",
+      "seed": 710822995676689,
+      "max_tokens": 1024,
+      "custom_prompt": "",
+      "preset_prompt": "Describe this image in detail.",
+      "quantization": "None (FP16)"
     },
-    "class_type": "ImageResize+",
     "_meta": {
-      "title": "🔧 Image Resize"
+      "title": "QwenVL"
     }
   }
 }

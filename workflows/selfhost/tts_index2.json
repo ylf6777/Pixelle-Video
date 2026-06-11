@@ -1,64 +1,77 @@
 {
-  "3": {
+  "12": {
+    "class_type": "VHS_LoadAudioUpload",
     "inputs": {
-      "text": "床前明月光，疑是地上霜。"
+      "duration": 0,
+      "start_time": 0,
+      "audio": "1e3582c9ff7673039859f5a21d42a0aee132481c485b3f0ee8cfccf9c77433b4.wav"
     },
+    "_meta": {
+      "title": "$ref_audio.audio"
+    }
+  },
+  "13": {
+    "class_type": "easy showAnything",
+    "inputs": {
+      "text": "[{\"id\": \"Narrator\", \"字幕\": \"首先，什么是版本控制？简单说，就是帮你给代码做时间机器。每次保存，都会生成一个快照，可以随时回到过去。这样改坏了代码，不用慌，一条命令就能撤回。团队协作时，每个人在自己的分支上开发，最后再合并，就不会互相覆盖。没有版本控制，就像在用 final_final_v3_ok.zip 这种方式管理项目，非常危险。 \", \"start\": 0.0, \"end\": 30.49}]",
+      "anything": [
+        "5",
+        2
+      ]
+    },
+    "_meta": {
+      "title": "Show Any"
+    }
+  },
+  "3": {
     "class_type": "Text _O",
+    "inputs": {
+      "text": "首先，什么是版本控制？简单说，就是帮你给代码做时间机器。每次保存，都会生成一个快照，可以随时回到过去。这样改坏了代码，不用慌，一条命令就能撤回。团队协作时，每个人在自己的分支上开发，最后再合并，就不会互相覆盖。没有版本控制，就像在用 final_final_v3_ok.zip 这种方式管理项目，非常危险。"
+    },
     "_meta": {
       "title": "$text.text!"
     }
   },
   "5": {
+    "class_type": "IndexTTS2BaseNode",
     "inputs": {
+      "num_beams": 3,
+      "seed": 1053771267,
+      "max_tokens_per_sentence": 120,
+      "max_mel_tokens": 1815,
+      "reference_audio": [
+        "12",
+        0
+      ],
+      "mode": "Auto",
+      "top_p": 0.9000000000000001,
+      "top_k": 30,
+      "temperature": 0.8000000000000002,
+      "do_sample_mode": "on",
       "text": [
         "3",
         0
       ],
-      "mode": "Auto",
-      "do_sample_mode": "on",
-      "temperature": 0.8,
-      "top_p": 0.9,
-      "top_k": 30,
-      "num_beams": 3,
       "repetition_penalty": 10,
-      "length_penalty": 0,
-      "max_mel_tokens": 1815,
-      "max_tokens_per_sentence": 120,
-      "seed": 4266796044,
-      "reference_audio": [
-        "12",
-        0
-      ]
+      "length_penalty": 0
     },
-    "class_type": "IndexTTS2BaseNode",
     "_meta": {
       "title": "Index TTS 2 - Base"
     }
   },
   "8": {
+    "class_type": "SaveAudioMP3",
     "inputs": {
       "filename_prefix": "audio/ComfyUI",
-      "quality": "V0",
-      "audioUI": "",
       "audio": [
         "5",
         0
-      ]
+      ],
+      "audioUI": "",
+      "quality": "V0"
     },
-    "class_type": "SaveAudioMP3",
     "_meta": {
       "title": "Save Audio (MP3)"
-    }
-  },
-  "12": {
-    "inputs": {
-      "audio": "小裴钱.wav",
-      "start_time": 0,
-      "duration": 0
-    },
-    "class_type": "VHS_LoadAudioUpload",
-    "_meta": {
-      "title": "$ref_audio.audio"
     }
   }
 }

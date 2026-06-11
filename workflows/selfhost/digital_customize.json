@@ -1,0 +1,292 @@
+{
+  "11": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+      "type": "qwen_image",
+      "device": "default"
+    },
+    "_meta": {
+      "title": "Load CLIP"
+    }
+  },
+  "12": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "qwen_image_vae.safetensors"
+    },
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "13": {
+    "class_type": "KSampler",
+    "inputs": {
+      "scheduler": "simple",
+      "negative": [
+        "3",
+        0
+      ],
+      "denoise": 1,
+      "latent_image": [
+        "9",
+        0
+      ],
+      "seed": 550085123848181,
+      "cfg": 1,
+      "sampler_name": "euler",
+      "model": [
+        "1",
+        0
+      ],
+      "positive": [
+        "2",
+        0
+      ],
+      "steps": 8
+    },
+    "_meta": {
+      "title": "KSampler"
+    }
+  },
+  "24": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "filename_prefix": "ComfyUI",
+      "images": [
+        "16",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Save Image"
+    }
+  },
+  "14": {
+    "class_type": "CR Text",
+    "inputs": {
+      "text": "让这个主体拿着这个产品"
+    },
+    "_meta": {
+      "title": "提示词"
+    }
+  },
+  "15": {
+    "class_type": "LayerUtility: ImageScaleByAspectRatio V2",
+    "inputs": {
+      "fit": "letterbox",
+      "aspect_ratio": "original",
+      "image": [
+        "18",
+        0
+      ],
+      "method": "lanczos",
+      "background_color": "#000000",
+      "round_to_multiple": "16",
+      "scale_to_side": "longest",
+      "proportional_height": 1,
+      "proportional_width": 1,
+      "scale_to_length": 1024
+    },
+    "_meta": {
+      "title": "LayerUtility: ImageScaleByAspectRatio V2"
+    }
+  },
+  "16": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "vae": [
+        "12",
+        0
+      ],
+      "samples": [
+        "13",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "17": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "b78d24ebf0e1e7ada5e85e5aca4fd8cbbbc395b33b560446b07993269bc61156.png"
+    },
+    "_meta": {
+      "title": "$secondimage.image!"
+    }
+  },
+  "18": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "45c125e493857d00b3b0eb8882684858b832d045c99becdaba7b3d22b2a325d6.webp"
+    },
+    "_meta": {
+      "title": "$firstimage.image!"
+    }
+  },
+  "1": {
+    "class_type": "CFGNorm",
+    "inputs": {
+      "strength": 1,
+      "model": [
+        "5",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "CFGNorm"
+    }
+  },
+  "2": {
+    "class_type": "TextEncodeQwenImageEditPlus",
+    "inputs": {
+      "vae": [
+        "12",
+        0
+      ],
+      "image1": [
+        "15",
+        0
+      ],
+      "prompt": [
+        "14",
+        0
+      ],
+      "image2": [
+        "20",
+        0
+      ],
+      "clip": [
+        "11",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "TextEncodeQwenImageEditPlus"
+    }
+  },
+  "3": {
+    "class_type": "TextEncodeQwenImageEdit",
+    "inputs": {
+      "vae": [
+        "12",
+        0
+      ],
+      "prompt": "",
+      "clip": [
+        "11",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "TextEncodeQwenImageEdit"
+    }
+  },
+  "4": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+      "lora_name": "Qwen-Image-Edit-Lightning-8steps-V1.0.safetensors",
+      "strength_model": 1,
+      "model": [
+        "10",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "LoraLoaderModelOnly"
+    }
+  },
+  "5": {
+    "class_type": "ModelSamplingAuraFlow",
+    "inputs": {
+      "shift": 3,
+      "model": [
+        "4",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "ModelSamplingAuraFlow"
+    }
+  },
+  "6": {
+    "class_type": "Int",
+    "inputs": {
+      "value": 720
+    },
+    "_meta": {
+      "title": "宽"
+    }
+  },
+  "7": {
+    "class_type": "Int",
+    "inputs": {
+      "value": 1280
+    },
+    "_meta": {
+      "title": "高"
+    }
+  },
+  "8": {
+    "class_type": "Int",
+    "inputs": {
+      "value": 1
+    },
+    "_meta": {
+      "title": "生成张数"
+    }
+  },
+  "9": {
+    "class_type": "EmptySD3LatentImage",
+    "inputs": {
+      "batch_size": [
+        "8",
+        0
+      ],
+      "width": [
+        "6",
+        0
+      ],
+      "height": [
+        "7",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "EmptySD3LatentImage"
+    }
+  },
+  "20": {
+    "class_type": "LayerUtility: ImageScaleByAspectRatio V2",
+    "inputs": {
+      "fit": "letterbox",
+      "aspect_ratio": "original",
+      "image": [
+        "17",
+        0
+      ],
+      "method": "lanczos",
+      "background_color": "#000000",
+      "round_to_multiple": "16",
+      "scale_to_side": "longest",
+      "proportional_height": 95,
+      "proportional_width": 1,
+      "scale_to_length": 1024
+    },
+    "_meta": {
+      "title": "LayerUtility: ImageScaleByAspectRatio V2"
+    }
+  },
+  "10": {
+    "class_type": "UNETLoader",
+    "inputs": {
+      "weight_dtype": "fp8_e4m3fn",
+      "unet_name": "Qwen-Image-Edit-2509_fp8_e4m3fn.safetensors"
+    },
+    "_meta": {
+      "title": "Load Diffusion Model"
+    }
+  }
+}

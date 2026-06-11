@@ -1,63 +1,18 @@
 {
-  "29": {
-    "inputs": {
-      "seed": 1067822190154760,
-      "steps": 20,
-      "cfg": 1,
-      "sampler_name": "euler",
-      "scheduler": "simple",
-      "denoise": 1,
-      "model": [
-        "48",
-        0
-      ],
-      "positive": [
-        "35",
-        0
-      ],
-      "negative": [
-        "33",
-        0
-      ],
-      "latent_image": [
-        "43",
-        0
-      ]
-    },
-    "class_type": "KSampler",
-    "_meta": {
-      "title": "KSampler"
-    }
-  },
-  "31": {
-    "inputs": {
-      "text": [
-        "46",
-        0
-      ],
-      "clip": [
-        "47",
-        0
-      ]
-    },
-    "class_type": "CLIPTextEncode",
-    "_meta": {
-      "title": "CLIP Text Encode (Prompt)"
-    }
-  },
   "33": {
+    "class_type": "ConditioningZeroOut",
     "inputs": {
       "conditioning": [
         "31",
         0
       ]
     },
-    "class_type": "ConditioningZeroOut",
     "_meta": {
       "title": "ConditioningZeroOut"
     }
   },
   "35": {
+    "class_type": "FluxGuidance",
     "inputs": {
       "guidance": 3.5,
       "conditioning": [
@@ -65,12 +20,21 @@
         0
       ]
     },
-    "class_type": "FluxGuidance",
     "_meta": {
       "title": "FluxGuidance"
     }
   },
+  "46": {
+    "class_type": "PrimitiveStringMultiline",
+    "inputs": {
+      "value": "a dog"
+    },
+    "_meta": {
+      "title": "$prompt.value!"
+    }
+  },
   "36": {
+    "class_type": "SaveImage",
     "inputs": {
       "filename_prefix": "ComfyUI",
       "images": [
@@ -78,47 +42,144 @@
         0
       ]
     },
-    "class_type": "SaveImage",
     "_meta": {
       "title": "Save Image"
     }
   },
-  "37": {
+  "47": {
+    "class_type": "UNETLoader",
     "inputs": {
+      "weight_dtype": "default",
+      "unet_name": "flux1-dev.sft"
+    },
+    "_meta": {
+      "title": "Load Diffusion Model"
+    }
+  },
+  "37": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "vae": [
+        "50",
+        0
+      ],
       "samples": [
         "29",
         0
-      ],
-      "vae": [
-        "49",
-        0
       ]
     },
-    "class_type": "VAEDecode",
     "_meta": {
       "title": "VAE Decode"
     }
   },
-  "41": {
+  "49": {
+    "class_type": "DualCLIPLoader",
     "inputs": {
-      "value": 1024
+      "clip_name1": "t5xxl_fp8_e4m3fn.safetensors",
+      "clip_name2": "clip_l.safetensors",
+      "type": "flux",
+      "device": "default"
     },
+    "_meta": {
+      "title": "DualCLIPLoader"
+    }
+  },
+  "29": {
+    "class_type": "KSampler",
+    "inputs": {
+      "scheduler": "simple",
+      "negative": [
+        "33",
+        0
+      ],
+      "denoise": 1,
+      "latent_image": [
+        "43",
+        0
+      ],
+      "seed": 266000910236567,
+      "cfg": 1.5,
+      "sampler_name": "euler",
+      "model": [
+        "51",
+        0
+      ],
+      "positive": [
+        "35",
+        0
+      ],
+      "steps": 8
+    },
+    "_meta": {
+      "title": "KSampler"
+    }
+  },
+  "50": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "ae.safetensors"
+    },
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "51": {
+    "class_type": "LoraLoader",
+    "inputs": {
+      "lora_name": "flux_turbo_v1_1.safetensors",
+      "strength_model": 1,
+      "model": [
+        "47",
+        0
+      ],
+      "clip": [
+        "49",
+        0
+      ],
+      "strength_clip": 1
+    },
+    "_meta": {
+      "title": "Load LoRA"
+    }
+  },
+  "41": {
     "class_type": "easy int",
+    "inputs": {
+      "value": 512
+    },
     "_meta": {
       "title": "$width.value"
     }
   },
-  "42": {
+  "31": {
+    "class_type": "CLIPTextEncode",
     "inputs": {
-      "value": 1024
+      "text": [
+        "46",
+        0
+      ],
+      "clip": [
+        "51",
+        1
+      ]
     },
+    "_meta": {
+      "title": "CLIP Text Encode (Prompt)"
+    }
+  },
+  "42": {
     "class_type": "easy int",
+    "inputs": {
+      "value": 512
+    },
     "_meta": {
       "title": "$height.value"
     }
   },
   "43": {
+    "class_type": "EmptyLatentImage",
     "inputs": {
+      "batch_size": 1,
       "width": [
         "41",
         0
@@ -126,52 +187,10 @@
       "height": [
         "42",
         0
-      ],
-      "batch_size": 1
+      ]
     },
-    "class_type": "EmptyLatentImage",
     "_meta": {
       "title": "Empty Latent Image"
-    }
-  },
-  "46": {
-    "inputs": {
-      "value": "Minimalist black-and-white matchstick figure style illustration, clean lines, simple sketch style, a dog"
-    },
-    "class_type": "PrimitiveStringMultiline",
-    "_meta": {
-      "title": "$prompt.value!"
-    }
-  },
-  "47": {
-    "inputs": {
-      "clip_name1": "clip_l.safetensors",
-      "clip_name2": "t5xxl_fp8_e4m3fn.safetensors",
-      "type": "flux",
-      "device": "default"
-    },
-    "class_type": "DualCLIPLoader",
-    "_meta": {
-      "title": "DualCLIPLoader"
-    }
-  },
-  "48": {
-    "inputs": {
-      "unet_name": "flux1-dev.safetensors",
-      "weight_dtype": "default"
-    },
-    "class_type": "UNETLoader",
-    "_meta": {
-      "title": "Load Diffusion Model"
-    }
-  },
-  "49": {
-    "inputs": {
-      "vae_name": "ae.safetensors"
-    },
-    "class_type": "VAELoader",
-    "_meta": {
-      "title": "Load VAE"
     }
   }
 }
