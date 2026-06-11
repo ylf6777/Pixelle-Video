@@ -614,8 +614,6 @@ class AssetBasedPipeline(LinearVideoPipeline):
             
             # Concatenate all narration audios for this scene
             if len(narration_audios) > 1:
-                from pixelle_video.utils.os_util import get_task_frame_path
-                
                 # Emit progress for combining audio
                 frame_progress = base_progress + ((i - 1) + 0.25) / total_frames * progress_range
                 self._emit_progress(ProgressEvent(
