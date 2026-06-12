@@ -17,34 +17,7 @@ For generating image prompts from narrations.
 """
 
 import json
-from typing import List, Optional
-
-
-# ==================== PRESET IMAGE STYLES ====================
-# Predefined visual styles for different use cases
-
-IMAGE_STYLE_PRESETS = {
-    "stick_figure": {
-        "name": "Stick Figure Sketch",
-        "description": "stick figure style sketch, black and white lines, pure white background, minimalist hand-drawn feel",
-        "use_case": "General scenes, simple and intuitive"
-    },
-    
-    "minimal": {
-        "name": "Minimalist Abstract",
-        "description": "minimalist abstract art, geometric shapes, clean composition, modern design, soft pastel colors",
-        "use_case": "Modern, artistic feel"
-    },
-    
-    "concept": {
-        "name": "Conceptual Visual",
-        "description": "conceptual visual metaphors, symbolic elements, thought-provoking imagery, artistic interpretation",
-        "use_case": "Deep content, philosophical thinking"
-    },
-}
-
-# Default preset
-DEFAULT_IMAGE_STYLE = "stick_figure"
+from typing import List
 
 
 IMAGE_PROMPT_GENERATION_PROMPT = """# Role Definition

@@ -86,7 +86,7 @@ class ImageSubConfig(BaseModel):
     """Image-specific configuration (under comfyui.image)"""
     default_workflow: Optional[str] = Field(default=None, description="Default image workflow (optional)")
     prompt_prefix: str = Field(
-        default="Minimalist black-and-white matchstick figure style illustration, clean lines, simple sketch style",
+        default="",
         description="Prompt prefix for all image generation"
     )
 
@@ -95,7 +95,7 @@ class VideoSubConfig(BaseModel):
     """Video-specific configuration (under comfyui.video)"""
     default_workflow: Optional[str] = Field(default=None, description="Default video workflow (optional)")
     prompt_prefix: str = Field(
-        default="Minimalist black-and-white matchstick figure style illustration, clean lines, simple sketch style",
+        default="",
         description="Prompt prefix for all video generation"
     )
 

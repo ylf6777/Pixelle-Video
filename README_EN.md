@@ -357,7 +357,7 @@ Determine what style of images AI generates.
 
 **Prompt Prefix**  
 - Controls overall image style (language needs to be English)
-- Example: Minimalist black-and-white matchstick figure style illustration, clean lines, simple sketch style
+- Example: Cute cartoon style, soft pastel colors, simple shapes
 - Click "Preview Style" to test effect
 
 #### Video Template

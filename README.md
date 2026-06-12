@@ -361,7 +361,7 @@ uv run streamlit run web/app.py
 
 **提示词前缀（Prompt Prefix）**  
 - 控制图像的整体风格（语言需要是英文的）
-- 例如：Minimalist black-and-white matchstick figure style illustration, clean lines, simple sketch style
+- 例如：Cute cartoon style, soft pastel colors, simple shapes
 - 点击「预览风格」可以测试效果
 
 #### 视频模板
