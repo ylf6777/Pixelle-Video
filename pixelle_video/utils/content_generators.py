@@ -463,14 +463,15 @@ async def generate_video_prompts(
 
 def _parse_json(text: str) -> dict:
     """
-    Parse JSON from text, with fallback to extract JSON from markdown code blocks
-    
+    Parse JSON from text, with fallback to extract JSON from markdown code blocks.
+    Supports both JSON objects and arrays.
+
     Args:
         text: Text containing JSON
-        
+
     Returns:
-        Parsed JSON dict
-        
+        Parsed JSON (dict or list)
+
     Raises:
         json.JSONDecodeError: If no valid JSON found
     """
@@ -479,8 +480,8 @@ def _parse_json(text: str) -> dict:
         return json.loads(text)
     except json.JSONDecodeError:
         pass
-    
-    # Try to extract JSON from markdown code block
+
+    # Try to extract JSON from markdown code block (object or array)
     json_pattern = r'```(?:json)?\s*([\s\S]+?)\s*```'
     match = re.search(json_pattern, text, re.DOTALL)
     if match:
@@ -488,16 +489,39 @@ def _parse_json(text: str) -> dict:
             return json.loads(match.group(1))
         except json.JSONDecodeError:
             pass
-    
-    # Try to find any JSON object in the text
-    json_pattern = r'\{[^{}]*(?:"narrations"|"image_prompts")\s*:\s*\[[^\]]*\][^{}]*\}'
-    match = re.search(json_pattern, text, re.DOTALL)
+
+    # Try to find any JSON object with expected keys
+    obj_pattern = r'\{[^{}]*(?:"narrations"|"image_prompts"|"narration")\s*:\s*\[[^\]]*\][^{}]*\}'
+    match = re.search(obj_pattern, text, re.DOTALL)
     if match:
         try:
             return json.loads(match.group(0))
         except json.JSONDecodeError:
             pass
-    
+
+    # Try to find JSON array containing objects (e.g. [{...}, {...}])
+    arr_start = text.find('[{')
+    if arr_start != -1:
+        arr_end = text.rfind('}]')
+        if arr_end > arr_start:
+            try:
+                json_str = text[arr_start:arr_end + 2]
+                return json.loads(json_str)
+            except json.JSONDecodeError:
+                pass
+
+    # Try general bracket matching for JSON array
+    bracket_start = text.find('[')
+    bracket_end = text.rfind(']')
+    if bracket_start != -1 and bracket_end > bracket_start:
+        try:
+            json_str = text[bracket_start:bracket_end + 1]
+            result = json.loads(json_str)
+            if isinstance(result, list):
+                return result
+        except json.JSONDecodeError:
+            pass
+
     # If all fails, raise error
     raise json.JSONDecodeError("No valid JSON found", text, 0)
 

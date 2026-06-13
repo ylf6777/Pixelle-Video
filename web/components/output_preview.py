@@ -84,9 +84,14 @@ def render_single_output(pixelle_video, video_params):
                 with st.spinner("AI 分析文章中..."):
                     try:
                         from pixelle_video.utils.content_generators import generate_scene_breakdown
+                        import uuid as _uuid
                         scenes = run_async(generate_scene_breakdown(
                             pixelle_video.llm, text
                         ))
+                        # 为每个分镜分配唯一 ID，用于 widget key 隔离
+                        for _s in scenes:
+                            if "_uid" not in _s:
+                                _s["_uid"] = str(_uuid.uuid4())[:8]
                         st.session_state[scenes_key] = scenes
                         st.session_state["st_confirmed"] = False
                         st.rerun()
@@ -102,9 +107,17 @@ def render_single_output(pixelle_video, video_params):
             if ref_key not in st.session_state:
                 st.session_state[ref_key] = {}
 
+            # 确保每个分镜都有唯一 ID
+            import uuid as _uuid
+            for _s in scenes:
+                if "_uid" not in _s:
+                    _s["_uid"] = str(_uuid.uuid4())[:8]
+
             edited = []
             for i, s in enumerate(scenes):
+                uid = s["_uid"]  # 稳定的唯一标识
                 st.markdown(f"**分镜 {i+1}**")
+
                 c1, c2 = st.columns([1, 1])
                 with c1:
                     ips = s.get("image_prompts", [s.get("image_prompt", "")])
@@ -112,43 +125,78 @@ def render_single_output(pixelle_video, video_params):
                         ips = [ips]
                     ip_text = ips[0] if ips else ""
                     ip = st.text_area(f"画面提示词", ip_text, height=80,
-                                      key=f"st_ip_{i}", label_visibility="collapsed",
+                                      key=f"st_ip_{uid}", label_visibility="collapsed",
                                       placeholder=f"分镜{i+1}画面提示词")
                 with c2:
                     nr = st.text_area(f"旁白", s.get("narration", ""), height=80,
-                                      key=f"st_nr_{i}", label_visibility="collapsed",
+                                      key=f"st_nr_{uid}", label_visibility="collapsed",
                                       placeholder=f"分镜{i+1}旁白")
 
-                # 参考图上传
+                # 操作按钮行：插入 + 删除
+                b1, b2, b3 = st.columns([1, 1, 2])
+                with b1:
+                    if st.button(f"＋ 插入到分镜{i+1}后", key=f"btn_insert_{uid}",
+                                 use_container_width=True):
+                        ss = st.session_state
+                        cur = list(ss.get(scenes_key, []))
+                        new_scene = {"image_prompt": "", "narration": "",
+                                     "_uid": str(_uuid.uuid4())[:8]}
+                        cur.insert(i + 1, new_scene)
+                        ss[scenes_key] = cur
+                        st.rerun()
+                with b2:
+                    if st.button(f"✕ 删除分镜{i+1}", key=f"btn_delete_{uid}",
+                                 use_container_width=True):
+                        ss = st.session_state
+                        cur = list(ss.get(scenes_key, []))
+                        if 0 <= i < len(cur):
+                            removed = cur.pop(i)
+                            ss[scenes_key] = cur
+                            # 清除被删分镜的参考图
+                            refs = ss.get(ref_key, {})
+                            refs.pop(removed.get("_uid", ""), None)
+                            ss[ref_key] = refs
+                        st.rerun()
+
+                # 参考图上传（key 基于 uid，不受位置变化影响）
                 ref_col, del_col = st.columns([4, 1])
                 with ref_col:
                     uploaded = st.file_uploader(
                         "📷 参考图（可选）", type=["jpg", "jpeg", "png", "webp"],
-                        key=f"st_upload_{i}", label_visibility="collapsed",
+                        key=f"st_upload_{uid}", label_visibility="collapsed",
                         help="上传参考图以融入插画创作")
                     if uploaded and uploaded.size <= 10 * 1024 * 1024:
                         import base64
                         img_bytes = uploaded.read()
                         b64 = base64.b64encode(img_bytes).decode()
                         mime = uploaded.type
-                        st.session_state[ref_key][str(i)] = f"data:{mime};base64,{b64}"
+                        st.session_state[ref_key][uid] = f"data:{mime};base64,{b64}"
                     elif uploaded:
                         st.error("图片不能超过 10MB")
 
                 with del_col:
-                    if str(i) in st.session_state[ref_key]:
-                        import uuid, base64
-                        ref_data = st.session_state[ref_key][str(i)]
-                        # 预览缩略图
+                    if uid in st.session_state[ref_key]:
+                        ref_data = st.session_state[ref_key][uid]
                         st.image(ref_data, width=60, caption="参考图")
-                        if st.button("✕", key=f"st_delref_{i}", help="删除参考图"):
-                            del st.session_state[ref_key][str(i)]
+                        if st.button("✕", key=f"st_delref_{uid}", help="删除参考图"):
+                            del st.session_state[ref_key][uid]
                             st.rerun()
 
                 edited.append({
                     "image_prompt": ip, "narration": nr,
-                    "reference_image": st.session_state[ref_key].get(str(i))
+                    "reference_image": st.session_state[ref_key].get(uid),
+                    "_uid": uid
                 })
+
+            # 在末尾添加新分镜按钮
+            if st.button("＋ 在末尾添加新分镜", key="btn_append_end",
+                         help="在最后添加一个空白分镜", use_container_width=True):
+                ss = st.session_state
+                cur = list(ss.get(scenes_key, []))
+                cur.append({"image_prompt": "", "narration": "",
+                            "_uid": str(_uuid.uuid4())[:8]})
+                ss[scenes_key] = cur
+                st.rerun()
 
             cA, cB = st.columns([1, 1])
             with cA:

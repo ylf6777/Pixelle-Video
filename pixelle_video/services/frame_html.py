@@ -419,9 +419,13 @@ class HTMLFrameGenerator:
             "text": text,
             "image": image,
         }
-        
+
         if ext:
             context.update(ext)
+            # 命名参数的优先级高于 ext，防止 ext 中的空值覆盖实际内容
+            context["title"] = title
+            context["text"] = text
+            context["image"] = image
         
         html = self._replace_parameters(self.template, context)
 
@@ -458,7 +462,7 @@ class HTMLFrameGenerator:
                 with os.fdopen(fd, 'w', encoding='utf-8') as f:
                     f.write(html)
                 
-                await page.goto(Path(tmp_html_path).as_uri(), wait_until='networkidle')
+                await page.goto(Path(tmp_html_path).as_uri(), wait_until='load', timeout=30000)
                 await page.screenshot(path=output_path, type='png', omit_background=True)
             finally:
                 if page:

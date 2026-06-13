@@ -441,7 +441,12 @@ class APIProviderMediaService:
         resolved_media_type = info.get("media_type") or media_type
 
         if resolved_media_type == "image":
-            image_paths = params.pop("image_paths", None)
+            image_paths = params.pop("image_paths", None) or []
+            if isinstance(image_paths, str):
+                image_paths = [image_paths]
+            if image_path:
+                image_paths = list(image_paths)
+                image_paths.insert(0, image_path)
             return await self._generate_image(
                 provider=provider,
                 model=model,
