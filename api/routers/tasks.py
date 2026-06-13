@@ -20,6 +20,7 @@ from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Query
 from loguru import logger
 
+from api.error_handler import map_exception
 from api.tasks import task_manager, Task, TaskStatus
 
 router = APIRouter(prefix="/tasks", tags=["Tasks"])
@@ -44,9 +45,10 @@ async def list_tasks(
         tasks = task_manager.list_tasks(status=status, limit=limit)
         return tasks
         
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"List tasks error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise map_exception(e, "tasks")
 
 
 @router.get("/{task_id}", response_model=Task)
@@ -71,8 +73,7 @@ async def get_task(task_id: str):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Get task error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise map_exception(e, "tasks")
 
 
 @router.delete("/{task_id}")
@@ -100,6 +101,5 @@ async def cancel_task(task_id: str):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Cancel task error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise map_exception(e, "tasks")
 

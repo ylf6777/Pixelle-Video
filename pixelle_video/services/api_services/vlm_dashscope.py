@@ -13,9 +13,7 @@ try:
 except ImportError:
     dashscope = None
     MultiModalConversation = None
-import logging
-
-logger = logging.getLogger(__name__)
+from loguru import logger
 from typing import Any, Dict, List, Optional
 
 class QwenVLClient:

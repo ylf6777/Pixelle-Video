@@ -25,14 +25,26 @@ from pixelle_video.prompts.title_generation import build_title_generation_prompt
 from pixelle_video.prompts.image_generation import build_image_prompt_prompt
 from pixelle_video.prompts.style_conversion import build_style_conversion_prompt
 
+# Video prompts
+from pixelle_video.prompts.video_generation import build_video_prompt_prompt
+
+# Scene breakdown
+from pixelle_video.prompts.scene_breakdown import build_scene_breakdown_prompt
+
 
 __all__ = [
     # Narration builders
     "build_topic_narration_prompt",
     "build_content_narration_prompt",
     "build_title_generation_prompt",
-    
+
     # Image builders
     "build_image_prompt_prompt",
     "build_style_conversion_prompt",
+
+    # Video builders
+    "build_video_prompt_prompt",
+
+    # Scene breakdown
+    "build_scene_breakdown_prompt",
 ]

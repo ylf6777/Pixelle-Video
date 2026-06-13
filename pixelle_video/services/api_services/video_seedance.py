@@ -5,12 +5,11 @@ Seedance 视频生成 API 客户端 (字节跳动 ARK)
 
 import os
 import time
-import logging
+from loguru import logger
 import requests
 import base64
 from typing import Optional
 
-logger = logging.getLogger(__name__)
 
 class SeedanceVideoClient:
     """
@@ -108,20 +107,27 @@ class SeedanceVideoClient:
                 "role": "first_frame"
             })
 
+        # 已知参数映射：video_ratio → ratio
+        ratio_value = kwargs.get("ratio") or kwargs.get("video_ratio") or "adaptive"
+        resolution_value = kwargs.get("resolution", "720p")
+
         payload = {
             "model": model,
             "content": content,
             "duration": duration,
-            "ratio": kwargs.get("ratio", "adaptive"),
-            "resolution": kwargs.get("resolution", "720p")
+            "ratio": ratio_value,
+            "resolution": resolution_value,
         }
 
-        # 合并其他可选参数 (如 seed, watermark)
+        # 合并 API 支持的可选参数
         for key in ["seed", "watermark", "generate_audio"]:
             if key in kwargs and kwargs[key] is not None:
                 payload[key] = kwargs[key]
 
-        logger.info(f"SeedanceVideoClient: 提交任务 model={model}, duration={duration}s")
+        logger.info(
+            f"SeedanceVideoClient: 提交任务 model={model}, duration={duration}s, "
+            f"ratio={ratio_value}, resolution={resolution_value}"
+        )
         resp = requests.post(
             url,
             headers=self._headers(),
@@ -129,10 +135,17 @@ class SeedanceVideoClient:
             timeout=self.timeout,
             proxies=self._proxies(),
         )
-        
+
         if not resp.ok:
-            logger.error(f"Seedance 提交失败: {resp.text}")
-            resp.raise_for_status()
+            error_detail = resp.text
+            logger.error(f"Seedance 提交失败 (HTTP {resp.status_code}): {error_detail}")
+            # 把 API 返回的错误详情暴露到异常消息中
+            try:
+                error_json = resp.json()
+                error_msg = error_json.get("error", {}).get("message", error_detail)
+            except Exception:
+                error_msg = error_detail
+            raise RuntimeError(f"Seedance API 错误 ({resp.status_code}): {error_msg}")
             
         data = resp.json()
         task_id = data.get("id")
@@ -178,6 +191,7 @@ class SeedanceVideoClient:
 
 if __name__ == "__main__":
     import sys
+    import logging
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     from config import Config
 

@@ -19,6 +19,7 @@ Endpoints for generating narrations, image prompts, and titles.
 from fastapi import APIRouter, HTTPException
 from loguru import logger
 
+from api.error_handler import map_exception
 from api.dependencies import PixelleVideoDep
 from api.schemas.content import (
     NarrationGenerateRequest,
@@ -70,9 +71,10 @@ async def generate_narration(
             narrations=narrations
         )
         
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Narration generation error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise map_exception(e, "content")
 
 
 @router.post("/image-prompt", response_model=ImagePromptGenerateResponse)
@@ -106,9 +108,10 @@ async def generate_image_prompt(
             image_prompts=image_prompts
         )
         
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Image prompt generation error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise map_exception(e, "content")
 
 
 @router.post("/title", response_model=TitleGenerateResponse)
@@ -140,7 +143,8 @@ async def generate_title_endpoint(
             title=title
         )
         
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Title generation error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise map_exception(e, "content")
 

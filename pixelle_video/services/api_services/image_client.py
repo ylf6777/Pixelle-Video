@@ -1,7 +1,7 @@
 import os
 import time
 import uuid
-import logging
+from loguru import logger
 from typing import List, Optional
 from .config import Config
 
@@ -170,7 +170,7 @@ class ImageClient:
                     "or switch to a DashScope model."
                 )
             try:
-                logging.info(f"ImageClient requesting Seedream: {model}")
+                logger.info(f"ImageClient requesting Seedream: {model}")
 
                 paths = self.seedream_client.generate_image(
                     prompt=prompt,
@@ -184,7 +184,7 @@ class ImageClient:
                     generated_local_paths.extend(paths)
 
             except Exception as e:
-                logging.error(f"Seedream generation failed: {e}")
+                logger.error(f"Seedream generation failed: {e}")
 
         elif is_sora:
             # --- GPT/Sora Logic ---
@@ -195,9 +195,9 @@ class ImageClient:
                     "or switch to a DashScope/Seedream model."
                 )
             try:
-                logging.info(f"ImageClient requesting GPT/Sora: {model}")
+                logger.info(f"ImageClient requesting GPT/Sora: {model}")
                 if image_paths:
-                    logging.warning("Sora/GPT model only supports Text-to-Image. Ignoring reference images.")
+                    logger.warning("Sora/GPT model only supports Text-to-Image. Ignoring reference images.")
 
                 # OpenAI uses 'x' separator, e.g. 1024x1024
                 gpt_size = size.replace('*', 'x') if size else "1024x1024"
@@ -212,15 +212,15 @@ class ImageClient:
                 if path and os.path.exists(path):
                     generated_local_paths.append(path)
                 else:
-                    logging.error(f"GPT/Sora returned invalid path or download failed: {path}")
+                    logger.error(f"GPT/Sora returned invalid path or download failed: {path}")
 
             except Exception as e:
-                logging.error(f"GPT/Sora generation failed: {e}")
+                logger.error(f"GPT/Sora generation failed: {e}")
 
         else:
             # --- DashScope Logic ---
             try:
-                logging.info(f"ImageClient requesting DashScope: {model}")
+                logger.info(f"ImageClient requesting DashScope: {model}")
 
                 if image_paths and len(image_paths) > 0:
                     # Pre-process image paths for DashScope
@@ -257,7 +257,7 @@ class ImageClient:
                     generated_local_paths.extend(paths)
                             
             except Exception as e:
-                logging.error(f"DashScope generation failed: {e}")
+                logger.error(f"DashScope generation failed: {e}")
                 raise RuntimeError(f"DashScope generation failed: {e}") from e
 
         return generated_local_paths

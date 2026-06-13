@@ -17,6 +17,7 @@ Image generation endpoints
 from fastapi import APIRouter, HTTPException
 from loguru import logger
 
+from api.error_handler import map_exception
 from api.dependencies import PixelleVideoDep
 from api.schemas.image import ImageGenerateRequest, ImageGenerateResponse
 
@@ -65,6 +66,5 @@ async def image_generate(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Image generation error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise map_exception(e, "image")
 

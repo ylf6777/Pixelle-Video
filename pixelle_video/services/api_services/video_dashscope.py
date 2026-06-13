@@ -5,7 +5,7 @@
 """
 
 import os
-import logging
+from loguru import logger
 import time
 import threading
 from contextlib import contextmanager
@@ -20,8 +20,6 @@ except ImportError:
     VideoSynthesis = None
 import requests
 from requests import exceptions as requests_exceptions
-
-logger = logging.getLogger(__name__)
 
 
 class DashscopeVideoClient:
@@ -570,6 +568,7 @@ class DashscopeVideoClient:
 if __name__ == "__main__":
     import sys
     import time
+    import logging
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     from config import Config
 

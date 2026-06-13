@@ -17,6 +17,7 @@ TTS (Text-to-Speech) endpoints
 from fastapi import APIRouter, HTTPException
 from loguru import logger
 
+from api.error_handler import map_exception
 from api.dependencies import PixelleVideoDep
 from api.schemas.tts import TTSSynthesizeRequest, TTSSynthesizeResponse
 from pixelle_video.utils.tts_util import get_audio_duration
@@ -88,7 +89,8 @@ async def tts_synthesize(
             duration=duration
         )
         
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"TTS synthesis error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise map_exception(e, "tts")
 

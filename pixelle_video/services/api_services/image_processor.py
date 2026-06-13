@@ -4,7 +4,7 @@ import numpy as np
 from pathlib import Path
 from datetime import datetime, timedelta
 from PIL import Image
-import logging
+from loguru import logger
 
 
 class ImageProcessor:
@@ -381,9 +381,9 @@ class ImageProcessor:
         # 3. 计算过期时间
         expire_time = datetime.now() + timedelta(hours=48)
         
-        logging.info(f"文件上传成功: {file_path}")
-        logging.info(f"  OSS URL: {oss_url}")
-        logging.info(f"  过期时间: {expire_time.strftime('%Y-%m-%d %H:%M:%S')} (48小时)")
+        logger.info(f"文件上传成功: {file_path}")
+        logger.info(f"  OSS URL: {oss_url}")
+        logger.info(f"  过期时间: {expire_time.strftime('%Y-%m-%d %H:%M:%S')} (48小时)")
         
         return oss_url
 
@@ -403,7 +403,7 @@ class ImageProcessor:
                 img = Image.open(p)
                 images.append(img)
             except Exception as e:
-                logging.error(f"Cannot open image {p}: {e}")
+                logger.error(f"Cannot open image {p}: {e}")
         
         if not images:
             return None

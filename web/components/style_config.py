@@ -34,6 +34,17 @@ from web.pipelines.api_workflows import (
 )
 from pixelle_video.config import config_manager
 from pixelle_video.tts_voices import EDGE_TTS_VOICES, get_voice_display_name
+from pixelle_video.constants import (
+    DEFAULT_IMAGE_TEMPLATE,
+    DEFAULT_VIDEO_TEMPLATE,
+    DEFAULT_STATIC_TEMPLATE,
+    DEFAULT_PREVIEW_IMAGE,
+    DEFAULT_TTS_PREVIEW_TEXT,
+    DEFAULT_IMAGE_TEST_PROMPT,
+    DEFAULT_VIDEO_TEST_PROMPT,
+    TEMPLATE_GRID_COLS,
+    TEMPLATE_THUMBNAIL_HEIGHT,
+)
 from web.prompt_templates import (
     CUSTOM_TEMPLATE_KEY,
     check_edit_permission,
@@ -54,6 +65,11 @@ def render_style_config(pixelle_video):
     """Render style configuration section (middle column)"""
     # TTS Section (moved from left column)
     # ====================================================================
+    # 提前获取当前分镜类型，用于 TTS/模板绑定的类型隔离
+    _current_template_type = st.session_state.get("template_type_selector", "image")
+    _media_config_key = "video" if _current_template_type == "video" else "image"
+    _active_state_key = f"_style_template_active_{_media_config_key}"
+
     with st.container(border=True):
         st.markdown(f"**{tr('section.tts')}**")
         
@@ -95,7 +111,7 @@ def render_style_config(pixelle_video):
             # ---- TTS 模板绑定：读取已激活的风格模板的语音/语速设置 ----
             _tts_bound_voice = None
             _tts_bound_speed = None
-            _tts_active_key = st.session_state.get("_style_template_active", "") or st.session_state.get("style_template_key_image", "")
+            _tts_active_key = st.session_state.get(_active_state_key, "") or st.session_state.get(f"style_template_key_{_media_config_key}", "")
             if _tts_active_key and _tts_active_key != CUSTOM_TEMPLATE_KEY:
                 _tts_binding = get_template_binding(_tts_active_key)
                 if _tts_binding:
@@ -245,7 +261,7 @@ def render_style_config(pixelle_video):
             # Preview text input
             preview_text = st.text_input(
                 tr("tts.preview_text"),
-                value="大家好，这是一段测试语音。",
+                value=DEFAULT_TTS_PREVIEW_TEXT,
                 placeholder=tr("tts.preview_text_placeholder"),
                 key="tts_preview_text"
             )
@@ -335,7 +351,7 @@ def render_style_config(pixelle_video):
         st.markdown(f"**{tr('section.template')}**")
 
         # ---- 当前风格模板可视化指示 ----
-        _active_style_key = st.session_state.get("_style_template_active", "") or st.session_state.get("style_template_key_image", "")
+        _active_style_key = st.session_state.get(_active_state_key, "") or st.session_state.get(f"style_template_key_{_media_config_key}", "")
         if _active_style_key and _active_style_key != CUSTOM_TEMPLATE_KEY:
             _active_name = get_template_name(_active_style_key, tr)
             st.caption(f"🎨 当前风格模板：**{_active_name}**")
@@ -396,17 +412,17 @@ def render_style_config(pixelle_video):
         
         # Get default template from config
         template_config = pixelle_video.config.get("template", {})
-        config_default_template = template_config.get("default_template", "1080x1920/image_default.html")
+        config_default_template = template_config.get("default_template", DEFAULT_IMAGE_TEMPLATE)
 
         # Backward compatibility
         if config_default_template == "1080x1920/default.html":
-            config_default_template = "1080x1920/image_default.html"
+            config_default_template = DEFAULT_IMAGE_TEMPLATE
         
         # Determine type-specific default template
         type_default_templates = {
-            'static': '1080x1920/static_default.html',
-            'image': '1080x1920/image_default.html',
-            'video': '1080x1920/video_default.html',
+            'static': DEFAULT_STATIC_TEMPLATE,
+            'image': DEFAULT_IMAGE_TEMPLATE,
+            'video': DEFAULT_VIDEO_TEMPLATE,
         }
         type_specific_default = type_default_templates.get(selected_template_type, config_default_template)
         
@@ -424,22 +440,22 @@ def render_style_config(pixelle_video):
         # ---- 风格模板 ↔ 画面模板自动绑定 ----
         _bound_template = None
         _fixed_params = None
-        # 优先读已激活模板，否则回退到下拉选中值
-        _tmpl_active_key = st.session_state.get("_style_template_active", "")
+        # 优先读当前类型的已激活模板，否则回退到当前类型的下拉选中值
+        _tmpl_active_key = st.session_state.get(_active_state_key, "")
         if not _tmpl_active_key:
-            _tmpl_active_key = st.session_state.get("style_template_key_image", "")
+            _tmpl_active_key = st.session_state.get(f"style_template_key_{_media_config_key}", "")
         if _tmpl_active_key and _tmpl_active_key != CUSTOM_TEMPLATE_KEY:
             _binding = get_template_binding(_tmpl_active_key)
             if _binding and _binding.frame_template:
-                _bound_template = _binding.frame_template
-                _fixed_params = _binding.fixed_params
+                # 仅当绑定的模板与当前分镜类型匹配时才应用
+                from pixelle_video.utils.template_util import get_template_type as _get_tpl_type
+                _bound_type = _get_tpl_type(_binding.frame_template)
+                if _bound_type == selected_template_type:
+                    _bound_template = _binding.frame_template
+                    _fixed_params = _binding.fixed_params
 
         if _bound_template:
             st.session_state['selected_template'] = _bound_template
-            # 同步模板类型（绑定的都是 image 模板）
-            if st.session_state.get('last_template_type') != 'image':
-                st.session_state['last_template_type'] = 'image'
-                selected_template_type = 'image'
 
         # Collect size groups and prepare tabs
         size_groups = []
@@ -500,7 +516,7 @@ def render_style_config(pixelle_video):
                 for tab, all_templates in zip(tabs, size_groups):
                     with tab:
                         # Create grid layout (5 columns)
-                        num_cols = 5
+                        num_cols = TEMPLATE_GRID_COLS
                         cols = st.columns(num_cols)
                         
                         for idx, template in enumerate(all_templates):
@@ -518,7 +534,7 @@ def render_style_config(pixelle_video):
                                         f"""
                                         <div style="
                                             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                                            height: 150px;
+                                            height: {TEMPLATE_THUMBNAIL_HEIGHT}px;
                                             display: flex;
                                             align-items: center;
                                             justify-content: center;
@@ -689,7 +705,7 @@ def render_style_config(pixelle_video):
                 )
                 preview_image = st.text_input(
                     tr("template.preview_param_image"),
-                    value="resources/example.png",
+                    value=DEFAULT_PREVIEW_IMAGE,
                     help=tr("template.preview_image_help"),
                     key="preview_image"
                 )
@@ -915,7 +931,7 @@ def render_style_config(pixelle_video):
             )
 
             # ---- 模板启动按钮：点击后才激活绑定，触发参数锁定 ----
-            _active_state_key = "_style_template_active"
+            # _active_state_key 已在文件顶部按分镜类型计算：_style_template_active_image 或 _style_template_active_video
             if _active_state_key not in st.session_state:
                 st.session_state[_active_state_key] = template_keys[-1]  # 默认自定义
 
@@ -1026,7 +1042,7 @@ def render_style_config(pixelle_video):
             with st.expander(preview_title, expanded=False):
                 # Test prompt input
                 test_prompt_label = tr("style.test_video_prompt") if template_media_type == "video" else tr("style.test_prompt")
-                test_prompt_value = "a peaceful lake, gentle camera movement" if template_media_type == "video" else "a dog"
+                test_prompt_value = DEFAULT_VIDEO_TEST_PROMPT if template_media_type == "video" else DEFAULT_IMAGE_TEST_PROMPT
                 
                 test_prompt = st.text_input(
                     test_prompt_label,

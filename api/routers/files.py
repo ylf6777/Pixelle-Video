@@ -21,6 +21,8 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 from loguru import logger
 
+from api.error_handler import map_exception
+
 router = APIRouter(prefix="/files", tags=["Files"])
 
 
@@ -123,6 +125,5 @@ async def get_file(file_path: str):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"File access error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise map_exception(e, "files")
 

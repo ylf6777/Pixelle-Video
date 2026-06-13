@@ -18,7 +18,7 @@ import os
 from pathlib import Path
 from typing import List, Tuple, Optional, Literal
 from pydantic import BaseModel, Field
-import logging
+from loguru import logger
 
 from pixelle_video.utils.os_util import (
     get_resource_path,
@@ -27,7 +27,6 @@ from pixelle_video.utils.os_util import (
     resource_exists
 )
 
-logger = logging.getLogger(__name__)
 
 
 def parse_template_size(template_path: str) -> Tuple[int, int]:

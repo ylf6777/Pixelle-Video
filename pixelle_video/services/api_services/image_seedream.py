@@ -5,7 +5,7 @@ Seedream 图像生成 API 客户端
 
 import os
 import time
-import logging
+from loguru import logger
 from typing import Optional, List, Dict
 import httpx
 from openai import OpenAI
@@ -61,7 +61,7 @@ class SeedreamClient:
         self.timeout = timeout
 
         if not self.api_key:
-            logging.warning(
+            logger.warning(
                 "SeedreamClient missing api_key. Set ARK_API_KEY. Seedream will be disabled."
             )
             self.client = None
@@ -241,7 +241,7 @@ class SeedreamClient:
                 f.write(response.content)
             return file_path
         except Exception as e:
-            logging.error(f"Failed to download image from {url}: {e}")
+            logger.error(f"Failed to download image from {url}: {e}")
             return None
 
 

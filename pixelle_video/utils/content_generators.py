@@ -17,6 +17,7 @@ Pure/stateless functions for generating content using LLM.
 These functions are reusable across different pipelines.
 """
 
+import asyncio
 import json
 import re
 from typing import List, Optional, Literal
@@ -340,7 +341,9 @@ async def generate_image_prompts(
                     logger.warning(error_msg)
                     
                     if attempt < max_retries:
-                        logger.info(f"Retrying batch {batch_idx}...")
+                        delay = 2 ** attempt
+                        logger.info(f"Retrying batch {batch_idx} in {delay}s...")
+                        await asyncio.sleep(delay)
                         continue
                     else:
                         raise ValueError(error_msg)
@@ -363,8 +366,10 @@ async def generate_image_prompts(
                 logger.error(f"Batch {batch_idx} JSON parse error (attempt {attempt}/{max_retries}): {e}")
                 if attempt >= max_retries:
                     raise
-                logger.info(f"Retrying batch {batch_idx}...")
-    
+                delay = 2 ** attempt
+                logger.info(f"Retrying batch {batch_idx} in {delay}s...")
+                await asyncio.sleep(delay)
+
     logger.info(f"✅ Generated {len(all_prompts)} image prompts")
     return all_prompts
 
@@ -455,8 +460,10 @@ async def generate_video_prompts(
                 logger.warning(f"✗ Batch {batch_idx} attempt {attempt} failed: {e}")
                 if attempt >= max_retries:
                     raise
-                logger.info(f"Retrying batch {batch_idx}...")
-    
+                delay = 2 ** attempt
+                logger.info(f"Retrying batch {batch_idx} in {delay}s...")
+                await asyncio.sleep(delay)
+
     logger.info(f"✅ Generated {len(all_prompts)} video prompts")
     return all_prompts
 
@@ -475,6 +482,7 @@ def _parse_json(text: str) -> dict:
     Raises:
         json.JSONDecodeError: If no valid JSON found
     """
+    logger.debug(f"_parse_json: input ({len(text)} chars): {text[:200]}...")
     # Try direct parsing first
     try:
         return json.loads(text)
@@ -490,16 +498,9 @@ def _parse_json(text: str) -> dict:
         except json.JSONDecodeError:
             pass
 
-    # Try to find any JSON object with expected keys
-    obj_pattern = r'\{[^{}]*(?:"narrations"|"image_prompts"|"narration")\s*:\s*\[[^\]]*\][^{}]*\}'
-    match = re.search(obj_pattern, text, re.DOTALL)
-    if match:
-        try:
-            return json.loads(match.group(0))
-        except json.JSONDecodeError:
-            pass
-
-    # Try to find JSON array containing objects (e.g. [{...}, {...}])
+    # Try array matching FIRST (before object matching).
+    # Array like [{...}] is the format used by generate_scene_breakdown.
+    # Must precede object regex to avoid matching the first {obj} inside the array.
     arr_start = text.find('[{')
     if arr_start != -1:
         arr_end = text.rfind('}]')
@@ -510,7 +511,16 @@ def _parse_json(text: str) -> dict:
             except json.JSONDecodeError:
                 pass
 
-    # Try general bracket matching for JSON array
+    # Try to find any JSON object with expected keys
+    obj_pattern = r'\{[^{}]*(?:"narrations"|"image_prompts"|"narration")\s*:\s*\[[^\]]*\][^{}]*\}'
+    match = re.search(obj_pattern, text, re.DOTALL)
+    if match:
+        try:
+            return json.loads(match.group(0))
+        except json.JSONDecodeError:
+            pass
+
+    # Try general bracket matching for JSON array (last resort for arrays)
     bracket_start = text.find('[')
     bracket_end = text.rfind(']')
     if bracket_start != -1 and bracket_end > bracket_start:
@@ -529,48 +539,22 @@ def _parse_json(text: str) -> dict:
 async def generate_scene_breakdown(
     llm_service,
     article: str,
+    media_type: str = "image",
 ) -> list[dict]:
-    """将文章拆为分镜，每项含旁白和按字数分配的画面提示词。
-    分镜数量由AI根据文章长度和内容复杂度自动决定。
+    """将文章拆为分镜，每项含旁白和按字数分配的画面/视频提示词。
 
-    多图规则（内嵌在提示词中）：
-    - 旁白≤30字 → 1幅画面
-    - 31-60字 → 2幅画面（引入+展开）
-    - 61-100字 → 3幅画面（引入+展开+收尾）
-    - >100字 → 4幅画面
+    Args:
+        llm_service: LLM 服务
+        article: 待拆解的文章
+        media_type: "image" 返回 image_prompts / "video" 返回 video_prompts
 
-    返回: [{"narration": "旁白", "image_prompts": ["画面1", "画面2", ...]}, ...]
+    Returns:
+        [{"narration": "旁白", "image_prompts": [...]}]  或
+        [{"narration": "旁白", "video_prompts": [...]}]
     """
-    prompt = f"""你是专业分镜师兼口播文案。把下面文章拆成若干个分镜，分镜数量根据文章长度和内容复杂度自动决定。
+    from pixelle_video.prompts.scene_breakdown import build_scene_breakdown_prompt
 
-【旁白-插画匹配规则】
-
-1. 每条分镜先写旁白，再根据旁白字数配画面：
-   - 旁白≤30字：配 1 幅画面
-   - 旁白31-60字：配 2 幅画面（第1幅引入场景，第2幅展开内容）
-   - 旁白61-100字：配 3 幅画面（引入→展开→收尾升华）
-   - 旁白>100字：配 4 幅画面
-
-2. 多幅画面要求：
-   - 所有画面围绕同一条旁白的核心主题
-   - 风格统一、色调一致、同一人物形象
-   - 构图有变化：远景→中景→特写，避免单调
-
-3. 画面提示词要求：
-   - 用中文，日式漫画分镜风格，画面中有对话气泡
-   - 中国场景和人物，crayon doodle scrapbook 风格
-
-4. 旁白要求：
-   - 长度由内容自然决定，不设限制，分镜时长跟随旁白长度
-   - 所有旁白连起来是一篇完整流畅的口播稿，有开头有过渡有结尾
-   - 像朋友聊天，自然口语
-
-5. 只返回 JSON 数组：
-[{{"narration": "旁白1", "image_prompts": ["画面1"]}}, {{"narration": "旁白2", "image_prompts": ["画面1", "画面2"]}}]
-
-文章：
-{article}"""
-
+    prompt = build_scene_breakdown_prompt(article, media_type)
     response = await llm_service(prompt=prompt, temperature=0.7, max_tokens=8192)
     result = _parse_json(response)
 
@@ -579,11 +563,18 @@ async def generate_scene_breakdown(
     if not isinstance(result, list):
         raise ValueError("LLM 未返回分镜数组")
 
+    # 根据 media_type 确定提示词字段名
+    prompt_key = "video_prompts" if media_type == "video" else "image_prompts"
+
     for item in result:
-        if "image_prompts" not in item:
-            item["image_prompts"] = [item.get("image_prompt", item.get("narration", ""))]
-        if isinstance(item["image_prompts"], str):
-            item["image_prompts"] = [item["image_prompts"]]
+        if prompt_key not in item:
+            # 兼容旧字段名
+            fallback = item.get("image_prompts") or item.get("video_prompts") or [item.get("image_prompt", item.get("narration", ""))]
+            if isinstance(fallback, str):
+                fallback = [fallback]
+            item[prompt_key] = fallback
+        if isinstance(item[prompt_key], str):
+            item[prompt_key] = [item[prompt_key]]
         if "narration" not in item:
             item["narration"] = item.get("text", "")
 

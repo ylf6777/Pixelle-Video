@@ -9,7 +9,7 @@ import io
 import ssl
 import time
 import base64
-import logging
+from loguru import logger
 from typing import Optional
 
 import jwt
@@ -18,7 +18,6 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from PIL import Image
 
-logger = logging.getLogger(__name__)
 
 # 可灵 API 基础地址
 KLING_BASE_URL = "https://api-beijing.klingai.com"
@@ -406,6 +405,7 @@ class KlingVideoClient:
 
 if __name__ == "__main__":
     import sys
+    import logging
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     from config import Config
 

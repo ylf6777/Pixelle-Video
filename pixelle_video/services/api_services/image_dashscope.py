@@ -1,6 +1,6 @@
 import os
 import json
-import logging
+from loguru import logger
 import time
 import uuid
 import threading
@@ -130,7 +130,7 @@ class DashScopeClient:
             else:
                 raise RuntimeError(f"Image generation failed: {response.code}, {response.message}, status={response.status_code}")
         except Exception as e:
-            logging.error(f"Error in generate_image (DashScope): {e}")
+            logger.error(f"Error in generate_image (DashScope): {e}")
             raise
 
     def edit_image(self, prompt, image_urls, model="wan2.7-image", size="1920*1080", n=1, session_id=None, save_dir=None):
@@ -185,7 +185,7 @@ class DashScopeClient:
             else:
                 raise RuntimeError(f"Image edit failed: {response.code}, {response.message}, status={response.status_code}")
         except Exception as e:
-            logging.error(f"Error in edit_image: {e}")
+            logger.error(f"Error in edit_image: {e}")
             raise
 
 

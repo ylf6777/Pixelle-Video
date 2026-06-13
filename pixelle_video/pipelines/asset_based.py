@@ -484,7 +484,7 @@ class AssetBasedPipeline(LinearVideoPipeline):
             dims = template_name.split("/")[0].split("x")
             media_width = int(dims[0])
             media_height = int(dims[1])
-        except:
+        except (ValueError, IndexError, AttributeError):
             # Default to 1080x1920
             media_width = 1080
             media_height = 1920

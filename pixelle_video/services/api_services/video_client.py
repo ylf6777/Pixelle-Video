@@ -6,7 +6,7 @@
 """
 
 import os
-import logging
+from loguru import logger
 from typing import Optional
 from .config import Config
 
@@ -18,8 +18,6 @@ except ImportError:
     from video_dashscope import DashscopeVideoClient
     from video_kling import KlingVideoClient
     from video_seedance import SeedanceVideoClient
-
-logger = logging.getLogger(__name__)
 
 
 class VideoClient:

@@ -17,6 +17,7 @@ Frame/Template rendering endpoints
 from fastapi import APIRouter, HTTPException
 from loguru import logger
 
+from api.error_handler import map_exception
 from api.dependencies import PixelleVideoDep
 from api.schemas.frame import FrameRenderRequest, FrameRenderResponse, TemplateParamsResponse
 from pixelle_video.services.frame_html import HTMLFrameGenerator
@@ -78,9 +79,10 @@ async def render_frame(
             height=height
         )
         
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Frame render error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise map_exception(e, "frame")
 
 
 @router.get("/template/params", response_model=TemplateParamsResponse)
@@ -155,7 +157,8 @@ async def get_template_params(
         
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail=f"Template not found: {template}")
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Get template params error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise map_exception(e, "frame")
 
