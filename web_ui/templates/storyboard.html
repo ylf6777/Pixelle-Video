@@ -31,8 +31,11 @@
       <span class="pv-showcase__subtitle" id="sceneCount"></span>
     </div>
     <div id="sceneList"></div>
-    <div style="display:flex;gap:12px;margin-top:var(--pv-space-6)">
+    <div style="display:flex;gap:12px;margin-top:var(--pv-space-6);flex-wrap:wrap">
       <button class="pv-btn-save" id="btnAddScene">添加分镜</button>
+      <button class="pv-btn-save" id="btnLock" style="display:none">确认分镜</button>
+      <button class="pv-btn-save" id="btnVideo" style="display:none">生成视频</button>
+      <span id="lockStatus" style="align-self:center;font-size:14px;color:var(--pv-accent);display:none">🔒 已锁定</span>
     </div>
   </div>
 </div>
@@ -56,6 +59,10 @@
     scenesData.forEach((s, i) => { sceneList.appendChild(buildCard(s, i)); });
     sceneCount.textContent = scenesData.length + ' 个分镜';
     resultArea.style.display = 'block';
+    showLockButtons();
+    if (locked) {
+      sceneList.querySelectorAll('.pv-scene-card').forEach(c => applyLockedState(c));
+    }
   }
 
   function buildCard(s, i) {
@@ -165,6 +172,62 @@
     sceneCount.textContent = scenesData.length + ' 个分镜';
     resultArea.style.display = 'block';
   });
+
+  let locked = false;
+  const btnLock = document.getElementById('btnLock');
+  const btnVideo = document.getElementById('btnVideo');
+  const lockStatus = document.getElementById('lockStatus');
+
+  function showLockButtons() {
+    btnLock.style.display = ''; btnVideo.style.display = '';
+    if (locked) {
+      btnLock.style.display = 'none';
+      lockStatus.style.display = '';
+      document.getElementById('btnAddScene').style.display = 'none';
+    }
+  }
+
+  function applyLockedState(card) {
+    if (!locked) return;
+    card.querySelectorAll('textarea, button[data-action]').forEach(el => { el.disabled = true; el.style.opacity = '0.6'; });
+    card.style.borderLeft = '3px solid var(--pv-accent)';
+  }
+
+  btnLock.addEventListener('click', () => {
+    locked = true;
+    btnLock.style.display = 'none';
+    lockStatus.style.display = '';
+    document.getElementById('btnAddScene').style.display = 'none';
+    // 禁用所有编辑
+    sceneList.querySelectorAll('textarea, button[data-action]').forEach(el => {
+      el.disabled = true;
+      el.style.opacity = '0.6';
+    });
+    sceneList.querySelectorAll('.pv-scene-card').forEach(card => {
+      card.style.borderLeft = '3px solid var(--pv-accent)';
+    });
+    resultArea.querySelector('.pv-showcase__subtitle').textContent += ' | 已锁定';
+  });
+
+  btnVideo.addEventListener('click', async () => {
+    if (!locked) { errorEl.textContent = '请先确认分镜'; return; }
+    btnVideo.textContent = '生成中...'; btnVideo.disabled = true;
+    const narrations = scenesData.map(s => s.narration).filter(Boolean);
+    try {
+      const r = await fetch('/api/workflows/video_G03_smoothmix/execute', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({prompt:narrations.join('; '), duration:scenesData.length * 5})
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.detail||'提交失败');
+      window.location.href = `/workflow/video_G03_smoothmix?task_id=${d.task_id}`;
+    } catch(e) { errorEl.textContent = e.message; }
+    btnVideo.textContent = '生成视频'; btnVideo.disabled = false;
+  });
+
+  // 首次生成后显示按钮
+  const origRenderAll = renderAllScenes;
+  renderAllScenes = function() { origRenderAll(); if(scenesData.length) showLockButtons(); };
 })();
 </script>
 {% endblock %}
