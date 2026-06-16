@@ -439,10 +439,36 @@ async def quick_create_page(request: Request):
     return templates.TemplateResponse("quick.html", {"request": request})
 
 
+@router.get("/styles", response_class=HTMLResponse)
+async def styles_page(request: Request):
+    """风格模板展示页"""
+    from web.prompt_templates import BUILTIN_TEMPLATES
+    style_list = []
+    for key, tpl in BUILTIN_TEMPLATES.items():
+        name = {"template_xiaojun": "晓君老师", "template_elderly": "中老年"}.get(key, key)
+        style_list.append({
+            "key": key, "name": name,
+            "desc": "手绘蜡笔风" if "crayon" in tpl.prompt else "温暖水彩风",
+            "prompt_preview": tpl.prompt[:120] + "...",
+            "locked": tpl.locked,
+        })
+    return templates.TemplateResponse("styles.html", {"request": request, "styles": style_list})
+
+
 @router.get("/storyboard", response_class=HTMLResponse)
-async def storyboard_page(request: Request):
-    """分镜脚本生成页面"""
-    return templates.TemplateResponse("storyboard.html", {"request": request})
+async def storyboard_page(request: Request, style: str = ""):
+    """分镜脚本生成页面 — 可选 style 参数传入风格模板"""
+    style_prompt = ""
+    if style:
+        from web.prompt_templates import BUILTIN_TEMPLATES
+        tpl = BUILTIN_TEMPLATES.get(style)
+        if tpl:
+            style_prompt = tpl.prompt
+    return templates.TemplateResponse("storyboard.html", {
+        "request": request,
+        "style_key": style,
+        "style_prompt": style_prompt,
+    })
 
 
 @router.get("/debug/storyboard", response_class=HTMLResponse)
