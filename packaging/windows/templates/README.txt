@@ -1,5 +1,5 @@
 ========================================
-  Pixelle-Video - Windows Portable
+  ylf_Video - Windows Portable
 ========================================
 
 AI-powered video creation platform
@@ -46,7 +46,7 @@ Configuration is done through the Web UI:
    - RunningHub API Key: For cloud image generation (optional)
 4. Click "Save Config" to save
 
-The configuration will be automatically saved to Pixelle-Video/config.yaml.
+The configuration will be automatically saved to ylf_Video/config.yaml.
 
 Note: You can also manually edit config.yaml if needed, but the Web UI is recommended.
 
@@ -56,7 +56,7 @@ Note: You can also manually edit config.yaml if needed, but the Web UI is recomm
 
 python/           - Python 3.11 embedded runtime
 tools/            - FFmpeg and other utilities
-Pixelle-Video/    - Main application
+ylf_Video/    - Main application
 data/             - User data (BGM, templates, workflows)
 output/           - Generated videos
 
@@ -89,15 +89,15 @@ Solution: Re-extract the package completely, don't move files
   Support
 ========================================
 
-GitHub: https://github.com/AIDC-AI/Pixelle-Video
-Documentation: https://aidc-ai.github.io/Pixelle-Video
-Issues: https://github.com/AIDC-AI/Pixelle-Video/issues
+GitHub: https://github.com/AIDC-AI/ylf_Video
+Documentation: https://aidc-ai.github.io/ylf_Video
+Issues: https://github.com/AIDC-AI/ylf_Video/issues
 
 ========================================
   License
 ========================================
 
-See LICENSE file in Pixelle-Video/ folder
+See LICENSE file in ylf_Video/ folder
 
 Copyright (c) 2025 Pixelle.AI
 

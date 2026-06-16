@@ -278,7 +278,7 @@ class TemplateConfig(BaseModel):
 
 class PixelleVideoConfig(BaseModel):
     """
-    Pixelle-Video 根配置
+    ylf_Video 根配置
 
     所有配置项的聚合根。提供配置校验和字典导出方法。
 
@@ -286,7 +286,7 @@ class PixelleVideoConfig(BaseModel):
         - 无外部依赖。纯 Pydantic 模型聚合。
     """
 
-    project_name: str = Field(default="Pixelle-Video", description="项目名称")
+    project_name: str = Field(default="ylf_Video", description="项目名称")
     llm: LLMConfig = Field(default_factory=LLMConfig)
     api_providers: APIProvidersConfig = Field(default_factory=APIProvidersConfig)
     comfyui: ComfyUIConfig = Field(default_factory=ComfyUIConfig)

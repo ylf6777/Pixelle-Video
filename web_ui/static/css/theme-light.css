@@ -1,0 +1,102 @@
+/* ============================================================
+   theme-light.css — 亮色主题
+   在 <html data-theme="light"> 时生效
+   覆写 :root 中所有 CSS 变量为亮色版本
+   ============================================================ */
+
+[data-theme="light"] {
+  /* ---- 画布与表面 ---- */
+  --pv-canvas: #f5f5f7;
+  --pv-surface: #ffffff;
+  --pv-surface-raised: #fafafa;
+
+  /* ---- 玻璃卡片 ---- */
+  --pv-glass-bg: rgba(0, 0, 0, 0.02);
+  --pv-glass-border: rgba(0, 0, 0, 0.08);
+  --pv-glass-hover-bg: rgba(0, 0, 0, 0.04);
+  --pv-glass-hover-border: rgba(0, 0, 0, 0.16);
+
+  /* ---- 强调色 (亮色主题下略微加深以保持对比) ---- */
+  --pv-accent: #0098b3;
+  --pv-accent-alt: #7c3aed;
+  --pv-accent-glow: rgba(0, 152, 179, 0.18);
+  --pv-accent-glow-alt: rgba(124, 58, 237, 0.14);
+
+  /* ---- 文字 ---- */
+  --pv-text: rgba(0, 0, 0, 0.87);
+  --pv-text-muted: rgba(0, 0, 0, 0.54);
+  --pv-text-faint: rgba(0, 0, 0, 0.28);
+
+  /* ---- 语义色 (保持不变以确保可读性) ---- */
+  --pv-success: #00a844;
+  --pv-warning: #e67e00;
+  --pv-error: #d50032;
+  --pv-info: #2962ff;
+
+  /* ---- 阴影 (亮色主题下阴影更浅) ---- */
+  --pv-shadow-card:
+    0 1px 3px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(0, 0, 0, 0.04);
+  --pv-shadow-card-hover:
+    0 4px 12px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(0, 152, 179, 0.16),
+    0 0 20px var(--pv-accent-glow);
+  --pv-shadow-modal:
+    0 0 0 1px rgba(0, 0, 0, 0.08),
+    0 16px 48px rgba(0, 0, 0, 0.2);
+
+  /* 滚动条适配亮色 */
+  scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+}
+
+/* ---- 亮色主题下的滚动条 (WebKit) ---- */
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.28);
+}
+
+/* ---- 亮色主题下的选中文本 ---- */
+[data-theme="light"] ::selection {
+  background: var(--pv-accent-glow);
+  color: var(--pv-accent);
+}
+
+/* ---- 导航栏亮色 ---- */
+[data-theme="light"] .pv-navbar {
+  background: rgba(255, 255, 255, 0.72);
+  border-bottom-color: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .pv-navbar--scrolled {
+  background: rgba(255, 255, 255, 0.9);
+  border-bottom-color: rgba(0, 0, 0, 0.10);
+}
+
+/* ---- 卡片缩略图叠加层适配 ---- */
+[data-theme="light"] .pv-card__thumb::after {
+  background: linear-gradient(
+    180deg,
+    transparent 60%,
+    rgba(245, 245, 247, 0.7) 100%
+  );
+}
+
+/* ---- 弹窗遮罩适配 ---- */
+[data-theme="light"] .pv-modal-overlay {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* ---- 骨架屏亮色 ---- */
+[data-theme="light"] .pv-skeleton::after {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.03) 40%,
+    rgba(0, 0, 0, 0.06) 50%,
+    rgba(0, 0, 0, 0.03) 60%,
+    transparent 100%
+  );
+}

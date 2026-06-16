@@ -13,7 +13,7 @@
 """
 操作系统工具函数（OS Utilities）
 
-提供 Pixelle-Video 项目的路径和文件管理工具。
+提供 ylf_Video 项目的路径和文件管理工具。
 
 提供:
 - get_pixelle_video_root_path: 通过环境变量获取项目根目录
@@ -50,7 +50,7 @@ from typing import Optional, Tuple, Literal
 
 def get_pixelle_video_root_path() -> str:
     """
-    获取 Pixelle-Video 项目根目录路径。
+    获取 ylf_Video 项目根目录路径。
 
     优先使用 PIXELLE_VIDEO_ROOT 环境变量，确保在开发和打包
     环境中都能可靠地定位项目根目录。
@@ -81,7 +81,7 @@ def get_pixelle_video_root_path() -> str:
 
 def ensure_pixelle_video_root_path() -> str:
     """
-    确保 Pixelle-Video 根目录存在，并返回路径。
+    确保 ylf_Video 根目录存在，并返回路径。
 
     如果 output 子目录不存在，会自动创建。
 

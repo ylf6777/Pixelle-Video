@@ -35,7 +35,7 @@ from web.components.faq import render_faq_sidebar
 
 # Page config
 st.set_page_config(
-    page_title="Home - Pixelle-Video",
+    page_title="Home - ylf_Video",
     page_icon="🎬",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -54,7 +54,7 @@ def main():
     # Render FAQ in sidebar
     render_faq_sidebar()
     
-    # Initialize Pixelle-Video
+    # Initialize ylf_Video
     pixelle_video = get_pixelle_video()
     
     # Render system configuration (LLM + ComfyUI)

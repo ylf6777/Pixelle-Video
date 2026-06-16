@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>ylf_Video - AI 工作流浏览器</title>
+  <!-- 主题防闪烁：在 CSS 加载前立即设置 data-theme，避免亮暗切换时的闪烁 -->
+  <script>
+    (function(){
+      var t=localStorage.getItem('pv-theme');
+      if(!t) t=window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+      document.documentElement.setAttribute('data-theme',t);
+    })();
+  </script>
+  <!-- 字体预连接，减少加载延迟 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=DM+Sans:wght@400;500&family=JetBrains+Mono:wght@500&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=DM+Sans:wght@400;500&family=JetBrains+Mono:wght@500&display=swap" media="print" onload="this.media='all'">
+  <!-- 样式分层：tokens(变量) → reset(重置) → layout(布局) → components(组件) → animations(动画) → theme(亮色覆盖) -->
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <link rel="stylesheet" href="/static/css/reset.css">
+  <link rel="stylesheet" href="/static/css/layout.css">
+  <link rel="stylesheet" href="/static/css/components.css">
+  <link rel="stylesheet" href="/static/css/animations.css">
+  <link rel="stylesheet" href="/static/css/theme-light.css">
+  <!-- Alpine.js：轻量响应式框架，管理主题切换、筛选等交互状态 -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <!-- htmx：通过 HTML 属性实现 AJAX 请求，无需手写 fetch -->
+  <script defer src="https://cdn.jsdelivr.net/npm/htmx.org@2.x.x/dist/htmx.min.js"></script>
+  <!-- 应用脚本 -->
+  <script defer src="/static/js/theme.js"></script>
+  <script defer src="/static/js/search.js"></script>
+  <script defer src="/static/js/masonry.js"></script>
+  <script defer src="/static/js/app.js"></script>
+</head>
+<body class="pv-canvas">
+  <!-- 无障碍：跳过导航链接，方便键盘用户直接跳到主内容 -->
+  <a href="#main-content" class="pv-skip-link">跳转到主内容</a>
+  {% include "components/navbar.html" %}
+  <main id="main-content">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

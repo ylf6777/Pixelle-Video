@@ -1,0 +1,771 @@
+/* ============================================================
+   components.css — 组件样式库
+   每个组件覆盖完整的 7 状态矩阵：
+   hover / active / focus-visible / loading / disabled / empty / error
+   ============================================================ */
+
+/* ============================================================
+   1. 卡片 .pv-card
+   ============================================================ */
+
+/* ---- 默认态 ---- */
+.pv-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--pv-glass-bg);
+  border: 1px solid var(--pv-glass-border);
+  border-radius: var(--pv-radius-md);
+  overflow: hidden;
+  transition:
+    transform var(--pv-duration-normal) var(--pv-ease),
+    box-shadow var(--pv-duration-normal) var(--pv-ease),
+    border-color var(--pv-duration-normal) var(--pv-ease),
+    background var(--pv-duration-normal) var(--pv-ease);
+  cursor: pointer;
+}
+
+/* ---- hover 态：发光提升 ---- */
+.pv-card:hover {
+  transform: translateY(-2px);
+  background: var(--pv-glass-hover-bg);
+  border-color: var(--pv-glass-hover-border);
+  box-shadow: var(--pv-shadow-card-hover);
+}
+
+/* ---- active 态：按下 ---- */
+.pv-card:active {
+  transform: translateY(0);
+  box-shadow: var(--pv-shadow-card);
+  transition-duration: var(--pv-duration-fast);
+}
+
+/* ---- focus-visible 态：键盘焦点 ---- */
+.pv-card:focus-visible {
+  outline: 2px solid var(--pv-accent);
+  outline-offset: 2px;
+  border-color: var(--pv-accent);
+}
+
+/* ---- 缩略图容器 ---- */
+.pv-card__thumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: var(--pv-surface-raised);
+}
+
+.pv-card__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--pv-duration-slow) var(--pv-ease);
+}
+
+.pv-card:hover .pv-card__thumb img {
+  transform: scale(1.03);
+}
+
+/* 缩略图叠加渐变 */
+.pv-card__thumb::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    transparent 60%,
+    rgba(6, 6, 15, 0.7) 100%
+  );
+  pointer-events: none;
+}
+
+/* ---- 标签 ---- */
+.pv-card__tag {
+  position: absolute;
+  top: var(--pv-space-3);
+  left: var(--pv-space-3);
+  z-index: 1;
+  padding: 2px 10px;
+  font-size: var(--pv-text-xs);
+  font-weight: 600;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* ---- 元信息区 ---- */
+.pv-card__meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pv-space-1);
+  padding: var(--pv-space-4);
+}
+
+.pv-card__meta-title {
+  font-family: var(--pv-font-display);
+  font-size: var(--pv-text-sm);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--pv-text);
+
+  /* 两行截断 */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.pv-card__meta-info {
+  display: flex;
+  align-items: center;
+  gap: var(--pv-space-2);
+  font-size: var(--pv-text-xs);
+  color: var(--pv-text-muted);
+}
+
+/* ---- 卡片内的按钮 ---- */
+.pv-card__btn {
+  margin: 0 var(--pv-space-4) var(--pv-space-4);
+}
+
+/* ---- loading 态：骨架替代 ---- */
+.pv-card--loading {
+  pointer-events: none;
+}
+
+.pv-card--loading .pv-card__thumb {
+  background: var(--pv-surface-raised);
+}
+
+/* ---- empty 态 ---- */
+.pv-card--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: var(--pv-text-faint);
+  cursor: default;
+}
+
+/* ---- error 态 ---- */
+.pv-card--error {
+  border-color: var(--pv-error);
+}
+
+.pv-card--error .pv-card__thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--pv-error);
+  font-size: var(--pv-text-xs);
+}
+
+/* ============================================================
+   2. 按钮 .pv-btn
+   ============================================================ */
+
+/* ---- 默认态 ---- */
+.pv-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--pv-space-2);
+  padding: 10px 20px;
+  font-family: var(--pv-font-display);
+  font-size: var(--pv-text-sm);
+  font-weight: 600;
+  line-height: 1;
+  border-radius: var(--pv-radius-sm);
+  border: none;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  transition:
+    background var(--pv-duration-fast) var(--pv-ease),
+    box-shadow var(--pv-duration-fast) var(--pv-ease),
+    transform var(--pv-duration-fast) var(--pv-ease),
+    opacity var(--pv-duration-fast) var(--pv-ease);
+}
+
+/* ---- Primary 按钮 (渐变强调) ---- */
+.pv-btn--primary {
+  color: #000;
+  background: linear-gradient(135deg, var(--pv-accent), var(--pv-accent-alt));
+  box-shadow: 0 2px 8px var(--pv-accent-glow);
+}
+
+.pv-btn--primary:hover {
+  box-shadow: 0 4px 16px var(--pv-accent-glow);
+  transform: translateY(-1px);
+}
+
+.pv-btn--primary:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px var(--pv-accent-glow);
+  transition-duration: var(--pv-duration-fast);
+}
+
+.pv-btn--primary:focus-visible {
+  outline: 2px solid var(--pv-accent);
+  outline-offset: 2px;
+}
+
+/* ---- Secondary 按钮 ---- */
+.pv-btn--secondary {
+  color: var(--pv-text);
+  background: var(--pv-glass-bg);
+  border: 1px solid var(--pv-glass-border);
+}
+
+.pv-btn--secondary:hover {
+  background: var(--pv-glass-hover-bg);
+  border-color: var(--pv-glass-hover-border);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.pv-btn--secondary:active {
+  background: rgba(255, 255, 255, 0.08);
+  transform: scale(0.97);
+}
+
+.pv-btn--secondary:focus-visible {
+  border-color: var(--pv-accent);
+  outline: 2px solid var(--pv-accent);
+  outline-offset: 2px;
+}
+
+/* ---- Loading 态 ---- */
+.pv-btn--loading {
+  position: relative;
+  pointer-events: none;
+  color: transparent;
+}
+
+.pv-btn--loading::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: pv-spin 0.6s linear infinite;
+}
+
+@keyframes pv-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ---- 禁用态 ---- */
+.pv-btn:disabled,
+.pv-btn--disabled {
+  opacity: 0.38;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+/* ---- 尺寸变体 ---- */
+.pv-btn--sm {
+  padding: 6px 12px;
+  font-size: var(--pv-text-xs);
+  border-radius: 6px;
+}
+
+.pv-btn--lg {
+  padding: 14px 28px;
+  font-size: var(--pv-text-base);
+  border-radius: var(--pv-radius-sm);
+}
+
+/* ---- 图标按钮 ---- */
+.pv-btn--icon {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+}
+
+.pv-btn--icon.pv-btn--sm {
+  width: 32px;
+  height: 32px;
+}
+
+/* ============================================================
+   3. 输入框 .pv-input
+   ============================================================ */
+
+/* ---- 默认态 ---- */
+.pv-input {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  font-size: var(--pv-text-sm);
+  color: var(--pv-text);
+  background: var(--pv-glass-bg);
+  border: 1px solid var(--pv-glass-border);
+  border-radius: var(--pv-radius-sm);
+  outline: none;
+  transition:
+    border-color var(--pv-duration-fast) var(--pv-ease),
+    box-shadow var(--pv-duration-fast) var(--pv-ease),
+    background var(--pv-duration-fast) var(--pv-ease);
+}
+
+.pv-input::placeholder {
+  color: var(--pv-text-faint);
+}
+
+/* ---- hover 态 ---- */
+.pv-input:hover {
+  border-color: var(--pv-glass-hover-border);
+}
+
+/* ---- focus 态 (亮边) ---- */
+.pv-input:focus,
+.pv-input:focus-visible {
+  border-color: var(--pv-accent);
+  box-shadow: 0 0 0 3px var(--pv-accent-glow);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* ---- 禁用态 ---- */
+.pv-input:disabled {
+  opacity: 0.38;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+/* ---- error 态 ---- */
+.pv-input--error {
+  border-color: var(--pv-error);
+}
+
+.pv-input--error:focus {
+  box-shadow: 0 0 0 3px rgba(255, 23, 68, 0.2);
+}
+
+/* ---- 搜索框变体 ---- */
+.pv-input--search {
+  padding-left: 40px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.35)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 12px center;
+}
+
+/* ============================================================
+   4. 标签 .pv-tag
+   ============================================================ */
+
+.pv-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  font-size: var(--pv-text-xs);
+  font-weight: 500;
+  line-height: 1.4;
+  border-radius: 9999px;
+  border: 1px solid var(--pv-glass-border);
+  background: var(--pv-glass-bg);
+  color: var(--pv-text-muted);
+  white-space: nowrap;
+  transition:
+    background var(--pv-duration-fast) var(--pv-ease),
+    border-color var(--pv-duration-fast) var(--pv-ease),
+    color var(--pv-duration-fast) var(--pv-ease);
+}
+
+/* ---- hover 态 ---- */
+.pv-tag:hover {
+  background: var(--pv-glass-hover-bg);
+  border-color: var(--pv-glass-hover-border);
+  color: var(--pv-text);
+}
+
+/* ---- active 态 (选中/激活) ---- */
+.pv-tag--active {
+  background: var(--pv-accent-glow);
+  border-color: var(--pv-accent);
+  color: var(--pv-accent);
+}
+
+/* ---- 来源徽章变体 ---- */
+.pv-tag--source {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.65rem;
+}
+
+/* ============================================================
+   5. 徽章 .pv-badge
+   ============================================================ */
+
+.pv-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  background: var(--pv-error);
+  border-radius: 9999px;
+}
+
+.pv-badge--success { background: var(--pv-success); }
+.pv-badge--warning { background: var(--pv-warning); }
+.pv-badge--info    { background: var(--pv-info); }
+
+/* ============================================================
+   6. 弹窗 .pv-modal
+   ============================================================ */
+
+/* ---- 遮罩层 ---- */
+.pv-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--pv-space-6);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  /* 入场动画 */
+  animation: pv-modal-overlay-in var(--pv-duration-normal) var(--pv-ease);
+}
+
+@keyframes pv-modal-overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ---- 弹窗容器 ---- */
+.pv-modal {
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+  max-height: 85vh;
+  overflow-y: auto;
+  background: var(--pv-surface);
+  border: 1px solid var(--pv-glass-border);
+  border-radius: var(--pv-radius-lg);
+  box-shadow: var(--pv-shadow-modal);
+
+  /* 入场动画 */
+  animation: pv-modal-in var(--pv-duration-normal) var(--pv-ease-spring);
+}
+
+@keyframes pv-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ---- 退场动画 (需 JS 添加类名触发) ---- */
+.pv-modal-overlay--closing {
+  animation: pv-modal-overlay-out var(--pv-duration-fast) var(--pv-ease) forwards;
+}
+
+.pv-modal--closing {
+  animation: pv-modal-out var(--pv-duration-fast) var(--pv-ease) forwards;
+}
+
+@keyframes pv-modal-overlay-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+@keyframes pv-modal-out {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateY(8px) scale(0.98); }
+}
+
+/* ---- 弹窗头部 ---- */
+.pv-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--pv-space-5) var(--pv-space-6);
+  border-bottom: 1px solid var(--pv-glass-border);
+}
+
+.pv-modal__title {
+  font-family: var(--pv-font-display);
+  font-size: var(--pv-text-lg);
+  font-weight: 600;
+}
+
+.pv-modal__close {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: var(--pv-text-muted);
+  transition:
+    background var(--pv-duration-fast) var(--pv-ease),
+    color var(--pv-duration-fast) var(--pv-ease);
+}
+
+.pv-modal__close:hover {
+  background: var(--pv-glass-hover-bg);
+  color: var(--pv-text);
+}
+
+/* ---- 弹窗内容 ---- */
+.pv-modal__body {
+  padding: var(--pv-space-6);
+}
+
+/* ---- 弹窗底部 ---- */
+.pv-modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--pv-space-3);
+  padding: var(--pv-space-4) var(--pv-space-6);
+  border-top: 1px solid var(--pv-glass-border);
+}
+
+/* ============================================================
+   7. 骨架屏 .pv-skeleton
+   ============================================================ */
+
+.pv-skeleton {
+  background: var(--pv-surface-raised);
+  border-radius: var(--pv-radius-sm);
+  overflow: hidden;
+  position: relative;
+}
+
+/* 脉冲动画 */
+.pv-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.04) 40%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.04) 60%,
+    transparent 100%
+  );
+  animation: pv-skeleton-shimmer 1.8s ease-in-out infinite;
+}
+
+@keyframes pv-skeleton-shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* 骨架屏变体 */
+.pv-skeleton--text {
+  height: 14px;
+  width: 100%;
+  margin-bottom: var(--pv-space-2);
+}
+
+.pv-skeleton--title {
+  height: 20px;
+  width: 60%;
+  margin-bottom: var(--pv-space-3);
+}
+
+.pv-skeleton--image {
+  aspect-ratio: 16 / 9;
+  width: 100%;
+}
+
+.pv-skeleton--circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+}
+
+/* ============================================================
+   8. 空状态 .pv-empty
+   ============================================================ */
+
+.pv-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--pv-space-16) var(--pv-space-6);
+  text-align: center;
+  color: var(--pv-text-faint);
+}
+
+.pv-empty__icon {
+  font-size: 2rem;
+  margin-bottom: var(--pv-space-4);
+  opacity: 0.4;
+}
+
+.pv-empty__title {
+  font-family: var(--pv-font-display);
+  font-size: var(--pv-text-lg);
+  font-weight: 600;
+  color: var(--pv-text-muted);
+  margin-bottom: var(--pv-space-2);
+}
+
+.pv-empty__description {
+  font-size: var(--pv-text-sm);
+  max-width: 320px;
+  line-height: 1.6;
+}
+
+/* ============================================================
+   9. 导航栏 .pv-navbar
+   ============================================================ */
+
+.pv-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  padding: 0 var(--pv-space-6);
+  background: rgba(13, 13, 31, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--pv-glass-border);
+  transition: background var(--pv-duration-fast) var(--pv-ease);
+}
+
+/* ---- 滚动后强化玻璃效果 ---- */
+.pv-navbar--scrolled {
+  background: rgba(13, 13, 31, 0.88);
+  border-bottom-color: var(--pv-glass-hover-border);
+}
+
+/* ---- 导航栏品牌 ---- */
+.pv-navbar__brand {
+  font-family: var(--pv-font-display);
+  font-size: var(--pv-text-lg);
+  font-weight: 700;
+  color: var(--pv-text);
+  display: flex;
+  align-items: center;
+  gap: var(--pv-space-2);
+}
+
+.pv-navbar__brand .pv-accent {
+  color: var(--pv-accent);
+}
+
+/* ---- 导航链接 ---- */
+.pv-navbar__links {
+  display: flex;
+  align-items: center;
+  gap: var(--pv-space-2);
+}
+
+.pv-navbar__link {
+  padding: 6px 14px;
+  font-size: var(--pv-text-sm);
+  font-weight: 500;
+  color: var(--pv-text-muted);
+  border-radius: var(--pv-radius-sm);
+  transition:
+    color var(--pv-duration-fast) var(--pv-ease),
+    background var(--pv-duration-fast) var(--pv-ease);
+}
+
+.pv-navbar__link:hover {
+  color: var(--pv-text);
+  background: var(--pv-glass-hover-bg);
+}
+
+.pv-navbar__link--active {
+  color: var(--pv-accent);
+  background: var(--pv-accent-glow);
+}
+
+/* ---- 响应式导航 ---- */
+@media (max-width: 767px) {
+  .pv-navbar {
+    padding: 0 var(--pv-space-4);
+  }
+
+  .pv-navbar__links {
+    gap: 0;
+  }
+
+  .pv-navbar__link {
+    padding: 6px 10px;
+    font-size: var(--pv-text-xs);
+  }
+}
+
+/* ============================================================
+   10. 筛选栏 .pv-filter
+   ============================================================ */
+
+.pv-filter {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--pv-space-2);
+  padding: var(--pv-space-4) 0;
+}
+
+/* 筛选栏横向标签组 */
+.pv-filter__group {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--pv-space-2);
+}
+
+.pv-filter__label {
+  font-size: var(--pv-text-xs);
+  font-weight: 600;
+  color: var(--pv-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-right: var(--pv-space-2);
+}
+
+.pv-filter .pv-tag {
+  cursor: pointer;
+}
+
+/* ---- 搜索框在筛选栏中 ---- */
+.pv-filter .pv-input--search {
+  max-width: 260px;
+  margin-left: auto;
+}
+
+@media (max-width: 767px) {
+  .pv-filter {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--pv-space-3);
+  }
+
+  .pv-filter .pv-input--search {
+    max-width: 100%;
+    margin-left: 0;
+  }
+}

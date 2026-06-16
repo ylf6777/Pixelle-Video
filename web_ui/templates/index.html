@@ -1,0 +1,46 @@
+{# 工作流浏览器主页 — 继承 base.html #}
+{% extends "base.html" %}
+
+{#
+  导入 workflow_card 宏，用于循环渲染工作流卡片
+#}
+{% from "components/workflow_card.html" import render_workflow_card %}
+
+{% block content %}
+{# Hero 区域 — 渐变背景 + 大标题 + 副标题 #}
+<section class="pv-hero">
+  <div class="pv-hero__bg" aria-hidden="true"></div>
+  <div class="pv-hero__content">
+    <h1 class="pv-hero__title">AI 工作流浏览器</h1>
+    <p class="pv-hero__subtitle">探索、发现、运行 AI 创作工作流</p>
+  </div>
+</section>
+
+{# 筛选栏 #}
+{% include "components/filter_bar.html" %}
+
+{# 工作流卡片瀑布流网格 #}
+<section class="pv-masonry" id="workflow-grid"
+         hx-get="/api/workflows"
+         hx-trigger="load"
+         hx-swap="innerHTML">
+  {# 初始加载中占位 — htmx 收到响应后会替换此内容 #}
+  <div class="pv-masonry__loading">
+    {% for i in range(6) %}
+    <div class="pv-card pv-card--skeleton" aria-hidden="true">
+      <div class="pv-card__thumb"><div class="pv-skeleton-box"></div></div>
+      <div class="pv-card__body">
+        <div class="pv-skeleton-line pv-skeleton-line--lg"></div>
+        <div class="pv-skeleton-line"></div>
+        <div class="pv-skeleton-line pv-skeleton-line--sm"></div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+{# 空状态 — 搜索无结果时由 htmx 返回此片段，初始隐藏 #}
+<div id="empty-placeholder" style="display:none;">
+  {% include "components/empty_state.html" %}
+</div>
+{% endblock %}

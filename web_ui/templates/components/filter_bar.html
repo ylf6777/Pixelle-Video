@@ -1,0 +1,35 @@
+{#
+  筛选栏组件 — 横向分类标签组
+  用 Alpine.js x-data 管理当前选中分类，点击触发 htmx 请求过滤结果。
+#}
+<div class="pv-filter-bar"
+     x-data="{ active: 'all' }"
+     hx-get="/api/workflows"
+     hx-trigger="filter-change from:body"
+     hx-target="#workflow-grid"
+     hx-swap="innerHTML"
+     hx-include="[name='category']">
+  <nav class="pv-filter-bar__nav" role="tablist" aria-label="工作流分类筛选">
+    {% set categories = [
+      ('all', '全部'),
+      ('text2img', '文生图'),
+      ('img2video', '图生视频'),
+      ('digital-human', '数字人'),
+      ('audio', '音频'),
+      ('motion-transfer', '动作迁移'),
+      ('analysis', '分析'),
+    ] %}
+    {% for key, label in categories %}
+    <button class="pv-filter-bar__tab"
+            :class="{ 'pv-filter-bar__tab--active': active === '{{ key }}' }"
+            @click="active = '{{ key }}'; $dispatch('filter-change')"
+            role="tab"
+            :aria-selected="active === '{{ key }}' ? 'true' : 'false'"
+            type="button">
+      {{ label }}
+    </button>
+    {% endfor %}
+  </nav>
+  {# 隐藏的 category 输入，随筛选状态同步，供 htmx 包含在请求参数中 #}
+  <input type="hidden" name="category" :value="active">
+</div>

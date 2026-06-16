@@ -1,0 +1,21 @@
+{#
+  空状态组件 — 无搜索结果或无可显示内容时展示
+#}
+<div class="pv-empty">
+  {# 空状态图标 — 搜索无结果的放大镜占位图 #}
+  <div class="pv-empty__icon" aria-hidden="true">
+    <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+      <circle cx="35" cy="35" r="20" stroke="currentColor" stroke-width="3" opacity="0.4"/>
+      <path d="m50 50 15 15" stroke="currentColor" stroke-width="3" stroke-linecap="round" opacity="0.4"/>
+      <circle cx="35" cy="35" r="14" stroke="currentColor" stroke-width="2" opacity="0.2"/>
+      <path d="M29 35h12" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+      <path d="M35 29v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+    </svg>
+  </div>
+
+  {# 提示标题 #}
+  <h3 class="pv-empty__title">没有找到匹配的工作流</h3>
+
+  {# 提示文字 #}
+  <p class="pv-empty__text">试试更换筛选条件或搜索关键词</p>
+</div>

@@ -49,7 +49,7 @@ def load_config_dict(config_path: str = "config.yaml") -> dict:
     Examples:
         >>> data = load_config_dict("config.yaml")
         >>> print(data.get("project_name"))
-        "Pixelle-Video"
+        "ylf_Video"
     """
     config_file = Path(config_path)
 

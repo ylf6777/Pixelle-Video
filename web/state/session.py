@@ -41,7 +41,7 @@ def init_i18n():
 
 def get_pixelle_video():
     """
-    Get initialized Pixelle-Video instance with proper caching and cleanup
+    Get initialized ylf_Video instance with proper caching and cleanup
     
     Uses st.session_state to cache the instance per user session.
     ComfyKit is lazily initialized and automatically recreated on config changes.

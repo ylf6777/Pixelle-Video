@@ -1,22 +1,22 @@
-<h1 align="center">🎬 Pixelle-Video —— AI 全自动短视频引擎</h1>
+<h1 align="center">🎬 ylf_Video —— AI 全自动短视频引擎</h1>
 
 <p align="center"><a href="README_EN.md">English</a> | <b>中文</b></p>
 
 <p align="center">
   <a href="https://www.bilibili.com/video/BV1WzyGBnEVp/?vd_source=e7e7d4ca8db9a18c80f17a24a6582fca" target="_blank"><img src="https://img.shields.io/badge/🎥 视频教程-EA4C89" alt="视频教程"></a>
-  <a href="https://github.com/AIDC-AI/Pixelle-Video/releases" target="_blank"><img src="https://img.shields.io/badge/📦 Windows包-50C878" alt="Windows整合包"></a>
-  <a href="https://aidc-ai.github.io/Pixelle-Video/zh" target="_blank"><img src="https://img.shields.io/badge/📘 使用文档-4A90E2" alt="使用文档"></a>
-  <a href="https://github.com/AIDC-AI/Pixelle-Video/stargazers"><img src="https://img.shields.io/github/stars/AIDC-AI/Pixelle-Video.svg" alt="Stargazers"></a>
-  <a href="https://github.com/AIDC-AI/Pixelle-Video/issues"><img src="https://img.shields.io/github/issues/AIDC-AI/Pixelle-Video.svg" alt="Issues"></a>
-  <a href="https://github.com/AIDC-AI/Pixelle-Video/network/members"><img src="https://img.shields.io/github/forks/AIDC-AI/Pixelle-Video.svg" alt="Forks"></a>
-  <a href="https://github.com/AIDC-AI/Pixelle-Video/blob/main/LICENSE"><img src="https://img.shields.io/github/license/AIDC-AI/Pixelle-Video.svg" alt="License"></a>
+  <a href="https://github.com/AIDC-AI/ylf_Video/releases" target="_blank"><img src="https://img.shields.io/badge/📦 Windows包-50C878" alt="Windows整合包"></a>
+  <a href="https://aidc-ai.github.io/ylf_Video/zh" target="_blank"><img src="https://img.shields.io/badge/📘 使用文档-4A90E2" alt="使用文档"></a>
+  <a href="https://github.com/AIDC-AI/ylf_Video/stargazers"><img src="https://img.shields.io/github/stars/AIDC-AI/ylf_Video.svg" alt="Stargazers"></a>
+  <a href="https://github.com/AIDC-AI/ylf_Video/issues"><img src="https://img.shields.io/github/issues/AIDC-AI/ylf_Video.svg" alt="Issues"></a>
+  <a href="https://github.com/AIDC-AI/ylf_Video/network/members"><img src="https://img.shields.io/github/forks/AIDC-AI/ylf_Video.svg" alt="Forks"></a>
+  <a href="https://github.com/AIDC-AI/ylf_Video/blob/main/LICENSE"><img src="https://img.shields.io/github/license/AIDC-AI/ylf_Video.svg" alt="License"></a>
 </p>
 
 https://github.com/user-attachments/assets/a42e7457-fcc8-40da-83fc-784c45a8b95d
 
 <br/>
 
-只需输入一个 **主题**，Pixelle-Video 就能自动完成：
+只需输入一个 **主题**，ylf_Video 就能自动完成：
 - ✍️ 撰写视频文案  
 - 🎨 生成 AI 配图/视频  
 - 🗣️ 合成语音解说  
@@ -64,7 +64,7 @@ https://github.com/user-attachments/assets/a42e7457-fcc8-40da-83fc-784c45a8b95d
 
 ## 📊 视频生成流程
 
-Pixelle-Video 采用模块化设计，整个视频生成流程清晰简洁：
+ylf_Video 采用模块化设计，整个视频生成流程清晰简洁：
 
 ![视频生成流程图](resources/flow.png)
 
@@ -75,7 +75,7 @@ Pixelle-Video 采用模块化设计，整个视频生成流程清晰简洁：
 
 ## 🎬 视频示例
 
-以下是使用 Pixelle-Video 生成的实际案例，展示了不同主题和风格的视频效果：
+以下是使用 ylf_Video 生成的实际案例，展示了不同主题和风格的视频效果：
 
 ### 📱 扩展模块视频展示
 
@@ -185,7 +185,7 @@ Pixelle-Video 采用模块化设计，整个视频生成流程清晰简洁：
 
 **无需安装 Python、uv 或 ffmpeg，一键开箱即用！**
 
-👉 **[下载 Windows 一键整合包](https://github.com/AIDC-AI/Pixelle-Video/releases/latest)**
+👉 **[下载 Windows 一键整合包](https://github.com/AIDC-AI/ylf_Video/releases/latest)**
 
 1. 下载最新的 Windows 一键整合包并解压
 2. 双击运行 `start.bat` 启动 Web 界面
@@ -232,8 +232,8 @@ sudo apt install ffmpeg
 #### 第一步：下载项目
 
 ```bash
-git clone https://github.com/AIDC-AI/Pixelle-Video.git
-cd Pixelle-Video
+git clone https://github.com/AIDC-AI/ylf_Video.git
+cd ylf_Video
 ```
 
 #### 第二步：启动 Web 界面
@@ -376,7 +376,7 @@ uv run streamlit run web/app.py
 - 从下拉菜单选择模板，按尺寸分组显示（竖屏/横屏/方形）
 - 点击「预览模板」可以自定义参数测试效果
 - 如果懂 HTML，可以在 `templates/` 文件夹创建自己的模板
-- 🔗 [查看所有模板效果图](https://aidc-ai.github.io/Pixelle-Video/zh/user-guide/templates/#_3)
+- 🔗 [查看所有模板效果图](https://aidc-ai.github.io/ylf_Video/zh/user-guide/templates/#_3)
 
 #### API 视频生成
 当选择支持动态视频的模板或扩展工作流时，可以使用直连 API 视频模型生成片段。
@@ -428,7 +428,7 @@ A: **本项目完全支持免费运行！**
 
 ## 🤝 参考项目
 
-Pixelle-Video 的设计受到以下优秀开源项目的启发：
+ylf_Video 的设计受到以下优秀开源项目的启发：
 
 - [Pixelle-MCP](https://github.com/AIDC-AI/Pixelle-MCP) - ComfyUI MCP 服务器，让 AI 助手直接调用 ComfyUI
 - [MoneyPrinterTurbo](https://github.com/harry0703/MoneyPrinterTurbo) - 优秀的视频生成工具
@@ -450,8 +450,8 @@ Pixelle-Video 的设计受到以下优秀开源项目的启发：
 
 ## 📢 反馈与支持
 
-- 🐛 **遇到问题**: 提交 [Issue](https://github.com/AIDC-AI/Pixelle-Video/issues)
-- 💡 **功能建议**: 提交 [Feature Request](https://github.com/AIDC-AI/Pixelle-Video/issues)
+- 🐛 **遇到问题**: 提交 [Issue](https://github.com/AIDC-AI/ylf_Video/issues)
+- 💡 **功能建议**: 提交 [Feature Request](https://github.com/AIDC-AI/ylf_Video/issues)
 - ⭐ **给个 Star**: 如果这个项目对你有帮助，欢迎给个 Star 支持一下！
 
 
@@ -473,4 +473,4 @@ Pixelle-Video 的设计受到以下优秀开源项目的启发：
 
 ## ⭐ Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=AIDC-AI/Pixelle-Video&type=Date)](https://star-history.com/#AIDC-AI/Pixelle-Video&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=AIDC-AI/ylf_Video&type=Date)](https://star-history.com/#AIDC-AI/ylf_Video&Date)

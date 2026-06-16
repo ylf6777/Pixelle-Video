@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-Pixelle-Video - AI-powered video generator
+ylf_Video - AI-powered video generator
 
 Convention-based system with unified configuration management.
 

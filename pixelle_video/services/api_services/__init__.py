@@ -1,2 +1,2 @@
-"""API provider clients used by Pixelle-Video adapters."""
+"""API provider clients used by ylf_Video adapters."""
 

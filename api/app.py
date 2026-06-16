@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-Pixelle-Video FastAPI 应用入口
+ylf_Video FastAPI 应用入口
 
 包含 FastAPI 应用实例、CORS 中间件、路由注册和应用生命周期管理。
 
@@ -77,24 +77,24 @@ async def lifespan(app: FastAPI):
         - 关闭：取消所有正在运行的任务，关闭 ComfyKit 和 Playwright 浏览器
     """
     # 启动阶段
-    logger.info("🚀 正在启动 Pixelle-Video API...")
+    logger.info("🚀 正在启动 ylf_Video API...")
     await task_manager.start()
-    logger.info("✅ Pixelle-Video API 启动成功\n")
+    logger.info("✅ ylf_Video API 启动成功\n")
 
     yield
 
     # 关闭阶段
-    logger.info("🛑 正在关闭 Pixelle-Video API...")
+    logger.info("🛑 正在关闭 ylf_Video API...")
     await task_manager.stop()
     await shutdown_pixelle_video()
-    logger.info("✅ Pixelle-Video API 关闭完成")
+    logger.info("✅ ylf_Video API 关闭完成")
 
 
 # 创建 FastAPI 应用实例
 app = FastAPI(
-    title="Pixelle-Video API",
+    title="ylf_Video API",
     description="""
-    ## Pixelle-Video - AI 视频生成平台 API
+    ## ylf_Video - AI 视频生成平台 API
 
     ### 功能
     - 🤖 **LLM**: 大语言模型集成
@@ -147,6 +147,21 @@ app.include_router(files_router, prefix=api_config.api_prefix)
 app.include_router(resources_router, prefix=api_config.api_prefix)
 app.include_router(frame_router, prefix=api_config.api_prefix)
 
+# === Web UI 静态文件和页面路由 ===
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path as _Path
+
+_web_ui_dir = _Path(__file__).resolve().parent.parent / "web_ui"
+if _web_ui_dir.exists():
+    app.mount("/static", StaticFiles(directory=str(_web_ui_dir / "static")), name="static")
+
+    from web_ui.routes import router as web_ui_router
+    app.include_router(web_ui_router)
+
+    logger.info("Web UI 路由已注册: /, /workflow/*, /history")
+else:
+    logger.warning("web_ui/ 目录不存在，跳过 Web UI 路由注册")
+
 
 @app.get("/")
 async def root():
@@ -158,7 +173,7 @@ async def root():
             格式::
 
                 {
-                    "service": "Pixelle-Video API",
+                    "service": "ylf_Video API",
                     "version": "0.1.0",
                     "docs": "/docs",
                     "health": "/health",
@@ -169,7 +184,7 @@ async def root():
         - 无（纯查询端点）
     """
     return {
-        "service": "Pixelle-Video API",
+        "service": "ylf_Video API",
         "version": "0.1.0",
         "docs": api_config.docs_url,
         "health": "/health",
@@ -191,7 +206,7 @@ if __name__ == "__main__":
     import uvicorn
 
     # 解析命令行参数
-    parser = argparse.ArgumentParser(description="启动 Pixelle-Video API 服务器")
+    parser = argparse.ArgumentParser(description="启动 ylf_Video API 服务器")
     parser.add_argument("--host", default="0.0.0.0", help="绑定的主机地址")
     parser.add_argument("--port", type=int, default=8000, help="绑定的端口号")
     parser.add_argument("--reload", action="store_true", help="启用自动重载（开发模式）")
@@ -201,7 +216,7 @@ if __name__ == "__main__":
     # 打印启动信息
     print(f"""
 ╔══════════════════════════════════════════════════════════════╗
-║                    Pixelle-Video API Server                      ║
+║                    ylf_Video API Server                      ║
 ╚══════════════════════════════════════════════════════════════╝
 
 正在启动服务器: http://{args.host}:{args.port}

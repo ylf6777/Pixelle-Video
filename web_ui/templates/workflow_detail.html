@@ -1,0 +1,89 @@
+{# 工作流详情/运行页 — 继承 base.html #}
+{% extends "base.html" %}
+
+{% block content %}
+<div class="pv-detail">
+  {# 面包屑导航 #}
+  <nav class="pv-breadcrumb" aria-label="面包屑导航">
+    <a href="/" class="pv-breadcrumb__link">工作流</a>
+    <span class="pv-breadcrumb__sep" aria-hidden="true">/</span>
+    <span class="pv-breadcrumb__current">{{ workflow.name }}</span>
+  </nav>
+
+  <div class="pv-detail__layout">
+    {# 左侧：工作流详情 #}
+    <aside class="pv-detail__info">
+      {# 工作流名称 #}
+      <h1 class="pv-detail__title">{{ workflow.name }}</h1>
+
+      {# 来源 + 分类 + 版本 等信息行 #}
+      <dl class="pv-detail__meta">
+        <div class="pv-detail__meta-item">
+          <dt>来源</dt>
+          <dd>
+            <span class="pv-badge pv-badge--{{ workflow.source }}">
+              {% if workflow.source == 'runninghub' %}RunningHub
+              {% elif workflow.source == 'selfhost' %}本地
+              {% elif workflow.source == 'api' %}API
+              {% elif workflow.source == 'zealman' %}Zealman
+              {% else %}{{ workflow.source }}
+              {% endif %}
+            </span>
+          </dd>
+        </div>
+        <div class="pv-detail__meta-item">
+          <dt>分类</dt>
+          <dd>{{ workflow.category }}</dd>
+        </div>
+        <div class="pv-detail__meta-item">
+          <dt>版本</dt>
+          <dd>{{ workflow.version or 'v1.0' }}</dd>
+        </div>
+      </dl>
+
+      {# 描述 #}
+      <div class="pv-detail__desc">
+        <h2 class="pv-detail__section-title">描述</h2>
+        <p>{{ workflow.description }}</p>
+      </div>
+
+      {# 标签 #}
+      {% if workflow.tags %}
+      <div class="pv-detail__tags">
+        <h2 class="pv-detail__section-title">标签</h2>
+        <div class="pv-card__tags">
+          {% for tag in workflow.tags %}
+          <span class="pv-card__tag">{{ tag }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </aside>
+
+    {# 右侧：运行参数区域 #}
+    <section class="pv-detail__run">
+      <h2 class="pv-detail__section-title">运行参数</h2>
+
+      <form class="pv-run-form"
+            hx-post="/api/workflow/{{ workflow.id }}/run"
+            hx-target="#run-result"
+            hx-swap="innerHTML">
+        {# 占位参数表单 — 后续根据实际工作流参数动态生成 #}
+        <div class="pv-run-form__params">
+          <p class="pv-run-form__placeholder">
+            参数表单将在连接后端服务后动态加载。
+          </p>
+        </div>
+
+        {# 提交按钮 — 渐变按钮，全宽 #}
+        <button type="submit" class="pv-btn pv-btn--gradient pv-btn--block">
+          执行
+        </button>
+      </form>
+
+      {# 执行结果反馈区域 #}
+      <div id="run-result" class="pv-run-result" role="status" aria-live="polite"></div>
+    </section>
+  </div>
+</div>
+{% endblock %}

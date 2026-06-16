@@ -35,7 +35,7 @@ from web.utils.async_helpers import run_async
 
 # Page config
 st.set_page_config(
-    page_title="History - Pixelle-Video",
+    page_title="History - ylf_Video",
     page_icon="📚",
     layout="wide",
 )
@@ -381,7 +381,7 @@ def main():
     # Render header
     render_header()
     
-    # Initialize Pixelle-Video
+    # Initialize ylf_Video
     pixelle_video = get_pixelle_video()
     
     # Sidebar: Statistics + Filters

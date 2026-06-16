@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-Pixelle-Video 核心服务包
+ylf_Video 核心服务包
 
 提供所有原子能力服务的统一入口。
 

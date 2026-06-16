@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-Pixelle-Video Configuration System
+ylf_Video Configuration System
 
 Unified configuration management with Pydantic validation.
 

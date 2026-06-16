@@ -1,0 +1,126 @@
+/* ============================================================
+   layout.css — 布局系统
+   容器 / 瀑布流 / Hero / 响应式断点
+   ============================================================ */
+
+/* ---- 主内容容器 ---- */
+.pv-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 var(--pv-space-6);
+}
+
+/* ---- 瀑布流网格 ---- */
+.pv-masonry {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+
+/* ---- Hero 英雄区 ---- */
+.pv-hero {
+  position: relative;
+  padding: var(--pv-space-30) 0 var(--pv-space-20);
+  text-align: center;
+  overflow: hidden;
+}
+
+/* Hero 渐变背景：从 canvas 过渡到 surface */
+.pv-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      ellipse 800px 400px at 50% 0%,
+      var(--pv-accent-glow),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 600px 300px at 30% 100%,
+      var(--pv-accent-glow-alt),
+      transparent 70%
+    );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.pv-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Hero 标题 */
+.pv-hero__title {
+  font-family: var(--pv-font-display);
+  font-size: var(--pv-text-3xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: var(--pv-space-4);
+}
+
+.pv-hero__title .pv-accent {
+  color: var(--pv-accent);
+}
+
+/* Hero 副标题 */
+.pv-hero__subtitle {
+  font-size: var(--pv-text-lg);
+  color: var(--pv-text-muted);
+  max-width: 640px;
+  margin: 0 auto var(--pv-space-8);
+}
+
+/* ============================================================
+   响应式断点
+   ============================================================ */
+
+/* ---- 中等屏幕 (平板横屏 / 小笔记本) ---- */
+@media (max-width: 1199px) {
+  .pv-container {
+    padding: 0 var(--pv-space-4);
+  }
+
+  .pv-masonry {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+  }
+
+  .pv-hero {
+    padding: var(--pv-space-20) 0 var(--pv-space-12);
+  }
+
+  .pv-hero__title {
+    font-size: var(--pv-text-2xl);
+  }
+
+  .pv-hero__subtitle {
+    font-size: var(--pv-text-base);
+  }
+}
+
+/* ---- 小屏幕 (手机) ---- */
+@media (max-width: 767px) {
+  .pv-container {
+    padding: 0 var(--pv-space-3);
+  }
+
+  .pv-masonry {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .pv-hero {
+    padding: var(--pv-space-16) 0 var(--pv-space-10);
+  }
+
+  .pv-hero__title {
+    font-size: var(--pv-text-xl);
+  }
+
+  .pv-hero__subtitle {
+    font-size: var(--pv-text-sm);
+    max-width: 100%;
+  }
+}

@@ -57,7 +57,7 @@ class TTSSynthesizeRequest(BaseModel):
         """Pydantic 模型配置"""
         json_schema_extra = {
             "example": {
-                "text": "你好，欢迎使用 Pixelle-Video！",
+                "text": "你好，欢迎使用 ylf_Video！",
                 "workflow": "runninghub/tts_edge.json",
                 "ref_audio": None
             }

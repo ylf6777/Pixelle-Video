@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-Pixelle-Video 核心服务层（Service Layer）
+ylf_Video 核心服务层（Service Layer）
 
 提供对所有能力的统一访问入口（LLM、TTS、Image、Video 等）。
 全局单例 `pixelle_video` 是项目中所有服务的唯一访问点。
@@ -61,7 +61,7 @@ from pixelle_video.pipelines.asset_based import AssetBasedPipeline
 
 class PixelleVideoCore:
     """
-    Pixelle-Video 核心服务层
+    ylf_Video 核心服务层
 
     提供对所有 AI 能力的统一访问入口。
     所有服务在调用 `initialize()` 之前为 None，调用后完成初始化。
@@ -256,10 +256,10 @@ class PixelleVideoCore:
             await pixelle_video.initialize()
         """
         if self._initialized:
-            logger.warning("Pixelle-Video 已经初始化")
+            logger.warning("ylf_Video 已经初始化")
             return
 
-        logger.info("🚀 正在初始化 Pixelle-Video...")
+        logger.info("🚀 正在初始化 ylf_Video...")
 
         # 1. 初始化核心服务（ComfyKit 稍后懒加载）
         self.llm = LLMService(self.config)
@@ -287,7 +287,7 @@ class PixelleVideoCore:
         self.generate_video = self._create_generate_video_wrapper()
 
         self._initialized = True
-        logger.info("✅ Pixelle-Video 初始化成功\n")
+        logger.info("✅ ylf_Video 初始化成功\n")
 
     async def cleanup(self):
         """
@@ -434,12 +434,12 @@ class PixelleVideoCore:
 
         Returns:
             str: 配置中的项目名称。如果配置中未设置 project_name，返回默认值
-                "Pixelle-Video"。
+                "ylf_Video"。
 
         Requires:
             - self.config          — 必须已通过 config_manager 加载
         """
-        return self.config.get("project_name", "Pixelle-Video")
+        return self.config.get("project_name", "ylf_Video")
 
     def __repr__(self) -> str:
         """

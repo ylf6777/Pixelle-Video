@@ -1,0 +1,50 @@
+{# 历史记录页 — 继承 base.html #}
+{% extends "base.html" %}
+
+{% block content %}
+<div class="pv-history">
+  {# 页面标题 #}
+  <header class="pv-history__header">
+    <h1 class="pv-history__title">生成历史</h1>
+    <p class="pv-history__subtitle">查看所有已执行的工作流任务记录</p>
+  </header>
+
+  {# 历史记录列表容器 — htmx 加载 + 分页支持 #}
+  <section class="pv-history__list"
+           id="history-list"
+           hx-get="/api/history"
+           hx-trigger="load"
+           hx-swap="innerHTML">
+    {# 初始加载骨架屏占位 — 表格形式，5行占位 #}
+    <div class="pv-history__loading">
+      {% for i in range(5) %}
+      <div class="pv-card pv-card--skeleton pv-card--row" aria-hidden="true">
+        <div class="pv-skeleton-line pv-skeleton-line--lg" style="width:40%"></div>
+        <div class="pv-skeleton-line" style="width:15%"></div>
+        <div class="pv-skeleton-line pv-skeleton-line--sm" style="width:10%"></div>
+        <div class="pv-skeleton-line pv-skeleton-line--sm" style="width:20%"></div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  {# 分页区域 — ID 与 hx-target 一致，由 API 返回替换 #}
+  <nav class="pv-pagination" id="history-pagination"
+       hx-get="/api/history"
+       hx-trigger="load"
+       hx-target="#history-list"
+       hx-swap="innerHTML"
+       aria-label="分页导航">
+  </nav>
+
+  {# 空状态 — 无历史记录时显示 #}
+  <div id="history-empty" style="display:none;">
+    {% include "components/empty_state.html" %}
+    <script>
+      {# 无记录时修改空状态文案 #}
+      document.querySelector('#history-empty .pv-empty__title').textContent = '暂无生成历史';
+      document.querySelector('#history-empty .pv-empty__text').textContent = '运行第一个工作流后，记录将显示在这里';
+    </script>
+  </div>
+</div>
+{% endblock %}

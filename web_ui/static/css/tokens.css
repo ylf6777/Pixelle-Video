@@ -1,0 +1,86 @@
+/* ============================================================
+   tokens.css — ylf_Video 设计令牌全集
+   所有 CSS 自定义属性集中定义于此，全局可用
+   ============================================================ */
+
+:root {
+  /* ---- 画布与表面 ---- */
+  --pv-canvas: #06060f;
+  --pv-surface: #0d0d1f;
+  --pv-surface-raised: #12122a;
+
+  /* ---- 玻璃卡片 ---- */
+  --pv-glass-bg: rgba(255, 255, 255, 0.025);
+  --pv-glass-border: rgba(255, 255, 255, 0.06);
+  --pv-glass-hover-bg: rgba(255, 255, 255, 0.05);
+  --pv-glass-hover-border: rgba(255, 255, 255, 0.12);
+
+  /* ---- 强调色 ---- */
+  --pv-accent: #00d4ff;
+  --pv-accent-alt: #8b5cf6;
+  --pv-accent-glow: rgba(0, 212, 255, 0.25);
+  --pv-accent-glow-alt: rgba(139, 92, 246, 0.20);
+
+  /* ---- 文字 ---- */
+  --pv-text: rgba(255, 255, 255, 0.90);
+  --pv-text-muted: rgba(255, 255, 255, 0.52);
+  --pv-text-faint: rgba(255, 255, 255, 0.25);
+
+  /* ---- 语义色 ---- */
+  --pv-success: #00c853;
+  --pv-warning: #ff9100;
+  --pv-error: #ff1744;
+  --pv-info: #448aff;
+
+  /* ---- 字体 ---- */
+  --pv-font-display: 'Space Grotesk', sans-serif;
+  --pv-font-body: 'DM Sans', sans-serif;
+  --pv-font-mono: 'JetBrains Mono', monospace;
+
+  /* ---- 字号 ---- */
+  --pv-text-xs: 0.75rem;
+  --pv-text-sm: 0.875rem;
+  --pv-text-base: 1rem;
+  --pv-text-lg: 1.25rem;
+  --pv-text-xl: 1.563rem;
+  --pv-text-2xl: 1.953rem;
+  --pv-text-3xl: 2.441rem;
+
+  /* ---- 间距 ---- */
+  --pv-space-1: 4px;
+  --pv-space-2: 8px;
+  --pv-space-3: 12px;
+  --pv-space-4: 16px;
+  --pv-space-5: 20px;
+  --pv-space-6: 24px;
+  --pv-space-8: 32px;
+  --pv-space-10: 40px;
+  --pv-space-12: 48px;
+  --pv-space-16: 64px;
+  --pv-space-20: 80px;
+  --pv-space-30: 120px;
+
+  /* ---- 圆角 ---- */
+  --pv-radius-sm: 8px;
+  --pv-radius-md: 16px;
+  --pv-radius-lg: 24px;
+
+  /* ---- 阴影 ---- */
+  --pv-shadow-card:
+    0 1px 2px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(0, 212, 255, 0.04);
+  --pv-shadow-card-hover:
+    0 2px 4px rgba(0, 0, 0, 0.5),
+    0 0 24px var(--pv-accent-glow),
+    0 0 0 1px rgba(0, 212, 255, 0.12);
+  --pv-shadow-modal:
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 16px 48px rgba(0, 0, 0, 0.6);
+
+  /* ---- 动效 ---- */
+  --pv-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --pv-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --pv-duration-fast: 150ms;
+  --pv-duration-normal: 300ms;
+  --pv-duration-slow: 500ms;
+}

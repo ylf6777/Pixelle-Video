@@ -1,0 +1,231 @@
+/* ============================================================
+   animations.css — 4 级动效系统
+   页面入场 / 滚动揭示 / hover 反馈 / 微交互
+   所有动画包裹 @media (prefers-reduced-motion: reduce)
+   ============================================================ */
+
+/* ============================================================
+   A. 页面入场 (Stagger Fade-In-Up)
+   每个子元素延迟递增 50ms
+   ============================================================ */
+
+/* 基础入场单元 */
+.pv-fade-in-up {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: pv-fade-in-up var(--pv-duration-slow) var(--pv-ease) forwards;
+}
+
+@keyframes pv-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Stagger 延迟工具类 */
+.pv-stagger > *:nth-child(1)  { animation-delay: 0ms; }
+.pv-stagger > *:nth-child(2)  { animation-delay: 50ms; }
+.pv-stagger > *:nth-child(3)  { animation-delay: 100ms; }
+.pv-stagger > *:nth-child(4)  { animation-delay: 150ms; }
+.pv-stagger > *:nth-child(5)  { animation-delay: 200ms; }
+.pv-stagger > *:nth-child(6)  { animation-delay: 250ms; }
+.pv-stagger > *:nth-child(7)  { animation-delay: 300ms; }
+.pv-stagger > *:nth-child(8)  { animation-delay: 350ms; }
+.pv-stagger > *:nth-child(9)  { animation-delay: 400ms; }
+.pv-stagger > *:nth-child(10) { animation-delay: 450ms; }
+.pv-stagger > *:nth-child(11) { animation-delay: 500ms; }
+.pv-stagger > *:nth-child(12) { animation-delay: 550ms; }
+.pv-stagger > *:nth-child(13) { animation-delay: 600ms; }
+.pv-stagger > *:nth-child(14) { animation-delay: 650ms; }
+.pv-stagger > *:nth-child(15) { animation-delay: 700ms; }
+.pv-stagger > *:nth-child(16) { animation-delay: 750ms; }
+.pv-stagger > *:nth-child(17) { animation-delay: 800ms; }
+.pv-stagger > *:nth-child(18) { animation-delay: 850ms; }
+.pv-stagger > *:nth-child(19) { animation-delay: 900ms; }
+.pv-stagger > *:nth-child(20) { animation-delay: 950ms; }
+
+/* 确保 stagger 子元素初始状态透明 */
+.pv-stagger > * {
+  opacity: 0;
+  animation: pv-fade-in-up var(--pv-duration-slow) var(--pv-ease) forwards;
+}
+
+/* ============================================================
+   B. 滚动揭示 (配合 Intersection Observer)
+   需要 JS 添加 .pv-reveal--visible 类名
+   ============================================================ */
+
+.pv-reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity var(--pv-duration-slow) var(--pv-ease),
+    transform var(--pv-duration-slow) var(--pv-ease);
+}
+
+.pv-reveal--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 不同方向的滚动揭示 */
+.pv-reveal--left {
+  transform: translateX(-24px);
+}
+
+.pv-reveal--left.pv-reveal--visible {
+  transform: translateX(0);
+}
+
+.pv-reveal--right {
+  transform: translateX(24px);
+}
+
+.pv-reveal--right.pv-reveal--visible {
+  transform: translateX(0);
+}
+
+.pv-reveal--scale {
+  transform: scale(0.92);
+}
+
+.pv-reveal--scale.pv-reveal--visible {
+  transform: scale(1);
+}
+
+/* ============================================================
+   C. hover 反馈动画
+   ============================================================ */
+
+/* 通用 hover 提升 */
+.pv-hover-lift {
+  transition: transform var(--pv-duration-fast) var(--pv-ease);
+}
+
+.pv-hover-lift:hover {
+  transform: translateY(-2px);
+}
+
+/* hover 发光 */
+.pv-hover-glow {
+  transition: box-shadow var(--pv-duration-normal) var(--pv-ease);
+}
+
+.pv-hover-glow:hover {
+  box-shadow: 0 0 24px var(--pv-accent-glow);
+}
+
+/* hover 缩放 */
+.pv-hover-scale {
+  transition: transform var(--pv-duration-fast) var(--pv-ease);
+}
+
+.pv-hover-scale:hover {
+  transform: scale(1.04);
+}
+
+/* ============================================================
+   D. 微交互
+   ============================================================ */
+
+/* 脉冲 (吸引注意) */
+.pv-pulse {
+  animation: pv-pulse 2s var(--pv-ease) infinite;
+}
+
+@keyframes pv-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.5; }
+}
+
+/* 呼吸发光 */
+.pv-breathe {
+  animation: pv-breathe 3s ease-in-out infinite;
+}
+
+@keyframes pv-breathe {
+  0%, 100% { box-shadow: 0 0 4px var(--pv-accent-glow); }
+  50%      { box-shadow: 0 0 20px var(--pv-accent-glow); }
+}
+
+/* 摇晃 (错误提示) */
+.pv-shake {
+  animation: pv-shake 0.4s var(--pv-ease);
+}
+
+@keyframes pv-shake {
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(-6px); }
+  40%      { transform: translateX(6px); }
+  60%      { transform: translateX(-4px); }
+  80%      { transform: translateX(4px); }
+}
+
+/* 旋转 (加载指示) */
+.pv-spin {
+  animation: pv-spin 0.8s linear infinite;
+}
+
+@keyframes pv-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 淡入 */
+.pv-fade-in {
+  animation: pv-fade-in var(--pv-duration-normal) var(--pv-ease);
+}
+
+@keyframes pv-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* 滑入上 */
+.pv-slide-up {
+  animation: pv-slide-up var(--pv-duration-normal) var(--pv-ease-spring);
+}
+
+@keyframes pv-slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   E. prefers-reduced-motion — 尊重用户运动偏好
+   所有动画在此禁用或最小化
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+
+  .pv-fade-in-up,
+  .pv-stagger > * {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+
+  .pv-reveal,
+  .pv-reveal--left,
+  .pv-reveal--right,
+  .pv-reveal--scale {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

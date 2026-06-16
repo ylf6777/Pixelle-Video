@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-Pixelle-Video API 层
+ylf_Video API 层
 
 基于 FastAPI 的 REST API，提供视频生成、LLM 对话、TTS 合成等服务的 HTTP 接口。
 

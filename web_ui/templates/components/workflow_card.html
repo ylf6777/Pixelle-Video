@@ -1,0 +1,60 @@
+{#
+  工作流卡片组件 — Jinja2 宏
+  用法: {% from "components/workflow_card.html" import render_workflow_card %}
+        {{ render_workflow_card(workflow) }}
+
+  参数 workflow 字段:
+    - id: 工作流唯一标识
+    - name: 工作流名称
+    - description: 描述文本
+    - source: 来源 (runninghub / selfhost / api / zealman)
+    - tags: 标签列表
+    - thumbnail: 缩略图 URL(可选，无则显示渐变色占位)
+#}
+{% macro render_workflow_card(workflow) -%}
+<article class="pv-card" data-source="{{ workflow.source }}">
+  {# 缩略图区域 — 有图显示图，无图显示渐变色 + CSS 噪点占位 #}
+  <div class="pv-card__thumb">
+    {% if workflow.thumbnail %}
+    <img src="{{ workflow.thumbnail }}" alt="{{ workflow.name }} 缩略图" loading="lazy" class="pv-card__thumb-img">
+    {% else %}
+    <div class="pv-card__thumb-placeholder" aria-hidden="true">
+      <div class="pv-card__thumb-grad"></div>
+      <div class="pv-card__thumb-noise"></div>
+    </div>
+    {% endif %}
+    {# 来源徽章 #}
+    <span class="pv-badge pv-badge--{{ workflow.source }}">
+      {% if workflow.source == 'runninghub' %}RunningHub
+      {% elif workflow.source == 'selfhost' %}本地
+      {% elif workflow.source == 'api' %}API
+      {% elif workflow.source == 'zealman' %}Zealman
+      {% else %}{{ workflow.source }}
+      {% endif %}
+    </span>
+  </div>
+
+  {# 卡片正文 #}
+  <div class="pv-card__body">
+    {# 工作流名称 — Space Grotesk 600 #}
+    <h3 class="pv-card__title">{{ workflow.name }}</h3>
+
+    {# 描述 — 单行省略 #}
+    <p class="pv-card__desc">{{ workflow.description }}</p>
+
+    {# 标签行 — JetBrains Mono #}
+    {% if workflow.tags %}
+    <div class="pv-card__tags">
+      {% for tag in workflow.tags %}
+      <span class="pv-card__tag">{{ tag }}</span>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {# 操作按钮 — 渐变按钮，链接到详情页 #}
+    <a href="/workflow/{{ workflow.id }}" class="pv-btn pv-btn--gradient">
+      使用
+    </a>
+  </div>
+</article>
+{%- endmacro %}

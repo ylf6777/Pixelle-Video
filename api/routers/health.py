@@ -33,7 +33,7 @@ class HealthResponse(BaseModel):
     """
     status: str = "healthy"
     version: str = "0.1.0"
-    service: str = "Pixelle-Video API"
+    service: str = "ylf_Video API"
 
 
 class CapabilitiesResponse(BaseModel):

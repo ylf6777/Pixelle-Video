@@ -32,13 +32,13 @@ from loguru import logger
 from pixelle_video.service import PixelleVideoCore
 
 
-# 全局 Pixelle-Video 实例，在 API 进程生命周期内复用
+# 全局 ylf_Video 实例，在 API 进程生命周期内复用
 _pixelle_video_instance: PixelleVideoCore = None
 
 
 async def get_pixelle_video() -> PixelleVideoCore:
     """
-    获取 Pixelle-Video 核心实例（用于 FastAPI 依赖注入）
+    获取 ylf_Video 核心实例（用于 FastAPI 依赖注入）
 
     在 API 进程生命周期内仅初始化一次（单例模式）。
     首次调用时创建实例并调用 initialize()，后续调用直接返回已有实例。
@@ -65,14 +65,14 @@ async def get_pixelle_video() -> PixelleVideoCore:
     if _pixelle_video_instance is None:
         _pixelle_video_instance = PixelleVideoCore()
         await _pixelle_video_instance.initialize()
-        logger.info("✅ Pixelle-Video 已为 API 初始化完成")
+        logger.info("✅ ylf_Video 已为 API 初始化完成")
 
     return _pixelle_video_instance
 
 
 async def shutdown_pixelle_video():
     """
-    关闭 Pixelle-Video 实例并清理所有资源
+    关闭 ylf_Video 实例并清理所有资源
 
     在 FastAPI 应用 shutdown 事件中调用。
     清理内容包括：关闭 ComfyKit 会话、关闭 HTML 帧生成器的浏览器实例。
@@ -84,7 +84,7 @@ async def shutdown_pixelle_video():
     """
     global _pixelle_video_instance
     if _pixelle_video_instance:
-        logger.info("正在关闭 Pixelle-Video...")
+        logger.info("正在关闭 ylf_Video...")
         await _pixelle_video_instance.cleanup()
         _pixelle_video_instance = None
 

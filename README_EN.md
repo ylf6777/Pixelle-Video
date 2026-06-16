@@ -1,20 +1,20 @@
-<h1 align="center">🎬 Pixelle-Video —— AI Fully Automated Short Video Engine</h1>
+<h1 align="center">🎬 ylf_Video —— AI Fully Automated Short Video Engine</h1>
 
 <p align="center"><b>English</b> | <a href="README.md">中文</a></p>
 
 <p align="center">
   <a href="https://www.youtube.com/watch?v=uUkx-lRxLjc" target="_blank"><img src="https://img.shields.io/badge/🎥 Video%20Tutorial-EA4C89" alt="Video Tutorial"></a>
-  <a href="https://github.com/AIDC-AI/Pixelle-Video/releases" target="_blank"><img src="https://img.shields.io/badge/📦 Windows-50C878" alt="Windows Package"></a>
-  <a href="https://aidc-ai.github.io/Pixelle-Video" target="_blank"><img src="https://img.shields.io/badge/📘 Documentation-4A90E2" alt="Documentation"></a>
-  <a href="https://github.com/AIDC-AI/Pixelle-Video/stargazers"><img src="https://img.shields.io/github/stars/AIDC-AI/Pixelle-Video.svg" alt="Stargazers"></a>
-  <a href="https://github.com/AIDC-AI/Pixelle-Video/issues"><img src="https://img.shields.io/github/issues/AIDC-AI/Pixelle-Video.svg" alt="Issues"></a>
-  <a href="https://github.com/AIDC-AI/Pixelle-Video/network/members"><img src="https://img.shields.io/github/forks/AIDC-AI/Pixelle-Video.svg" alt="Forks"></a>
-  <a href="https://github.com/AIDC-AI/Pixelle-Video/blob/main/LICENSE"><img src="https://img.shields.io/github/license/AIDC-AI/Pixelle-Video.svg" alt="License"></a>
+  <a href="https://github.com/AIDC-AI/ylf_Video/releases" target="_blank"><img src="https://img.shields.io/badge/📦 Windows-50C878" alt="Windows Package"></a>
+  <a href="https://aidc-ai.github.io/ylf_Video" target="_blank"><img src="https://img.shields.io/badge/📘 Documentation-4A90E2" alt="Documentation"></a>
+  <a href="https://github.com/AIDC-AI/ylf_Video/stargazers"><img src="https://img.shields.io/github/stars/AIDC-AI/ylf_Video.svg" alt="Stargazers"></a>
+  <a href="https://github.com/AIDC-AI/ylf_Video/issues"><img src="https://img.shields.io/github/issues/AIDC-AI/ylf_Video.svg" alt="Issues"></a>
+  <a href="https://github.com/AIDC-AI/ylf_Video/network/members"><img src="https://img.shields.io/github/forks/AIDC-AI/ylf_Video.svg" alt="Forks"></a>
+  <a href="https://github.com/AIDC-AI/ylf_Video/blob/main/LICENSE"><img src="https://img.shields.io/github/license/AIDC-AI/ylf_Video.svg" alt="License"></a>
 </p>
 
 https://github.com/user-attachments/assets/a42e7457-fcc8-40da-83fc-784c45a8b95d
 
-Just input a **topic**, and Pixelle-Video will automatically:
+Just input a **topic**, and ylf_Video will automatically:
 - ✍️ Write video script
 - 🎨 Generate AI images/videos  
 - 🗣️ Synthesize voice narration
@@ -63,7 +63,7 @@ Just input a **topic**, and Pixelle-Video will automatically:
 
 ## 📊 Video Generation Pipeline
 
-Pixelle-Video adopts a modular design, the entire video generation process is clear and concise:
+ylf_Video adopts a modular design, the entire video generation process is clear and concise:
 
 ![Video Generation Flow](resources/flow_en.png)
 
@@ -74,7 +74,7 @@ Each step supports flexible customization, allowing you to choose different AI m
 
 ## 🎬 Video Examples
 
-Here are actual cases generated using Pixelle-Video, showcasing video effects with different themes and styles:
+Here are actual cases generated using ylf_Video, showcasing video effects with different themes and styles:
 
 ### 📱 Extension Module Video Showcase
 
@@ -181,7 +181,7 @@ Here are actual cases generated using Pixelle-Video, showcasing video effects wi
 
 **No need to install Python, uv, or ffmpeg - ready to use out of the box!**
 
-👉 **[Download Windows All-in-One Package](https://github.com/AIDC-AI/Pixelle-Video/releases/latest)**
+👉 **[Download Windows All-in-One Package](https://github.com/AIDC-AI/ylf_Video/releases/latest)**
 
 1. Download the latest Windows All-in-One Package and extract it
 2. Double-click `start.bat` to launch the Web interface
@@ -228,8 +228,8 @@ After installation, run `ffmpeg -version` in the terminal to verify successful i
 #### Step 1: Clone Project
 
 ```bash
-git clone https://github.com/AIDC-AI/Pixelle-Video.git
-cd Pixelle-Video
+git clone https://github.com/AIDC-AI/ylf_Video.git
+cd ylf_Video
 ```
 
 #### Step 2: Launch Web Interface
@@ -372,7 +372,7 @@ Determines video layout and design.
 - Select template from dropdown menu, displayed grouped by dimension (portrait/landscape/square)
 - Click "Preview Template" to test effect with custom parameters
 - If you know HTML, you can create your own templates in the `templates/` folder
-- 🔗 [View All Template Previews](https://aidc-ai.github.io/Pixelle-Video/user-guide/templates/#built-in-template-preview)
+- 🔗 [View All Template Previews](https://aidc-ai.github.io/ylf_Video/user-guide/templates/#built-in-template-preview)
 
 #### API Video Generation
 When using dynamic video templates or extension workflows, you can generate clips through direct API video models.
@@ -424,7 +424,7 @@ A: **This project fully supports free operation!**
 
 ## 🤝 Referenced Projects
 
-Pixelle-Video design is inspired by the following excellent open-source projects:
+ylf_Video design is inspired by the following excellent open-source projects:
 
 - [Pixelle-MCP](https://github.com/AIDC-AI/Pixelle-MCP) - ComfyUI MCP server, allows AI assistants to directly call ComfyUI
 - [MoneyPrinterTurbo](https://github.com/harry0703/MoneyPrinterTurbo) - Excellent video generation tool
@@ -446,8 +446,8 @@ Scan the QR codes below to join our communities for latest updates and technical
 
 ## 📢 Feedback and Support
 
-- 🐛 **Encountered Issues**: Submit [Issue](https://github.com/AIDC-AI/Pixelle-Video/issues)
-- 💡 **Feature Suggestions**: Submit [Feature Request](https://github.com/AIDC-AI/Pixelle-Video/issues)
+- 🐛 **Encountered Issues**: Submit [Issue](https://github.com/AIDC-AI/ylf_Video/issues)
+- 💡 **Feature Suggestions**: Submit [Feature Request](https://github.com/AIDC-AI/ylf_Video/issues)
 - ⭐ **Give a Star**: If this project helps you, feel free to give a Star for support!
 
 
@@ -466,4 +466,4 @@ This project is released under the Apache License 2.0. For details, please see t
 
 ## ⭐ Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=AIDC-AI/Pixelle-Video&type=Date)](https://star-history.com/#AIDC-AI/Pixelle-Video&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=AIDC-AI/ylf_Video&type=Date)](https://star-history.com/#AIDC-AI/ylf_Video&Date)

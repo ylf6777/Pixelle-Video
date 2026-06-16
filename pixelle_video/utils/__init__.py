@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-Pixelle-Video Utilities
+ylf_Video Utilities
 
 Utility functions and helpers for content generation, LLM interaction,
 file/path management, TTS, templates, and workflow resolution.

@@ -242,7 +242,7 @@ class ConfigManager:
 
         Examples:
             >>> cm.get("project_name")
-            "Pixelle-Video"
+            "ylf_Video"
         """
         return self.config.to_dict().get(key, default)
 
