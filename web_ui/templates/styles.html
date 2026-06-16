@@ -22,15 +22,17 @@
          @click="select('{{ s.key }}')"
          x-show="!filterCat || filterCat==='{{ s.category }}'">
       <div class="pv-card__thumb">
-        <iframe src="{{ s.tpl_path }}" frameborder="0" scrolling="no"
-          style="width:540px;height:960px;transform:scale(0.24);transform-origin:0 0;pointer-events:none;border:none"
-          loading="lazy"></iframe>
+        <div class="pv-card__thumb-grad" style="background:linear-gradient(135deg,{{ loop.cycle('#667eea,#764ba2','#f093fb,#f5576c','#4facfe,#00f2fe','#43e97b,#38f9d7','#fa709a,#fee140') }})"></div>
         <span class="pv-badge pv-badge--{{ s.category }}" style="position:absolute;top:8px;right:8px;z-index:1">{{ s.category }}</span>
       </div>
       <div class="pv-card__body">
         <h3 class="pv-card__title">{{ s.name }}</h3>
         <p class="pv-card__desc">{{ s.desc }}</p>
-        <span class="pv-style-card__check" x-show="selected === '{{ s.key }}'">✓ 已选中</span>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <a href="/templates/1080x1920/{{ s.key }}.html" target="_blank"
+            class="pv-btn-save" style="padding:4px 12px;font-size:12px;text-decoration:none">查看模板</a>
+          <span class="pv-style-card__check" x-show="selected === '{{ s.key }}'">✓</span>
+        </div>
       </div>
     </div>
     {% endfor %}

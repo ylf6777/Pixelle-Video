@@ -471,10 +471,7 @@ async def styles_page(request: Request):
     }
     style_list = []
     for key, (name, desc, cat) in TEMPLATE_INFO.items():
-        style_list.append({
-            "key": key, "name": name, "desc": desc, "category": cat,
-            "tpl_path": f"/templates/1080x1920/{key}.html",
-        })
+        style_list.append({"key": key, "name": name, "desc": desc, "category": cat})
     return templates.TemplateResponse("styles.html", {"request": request, "styles": style_list})
 
 
