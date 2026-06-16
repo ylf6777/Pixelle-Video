@@ -1,18 +1,38 @@
-{# 工作流浏览器主页 — 分类在导航栏 #}
+{# 主页 — 工作流浏览器 + 作品展示 #}
 {% extends "base.html" %}
 {% from "components/workflow_card.html" import render_workflow_card %}
 {% block content %}
 
-<div class="pv-browser" x-data="workflowBrowser()" x-init="init()"
+<div class="pv-browser" x-data="homePage()" x-init="init()"
      @category-change.window="activeCategory=$event.detail;filter()">
 
-  {# 搜索框 #}
-  <div class="pv-search-bar">
-    <input type="search" x-model="query" @input="filter()"
-      placeholder="搜索工作流..." class="pv-input pv-input--search">
+  {# 搜索功能区 #}
+  <div class="pv-search-section">
+    <form class="pv-search-box" @submit.prevent="filter()">
+      <input type="search" x-model="query" @input="filter()"
+        placeholder="搜索工作流..." class="pv-input pv-input--search pv-search-box__input">
+      <button type="submit" class="pv-btn pv-btn--gradient pv-search-box__btn">搜索</button>
+    </form>
   </div>
 
-  {# 卡片网格 — 服务端渲染 + Alpine.js show/hide #}
+  {# 作品展示区头部 #}
+  <div class="pv-showcase-header">
+    <h2 class="pv-showcase__title">作品展示</h2>
+    <nav class="pv-showcase__cats" role="tablist" aria-label="分类筛选"
+         x-data="categoryFilter()">
+      {% set cats = [
+        ('digital_human', '数字人'), ('image', '图片生成'),
+        ('video', '视频生成'), ('action', '动作模仿')
+      ] %}
+      {% for id, label in cats %}
+      <button class="pv-showcase__cat"
+        :class="{ 'pv-showcase__cat--active': activeCategory === '{{ id }}' }"
+        @click="selectCategory('{{ id }}')" type="button">{{ label }}</button>
+      {% endfor %}
+    </nav>
+  </div>
+
+  {# 作品卡片网格 #}
   <section class="pv-masonry" id="workflow-grid">
     {% for wf in workflows %}
     <div class="pv-card"
@@ -29,4 +49,52 @@
     </div>
   </section>
 </div>
+
+<script>
+document.addEventListener('alpine:init', () => {
+  Alpine.data('categoryFilter', () => ({
+    activeCategory: '',
+    selectCategory(cat) {
+      this.activeCategory = this.activeCategory === cat ? '' : cat;
+      window.dispatchEvent(new CustomEvent('category-change', {detail: this.activeCategory}));
+    }
+  }));
+  Alpine.data('homePage', () => ({
+    query: '', activeCategory: '',
+    init() {
+      const p = new URLSearchParams(window.location.search);
+      this.activeCategory = p.get('category') || '';
+      this.query = p.get('q') || '';
+      if (this.activeCategory || this.query) this.filter();
+    },
+    filter() {
+      const url = new URL(window.location);
+      if (this.activeCategory) url.searchParams.set('category', this.activeCategory);
+      else url.searchParams.delete('category');
+      if (this.query) url.searchParams.set('q', this.query);
+      else url.searchParams.delete('q');
+      window.history.replaceState({}, '', url);
+    },
+    matchCard(wf) {
+      if (this.activeCategory && wf.category !== this.activeCategory) return false;
+      if (this.query.trim()) {
+        const q = this.query.toLowerCase();
+        const name = (wf.name || '').toLowerCase();
+        const desc = (wf.description || '').toLowerCase();
+        const tags = (wf.tags || []).join(' ').toLowerCase();
+        if (!name.includes(q) && !desc.includes(q) && !tags.includes(q)) return false;
+      }
+      return true;
+    },
+    hasVisible() {
+      const grid = document.getElementById('workflow-grid');
+      if (!grid) return true;
+      for (const card of grid.querySelectorAll('.pv-card:not(.pv-empty)')) {
+        if (card.style.display !== 'none' && getComputedStyle(card).display !== 'none') return true;
+      }
+      return false;
+    }
+  }));
+});
+</script>
 {% endblock %}

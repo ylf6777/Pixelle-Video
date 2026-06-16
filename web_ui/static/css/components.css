@@ -770,7 +770,103 @@
 }
 
 /* ============================================================
-   10. 筛选栏 .pv-filter
+   10. 搜索功能区
+   ============================================================ */
+
+.pv-search-section {
+  display: flex;
+  justify-content: center;
+  padding: var(--pv-space-6) 0 var(--pv-space-8);
+}
+
+.pv-search-box {
+  display: flex;
+  gap: var(--pv-space-2);
+  width: 100%;
+  max-width: 640px;
+}
+
+.pv-search-box__input {
+  flex: 1;
+  height: 44px;
+  padding: 0 var(--pv-space-4);
+  border-radius: var(--pv-radius-sm);
+  border: 1px solid var(--pv-glass-border);
+  background: var(--pv-glass-bg);
+  color: var(--pv-text);
+  font-size: var(--pv-text-base);
+  font-family: var(--pv-font-body);
+  outline: none;
+  transition: border-color var(--pv-duration-fast) var(--pv-ease);
+}
+.pv-search-box__input:focus {
+  border-color: var(--pv-accent);
+}
+.pv-search-box__input::placeholder {
+  color: var(--pv-text-faint);
+}
+.pv-search-box__btn {
+  height: 44px;
+  padding: 0 var(--pv-space-6);
+  white-space: nowrap;
+}
+
+/* ============================================================
+   11. 作品展示区头部
+   ============================================================ */
+
+.pv-showcase-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--pv-space-5);
+  margin-bottom: var(--pv-space-6);
+  padding-bottom: var(--pv-space-4);
+  border-bottom: 1px solid var(--pv-glass-border);
+}
+
+.pv-showcase__title {
+  font-family: var(--pv-font-display);
+  font-size: var(--pv-text-xl);
+  font-weight: 700;
+  color: var(--pv-text);
+  margin: 0;
+}
+
+.pv-showcase__cats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pv-showcase__cat {
+  padding: 6px 18px;
+  border-radius: 20px;
+  border: 1px solid var(--pv-glass-border);
+  background: var(--pv-glass-bg);
+  color: var(--pv-text-muted);
+  font-size: var(--pv-text-sm);
+  font-family: var(--pv-font-body);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--pv-duration-fast) var(--pv-ease);
+  white-space: nowrap;
+  min-height: 36px;
+}
+.pv-showcase__cat:hover {
+  border-color: var(--pv-accent);
+  color: var(--pv-accent);
+  background: rgba(0,212,255,0.06);
+}
+.pv-showcase__cat--active {
+  background: var(--pv-accent);
+  color: #000;
+  border-color: var(--pv-accent);
+  font-weight: 600;
+}
+
+/* ============================================================
+   12. 筛选栏 .pv-filter (legacy)
    ============================================================ */
 
 .pv-filter {

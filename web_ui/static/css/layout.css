@@ -10,6 +10,15 @@
   padding: 0 var(--pv-space-6);
 }
 
+/* ---- 主页浏览器 ---- */
+.pv-browser {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--pv-space-4) var(--pv-space-6);
+}
+
+/* ---- 搜索框在筛选栏中 ---- */
+
 /* ---- 瀑布流网格 ---- */
 .pv-masonry {
   display: grid;
@@ -102,13 +111,26 @@
 
 /* ---- 小屏幕 (手机) ---- */
 @media (max-width: 767px) {
-  .pv-container {
+  .pv-container, .pv-browser {
     padding: 0 var(--pv-space-3);
   }
 
   .pv-masonry {
     grid-template-columns: 1fr;
     gap: 12px;
+  }
+
+  .pv-search-box { max-width: 100%; }
+  .pv-search-box__btn { padding: 0 var(--pv-space-4); }
+
+  .pv-showcase-header {
+    flex-direction: column;
+    gap: var(--pv-space-3);
+  }
+
+  .pv-showcase__cat {
+    padding: 5px 14px;
+    font-size: var(--pv-text-xs);
   }
 
   .pv-hero {
