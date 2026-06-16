@@ -1,0 +1,44 @@
+# ylf_Video Systemd 进程守护
+#
+# 部署:
+#   sudo cp deploy/systemd/ylf-video.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now ylf-video
+#
+# 管理:
+#   sudo systemctl status ylf-video
+#   sudo systemctl restart ylf-video
+#   sudo journalctl -u ylf-video -f
+
+[Unit]
+Description=ylf_Video - AI Video Generation Platform
+After=network.target
+
+[Service]
+Type=simple
+User=ylf-video
+Group=ylf-video
+WorkingDirectory=/opt/ylf_video
+
+# 启动命令
+ExecStart=/home/ylf-video/.local/bin/uv run python api/app.py --host 127.0.0.1 --port 8000
+
+# 环境变量
+Environment="PATH=/home/ylf-video/.local/bin:/usr/bin:/bin"
+Environment="PYTHONUNBUFFERED=1"
+
+# 自动重启策略
+Restart=always
+RestartSec=5
+
+# 资源限制
+LimitNOFILE=65536
+MemoryMax=4G
+
+# 日志
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ylf-video
+
+[Install]
+WantedBy=multi-user.target

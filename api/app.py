@@ -37,6 +37,16 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
+# 配置文件日志轮转（生产环境）
+logger.add(
+    "logs/ylf_video_{time:YYYY-MM-DD}.log",
+    rotation="00:00",       # 每天午夜轮转
+    retention="30 days",    # 保留 30 天
+    level="INFO",
+    format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}:{function}:{line} | {message}",
+    encoding="utf-8",
+)
+
 from api.config import api_config
 from api.tasks import task_manager
 from api.dependencies import shutdown_pixelle_video
