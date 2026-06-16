@@ -1048,6 +1048,7 @@
 .pv-btn-save {
   background: var(--pv-accent);
   color: #000;
+  font-family: "Microsoft YaHei","PingFang SC","Hiragino Sans GB","Noto Sans SC",var(--pv-font-body);
 }
 .pv-btn-save:hover {
   background: #00e0ff;
