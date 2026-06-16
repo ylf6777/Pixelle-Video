@@ -1,0 +1,23 @@
+[
+  {
+    "work_id": "2400b879-30f",
+    "title": "测试上传",
+    "author": "老杨",
+    "file_path": "works\\3fe95597-a1f\\test.png",
+    "media_type": "image",
+    "category": "图片生成",
+    "description": "测试描述",
+    "status": "uploaded",
+    "created_at": "2026-06-16T11:42:55.322940"
+  },
+  {
+    "work_id": "fa48d29d-bdd",
+    "title": "测试作品",
+    "author": "老杨",
+    "file_path": "works\\1a964155-0f9\\t.jpg",
+    "media_type": "image",
+    "status": "approved",
+    "created_at": "2026-06-16T11:34:43.732996",
+    "reviewed_at": "2026-06-16T11:34:43.738263"
+  }
+]

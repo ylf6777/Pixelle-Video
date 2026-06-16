@@ -441,17 +441,37 @@ async def quick_create_page(request: Request):
 
 @router.get("/styles", response_class=HTMLResponse)
 async def styles_page(request: Request):
-    """风格模板展示页"""
-    from web.prompt_templates import BUILTIN_TEMPLATES
+    """风格模板展示页 — 25 种画面模板"""
+    TEMPLATE_INFO = {
+        "image_default": ("默认图片", "标准竖屏排版，适合通用视频", "图片"),
+        "image_blur_card": ("毛玻璃卡片", "背景模糊+文字卡片，现代简洁", "图片"),
+        "image_book": ("书本翻页", "仿书本排版，适合知识类内容", "图片"),
+        "image_cartoon": ("卡通动漫", "卡通风格装饰，活泼可爱", "图片"),
+        "image_elegant": ("优雅简约", "大留白+衬线字体，高端质感", "图片"),
+        "image_excerpt": ("文摘卡片", "半透明卡片叠加，文艺清新", "图片"),
+        "image_fashion_vintage": ("时尚复古", "复古色调+怀旧纹理", "图片"),
+        "image_full": ("全屏大图", "图片全屏铺满，沉浸式视觉", "图片"),
+        "image_healing": ("治愈温暖", "暖色调+柔和边框，治愈系", "图片"),
+        "image_health_preservation": ("养生保健", "养生主题配色", "图片"),
+        "image_life_insights": ("生活感悟", "生活哲理类排版，温暖走心", "图片"),
+        "image_life_insights_light": ("生活感悟浅色", "浅色版，清爽明亮", "图片"),
+        "image_long_text": ("长文本", "适合大段文字，阅读优先", "图片"),
+        "image_modern": ("现代简约", "几何线条+无衬线，现代感", "图片"),
+        "image_neon": ("霓虹灯", "赛博朋克霓虹风格", "图片"),
+        "image_psychology_card": ("心理卡片", "心理学主题配色", "图片"),
+        "image_purple": ("紫色梦幻", "紫色渐变+梦幻元素", "图片"),
+        "image_satirical_cartoon": ("讽刺漫画", "漫画分格排版", "图片"),
+        "image_simple_black": ("极简黑", "纯黑背景+白字", "图片"),
+        "image_simple_line_drawing": ("简笔画", "手绘线条风格，清新可爱", "图片"),
+        "video_default": ("默认视频", "横屏视频模板", "视频"),
+        "video_healing": ("治愈视频", "暖色叠加+柔和动画", "视频"),
+        "static_default": ("静态默认", "纯文字静态模板", "静态"),
+        "static_excerpt": ("静态文摘", "文摘卡片静态版", "静态"),
+        "asset_default": ("素材默认", "自定义素材模板", "其他"),
+    }
     style_list = []
-    for key, tpl in BUILTIN_TEMPLATES.items():
-        name = {"template_xiaojun": "晓君老师", "template_elderly": "中老年"}.get(key, key)
-        style_list.append({
-            "key": key, "name": name,
-            "desc": "手绘蜡笔风" if "crayon" in tpl.prompt else "温暖水彩风",
-            "prompt_preview": tpl.prompt[:120] + "...",
-            "locked": tpl.locked,
-        })
+    for key, (name, desc, cat) in TEMPLATE_INFO.items():
+        style_list.append({"key": key, "name": name, "desc": desc, "category": cat})
     return templates.TemplateResponse("styles.html", {"request": request, "styles": style_list})
 
 
