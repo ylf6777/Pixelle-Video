@@ -1,0 +1,140 @@
+[
+  {
+    "key": "A01-文生图-Qwen2512高清放大",
+    "display_name": "A01-文生图-Qwen2512高清放大 [image]",
+    "source": "zealman",
+    "media_type": "image"
+  },
+  {
+    "key": "P02-动作迁移-Wan2.2Animate角色迁移",
+    "display_name": "P02-动作迁移-Wan2.2Animate角色迁移 [digital_human]",
+    "source": "zealman",
+    "media_type": "digital_human"
+  },
+  {
+    "key": "D14-分镜-Flux克莱因9B多角度多场景",
+    "display_name": "D14-分镜-Flux克莱因9B多角度多场景 [image]",
+    "source": "zealman",
+    "media_type": "image"
+  },
+  {
+    "key": "C18-豹豹喵呜制作-白玉AIO三采超高清写真生成",
+    "display_name": "C18-豹豹喵呜制作-白玉AIO三采超高清写真生成 [none]",
+    "source": "zealman",
+    "media_type": "none"
+  },
+  {
+    "key": "D18-klein9b真人剧制造机-多图编辑",
+    "display_name": "D18-klein9b真人剧制造机-多图编辑 [image]",
+    "source": "zealman",
+    "media_type": "image"
+  },
+  {
+    "key": "B13-千问角色一键多角度_multiple_character_angles-v1.0",
+    "display_name": "B13-千问角色一键多角度_multiple_character_angles-v1.0 [image]",
+    "source": "zealman",
+    "media_type": "image"
+  },
+  {
+    "key": "H17-文图生视频-LTX2.3全面优化版",
+    "display_name": "H17-文图生视频-LTX2.3全面优化版 [video]",
+    "source": "zealman",
+    "media_type": "video"
+  },
+  {
+    "key": "P17-动作迁移4090-48G显卡专用V8",
+    "display_name": "P17-动作迁移4090-48G显卡专用V8 [video]",
+    "source": "zealman",
+    "media_type": "video"
+  },
+  {
+    "key": "Y08-四宫格-LTX-2.3图生视频优化版",
+    "display_name": "Y08-四宫格-LTX-2.3图生视频优化版 [video]",
+    "source": "zealman",
+    "media_type": "video"
+  },
+  {
+    "key": "P07-动作迁移-Wan2.2AnimateV4",
+    "display_name": "P07-动作迁移-Wan2.2AnimateV4 [digital_human]",
+    "source": "zealman",
+    "media_type": "digital_human"
+  },
+  {
+    "key": "H31-ltx2.3声音-图像生成视频",
+    "display_name": "H31-ltx2.3声音-图像生成视频 [video]",
+    "source": "zealman",
+    "media_type": "video"
+  },
+  {
+    "key": "H28-LTX2.3-高动态图生视频",
+    "display_name": "H28-LTX2.3-高动态图生视频 [video]",
+    "source": "zealman",
+    "media_type": "video"
+  },
+  {
+    "key": "G07-图生视频-Wan2.2+LightX2V-WorkFisher",
+    "display_name": "G07-图生视频-Wan2.2+LightX2V-WorkFisher [video]",
+    "source": "zealman",
+    "media_type": "video"
+  },
+  {
+    "key": "G03-图生视频-Wan2.2SmoothMix",
+    "display_name": "G03-图生视频-Wan2.2SmoothMix [video]",
+    "source": "zealman",
+    "media_type": "video"
+  },
+  {
+    "key": "G02-首尾帧-Wan2.2首尾帧视频",
+    "display_name": "G02-首尾帧-Wan2.2首尾帧视频 [video]",
+    "source": "zealman",
+    "media_type": "video"
+  },
+  {
+    "key": "G01-图生视频-Wan2.2万相基础版",
+    "display_name": "G01-图生视频-Wan2.2万相基础版 [video]",
+    "source": "zealman",
+    "media_type": "video"
+  },
+  {
+    "key": "J11-LTX2.3高清超自然电商数字人",
+    "display_name": "J11-LTX2.3高清超自然电商数字人 [digital_human]",
+    "source": "zealman",
+    "media_type": "digital_human"
+  },
+  {
+    "key": "D20-RAW画质重建Adonis_Workflow",
+    "display_name": "D20-RAW画质重建Adonis_Workflow [image]",
+    "source": "zealman",
+    "media_type": "image"
+  },
+  {
+    "key": "N2-单人声音克隆FishAudio S2pro",
+    "display_name": "N2-单人声音克隆FishAudio S2pro [audio]",
+    "source": "zealman",
+    "media_type": "audio"
+  },
+  {
+    "key": "C07-文生图-Zimage-Nunchaku加速",
+    "display_name": "C07-文生图-Zimage-Nunchaku加速 [image]",
+    "source": "zealman",
+    "media_type": "image"
+  },
+  {
+    "key": "A08-洗图-Qwen二次元转真人高清放大",
+    "display_name": "A08-洗图-Qwen二次元转真人高清放大 [image]",
+    "source": "zealman",
+    "media_type": "image"
+  },
+  {
+    "key": "G10-图生视频-Wan2.2SmoothMixV2",
+    "display_name": "G10-图生视频-Wan2.2SmoothMixV2 [video]",
+    "source": "zealman",
+    "media_type": "video"
+  },
+  {
+    "key": "C16-短剧文生图专用-支持场景-角色",
+    "display_name": "C16-短剧文生图专用-支持场景-角色 [image]",
+    "source": "zealman",
+    "media_type": "image"
+  }
+]

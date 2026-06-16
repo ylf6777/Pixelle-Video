@@ -1,0 +1,1143 @@
+zealman镜像API接口说明（v8.5）
+zealman镜像API接口说明（v8.5）
+镜像qq群1046279436
+生成于 2026-06-15T03:20:20.536Z
+1. 工作流 API
+快速上手
+执行与查询
+文件上传
+工作流配置（CRUD）
+2. 控制面板 API
+快速上手
+面板状态 / 硬件
+ComfyUI 启停 / 状态
+我的资产 / 输出管理
+3. 并发接口 API
+快速上手
+AutoDL 实例管理
+镜像机 ComfyUI 控制
+任务调度
+BASE URL
+https://uu1021136-781466526648.bjb2.seetacloud.com:8443
+文件参数支持公网 URL · base64 · 上传后填 name
+1. 工作流 API
+直接调用生成内容
+把面板里&quot;导入工作流&quot;保存好的一张张卡片，当成&quot;AI 生成接口&quot;远程调用。三步走：① 提交任务拿 prompt_id；② 轮询查结果；③ 拿到图片/视频/音频的下载 URL。下面这段代码可以直接复制到浏览器控制台或 Node 里跑通。
+完整示例 · 跑一次工作流并拿到生成结果
+QUICKSTART
+最常用的接入方式：直接向当前面板地址的 /api/workflow/generate 提交任务，拿到 prompt_id 后再轮询 /api/workflow/result。示例里使用完整 URL，复制后更容易看懂。
+完整调用示例
+const
+response =
+await
+fetch(
+'https://uu1021136-781466526648.bjb2.seetacloud.com:8443/api/workflow/generate'
+method:
+'POST'
+headers: {
+'Content-Type'
+'application/json'
+body: JSON.stringify({
+workflow_id:
+'A01-文生图-Qwen2512高清放大'
+input_values: {
+'3:seed'
+325183347
+'187:text'
+'亚洲女生，真人\nA photo-realistic portrait of a young Asian woman with natural skin texture, cinematic lighting'
+'437:text'
+'低分辨率，低画质，肢体畸形，手指畸形，画面过饱和，蜡像感，人脸无细节，过度光滑，画面具有AI感。构图混乱。文字模糊，扭曲'
+'515:value'
+1280
+'516:value'
+const
+data =
+await
+response.json();
+// data.prompt_id — 推荐轮询 https://uu1021136-781466526648.bjb2.seetacloud.com:8443/api/workflow/result?prompt_id=... 获取简化结果
+// 兼容旧方式：也可轮询 https://uu1021136-781466526648.bjb2.seetacloud.com:8443/api/comfy/proxy/history?prompt_id=...
+console.log(data);
+Step 1 · 提交任务并获取 prompt_id
+workflow_id 填「API 生成」页里已经导入保存的工作流名称。input_values 里直接写这个工作流需要改的参数，key 的格式是「节点ID:字段名」。请求成功后返回 data.prompt_id，之后用它查询结果。
+执行与查询
+5 个接口
+完整的调用链：① POST /api/workflow/generate 提交并拿到 prompt_id；② 每隔 1～3 秒 GET /api/workflow/result?prompt_id=… 直到 pending=false；③ 在响应里取 results 数组拿到所有产出文件的 URL。
+POST
+/api/workflow/generate
+"workflow_id"
+"example-workflow.json"
+"input_values"
+"12:image"
+"https://example.com/in.png"
+"21:audio"
+"https://example.com/in.mp3"
+"33:text"
+"一只在沙滩上奔跑的小狗，电影感"
+"client_id"
+"my-app-001"
+调用示例
+// fetch 写法（浏览器 / Node 18+）
+const
+await
+fetch(BASE_URL +
+'/api/workflow/generate'
+method:
+'POST'
+headers: {
+'Content-Type'
+'application/json'
+body: JSON.stringify({
+workflow_id:
+'example-workflow.json'
+input_values: {
+'12:image'
+'https://example.com/in.png'
+'33:text'
+'一只在沙滩上奔跑的小狗'
+const
+data =
+await
+r.json();
+(!data.success)
+throw
+Error(data.error);
+const
+promptId = data.prompt_id;
+console.log(
+'已提交，prompt_id ='
+, promptId);
+响应示例
+"success"
+true
+"prompt_id"
+"d1e7a2b8-4a01-…"
+"client_id"
+"my-app-001"
+"number"
+提交生成任务，立即返回 prompt_id
+请求体中的 workflow_id 指定要跑哪条已保存的工作流；接口只负责入队，HTTP 响应里立刻给出 prompt_id，不等待画布跑完。workflow_id 须为已在「API 生成」页导入并保存到面板的工作流。input_values 的 key 为「节点ID:字段名」，例如 &quot;12:image&quot;。文件类参数：① 公网 https URL；② data:*;base64（默认上限约 50MB）；③ 先走上传接口拿到 name 再填入。client_id 可选，用于 WebSocket 进度；不传也可正常使用。
+/api/workflow/result?prompt_id={prompt_id}
+调用示例
+// 轮询直到完成
+async
+function
+waitForResult(promptId) {
+while
+true
+const
+await
+fetch(BASE_URL +
+'/api/workflow/result?prompt_id='
++ promptId);
+const
+data =
+await
+r.json();
+(data.pending ===
+false
+return
+data.results;
+await
+Promise(res =&gt; setTimeout(res,
+1500
+const
+results =
+await
+waitForResult(promptId);
+results.forEach(r =&gt; console.log(r.type,
+, BASE_URL + r.url));
+响应示例
+"success"
+true
+"pending"
+false
+"prompt_id"
+"d1e7a2b8-…"
+"results"
+"type"
+"image"
+"url"
+"/output/2025/zealman_00001.png"
+"filename"
+"zealman_00001.png"
+"type"
+"video"
+"url"
+"/output/2025/zealman_00001.mp4"
+"filename"
+"zealman_00001.mp4"
+推荐：根据 prompt_id 拿到简化结果（图片/视频/音频的可访问 URL）
+响应中 pending=true 表示还在跑，请继续轮询；pending=false 即任务结束。results 是数组，按节点输出顺序排列；每个元素包含 type（image/video/audio/text）和 url（output 文件直接是 /output/...，可直接显示或下载）。建议每 1～3 秒轮询一次，避免给后端打满。
+/api/comfy/proxy/history?prompt_id={prompt_id}
+调用示例
+curl
+"$BASE_URL/api/comfy/proxy/history?prompt_id=$PROMPT_ID"
+响应示例
+"d1e7a2b8-…"
+"prompt"
+"outputs"
+"images"
+"filename"
+"zealman_00001.png"
+"subfolder"
+"type"
+"output"
+"status"
+"status_str"
+"success"
+"completed"
+true
+获取 ComfyUI 原始 history（节点级输出明细，调试用）
+比 /api/workflow/result 更&quot;原始&quot;，直接转发自 ComfyUI 自身的 history 接口，包含每个节点的输出与执行错误信息。普通业务调用建议优先用 /api/workflow/result；只有需要排查&quot;哪一个节点报错&quot;时才用这里。
+/output/{subfolder}/{filename}
+调用示例
+// 显示生成的图片
+document.getElementById(
+'preview'
+).src = BASE_URL +
+'/output/2025/zealman_00001.png'
+// 直接下载
+const
+await
+fetch(BASE_URL +
+'/output/2025/zealman_00001.png'
+const
+blob =
+await
+r.blob();
+直接读取 ComfyUI output 目录里的生成结果（图片/视频/音频）
+由面板用 express.static 直接静态托管，可在 &lt;img&gt;/&lt;video&gt; 标签 src 里直接使用。/api/workflow/result 返回的 url 字段已经是这种相对路径，前面拼上 BASE_URL 就能下载或在浏览器里打开。
+/api/comfy/view?filename=...&amp;type=input&amp;subfolder=...
+调用示例
+// 预览刚上传的图片
+const
+url = BASE_URL +
+'/api/comfy/view?filename='
++ encodeURIComponent(name) +
+'&amp;type=input'
+img.src = url;
+读取 ComfyUI input/temp 目录里的文件（type=input/temp/output）
+主要用于读取上传后的 input 素材或 temp 中间产物。output 文件优先用 /output/... 直链。type 默认 input；subfolder 可选。
+文件上传
+2 个接口
+当 input_values 里要传图片/视频/音频，但又不方便用公网 URL 或 base64 时，先把文件上传到 ComfyUI input 目录，拿到返回的 name，再把这个 name 填回 input_values 里对应的字段。
+POST
+/api/comfy/upload/file
+multipart/form-data
+file:      &lt;File&gt;
+// 必填，二进制文件
+overwrite:
+true
+false
+// 可选，默认 false
+（兼容字段名：file / image / video / audio）
+调用示例
+# curl 上传本地文件
+curl -X POST
+"$BASE_URL/api/comfy/upload/file"
+"file=@/path/to/local.png"
+"overwrite=true"
+# 浏览器 fetch + FormData
+const
+fd =
+FormData();
+fd.append(
+'file'
+, fileInput.files[
+fd.append(
+'overwrite'
+'true'
+const
+await
+fetch(BASE_URL +
+'/api/comfy/upload/file'
+, { method:
+'POST'
+, body: fd });
+const
+{ name } =
+await
+r.json();
+// 把 name 填到 input_values 里
+inputValues[
+'12:image'
+] = name;
+响应示例
+"name"
+"local.png"
+"subfolder"
+"type"
+"input"
+推荐：通用文件上传，图片/视频/音频/任意文件都可以
+Content-Type 必须是 multipart/form-data。字段名兼容 file / image / video / audio 任意一个。overwrite=true 可覆盖同名文件。返回的 name 字段就是给 input_values 用的值。
+POST
+/api/comfy/upload/image
+multipart/form-data
+image:     &lt;File&gt;
+overwrite:
+true
+false
+旧兼容接口：仅接受 image 字段（仅图片）
+能用 /api/comfy/upload/file 就用它，本接口仅为旧客户端保留。
+工作流配置（CRUD）
+5 个接口
+管理&quot;已保存的 API 工作流&quot;——也就是 API 生成页里那一张张卡片。普通业务调用只读 list/config 即可；save/rename/delete 通常由 API 生成页内部使用。
+/api/workflow/list
+调用示例
+const
+await
+fetch(BASE_URL +
+'/api/workflow/list'
+const
+{ workflows } =
+await
+r.json();
+workflows.forEach(w =&gt; console.log(w.id,
+'运行'
+, w.run_count,
+响应示例
+"success"
+true
+"workflows"
+"id"
+"example-workflow"
+"name"
+"example-workflow.json"
+"mtime"
+"2025-11-12T08:00:00.000Z"
+"run_count"
+"last_run_at"
+"2025-11-12T08:30:00.000Z"
+"last_prompt_id"
+"d1e7a2b8-…"
+列出所有已保存的 API 工作流（卡片列表）
+按修改时间倒序返回，包含运行次数、最后一次 prompt_id 等用量统计。
+/api/workflow/config/{id}
+调用示例
+const
+await
+fetch(BASE_URL +
+'/api/workflow/config/example-workflow'
+const
+{ workflow_template, api_config } =
+await
+r.json();
+响应示例
+"success"
+true
+"workflow_template"
+"class_type"
+"LoadImage"
+"inputs"
+"image"
+"input.png"
+"api_config"
+"enabledParams"
+"1:image"
+true
+"formValues"
+: {},
+"customLabels"
+"1:image"
+"上传图片"
+读取单个 API 工作流配置 + 原始 workflow_template
+返回的 workflow_template 是完整 ComfyUI API 格式 prompt（节点 ID → 节点定义），可以直接代理给 ComfyUI；api_config 包含 enabledParams/formValues/customLabels，用于在 UI 上还原参数面板。
+POST
+/api/workflow/save
+"workflow_id"
+"example-workflow.json"
+"workflow_template"
+"class_type"
+"LoadImage"
+"inputs"
+"image"
+"input.png"
+"api_config"
+"enabledParams"
+"1:image"
+true
+"formValues"
+: {},
+"customLabels"
+"1:image"
+"上传图片"
+保存或覆盖一个 API 工作流（导入工作流、参数编辑页保存均走此接口）
+若 workflow_id 已存在则覆盖；不存在则新建。api_config 可选，传了会作为 _api_config 字段一起写入 .json 文件，供后续打开参数编辑页恢复表单。
+POST
+/api/workflow/rename
+"oldId"
+"example-workflow.json"
+"newId"
+"new-name.json"
+重命名一个 API 工作流（同时迁移用量统计）
+若 newId 已存在会返回 400。
+DELETE
+/api/workflow/{id}
+调用示例
+await
+fetch(BASE_URL +
+'/api/workflow/example-workflow'
+, { method:
+'DELETE'
+删除一个 API 工作流配置（同时清掉用量统计）
+2. 控制面板 API
+面板自身的运维与资产接口
+面板自身的运维接口：硬件信息、ComfyUI 启停、资产管理等。面板默认监听 6008 端口，AutoDL 上可通过&quot;自定义服务&quot;暴露到公网。
+完整示例 · 自检 + 自动启动 ComfyUI
+QUICKSTART
+从面板在线自检到 ComfyUI 就绪。左侧为完整脚本；右侧 Step 对应每一段在做什么。
+完整调用示例
+const
+BASE_URL =
+"https://uu1021136-781466526648.bjb2.seetacloud.com:8443"
+const
+await
+fetch(BASE_URL +
+'/api/health'
+.then(r =&gt; r.json());
+(h.status !==
+'ok'
+throw
+Error(
+'面板未启动'
+const
+gpu =
+await
+fetch(BASE_URL +
+'/api/gpu/info'
+.then(r =&gt; r.json());
+(!gpu.hasGPU)
+throw
+Error(
+'当前是无卡模式'
+console.log(
+'GPU：'
+, gpu.gpus?.[
+]?.name);
+st =
+await
+fetch(BASE_URL +
+'/api/comfy/status'
+.then(r =&gt; r.json());
+(!st.running) {
+await
+fetch(BASE_URL +
+'/api/comfy/start'
+method:
+'POST'
+headers: {
+'Content-Type'
+'application/json'
+body: JSON.stringify({
+useProxy:
+true
+proxyType:
+'network_turbo'
+; i &lt;
+; i++) {
+await
+Promise(r =&gt; setTimeout(r,
+3000
+st =
+await
+fetch(BASE_URL +
+'/api/comfy/status'
+.then(r =&gt; r.json());
+(st.running)
+break
+(!st.running)
+throw
+Error(
+'ComfyUI 启动超时'
+console.log(
+'已就绪 → 端口'
+, st.port);
+Step 1 · 定义面板地址
+BASE_URL 即当前控制面板地址（与本文档页的 origin 一致）。示例中会替换为实际地址。
+Step 2 · 健康检查（面板存活）
+/api/health 是最轻量的存活探针。返回 { status: &quot;ok&quot;, uptime: 秒数 } 即视为面板可用，常用作监控脚本的就绪探针。
+Step 3 · GPU 与无卡模式判断
+AutoDL 的「无卡模式」也能开机但跑不了生成。返回里 hasGPU=false 就是无卡模式，需到 AutoDL 控制台正常开机；hasGPU=true 时可在 gpus[] 里看到显卡型号和显存大小。
+Step 4 · 查询 ComfyUI 状态
+返回 { running, starting, reason, port: 6006, ... }。running=true 直接进入生成流程；running=false 时若 starting=true 说明面板已经在自启动，等几秒再轮询即可；都为 false 才需要主动调用启动接口。
+Step 5 · 启动并等待 ComfyUI 就绪
+useProxy + proxyType=&quot;network_turbo&quot; 会在启动前 source /etc/network_turbo，解决拉模型/插件依赖的网络问题；普通环境可去掉这两个参数。
+启动接口立即返回，需要轮询 status 直到 running=true，建议每 3 秒查一次、最多等 60 秒。
+面板状态 / 硬件
+6 个接口
+只读接口，全部 GET，可直接放进监控脚本里循环拉取。
+/api/health
+调用示例
+curl -s
+"$BASE_URL/api/health"
+响应示例
+"status"
+"ok"
+"timestamp"
+"2026-05-12T03:00:00.000Z"
+"uptime"
+3600.12
+面板服务健康检查（最简单的存活探针）
+常用作监控/CI 的就绪探针；返回 200 即视为面板可用。
+/api/external-url-6008
+当前面板（6008 端口）的 AutoDL 外网地址
+在 AutoDL 容器内调用，返回类似 https://u123-app.openbayes.net 的地址，可分发给外部使用。当前面板不在 AutoDL 环境时会返回 success=false。
+/api/gpu/info
+调用示例
+curl -s
+"$BASE_URL/api/gpu/info"
+响应示例
+"success"
+true
+"hasGPU"
+true
+"gpus"
+"name"
+"RTX 4090"
+"memory_total_mb"
+24564
+"memory_used_mb"
+1024
+GPU 型号、显存占用、是否无卡模式
+无卡模式（hasGPU=false）下，跑生成会立刻失败；建议在调用 generate 前先查这里。
+/api/hardware/info
+CPU / 内存 / 磁盘 等综合硬件信息
+/api/disk/size
+响应示例
+"success"
+true
+"system"
+"total_gb"
+"used_gb"
+"free_gb"
+"data"
+"total_gb"
+"used_gb"
+"free_gb"
+系统盘 / 数据盘 总容量与剩余空间
+/api/disk-usage
+磁盘明细：模型 / 输出 / 缓存 等分目录占用
+ComfyUI 启停 / 状态
+9 个接口
+ComfyUI（监听 6006）由面板托管，启停、查询、日志均走这里。调用工作流前需先确认 status.running=true。
+POST
+/api/comfy/start
+"useProxy"
+true
+"proxyType"
+"network_turbo"
+"disableCopilot"
+true
+调用示例
+curl -X POST
+"$BASE_URL/api/comfy/start"
+"Content-Type: application/json"
+'{"useProxy":true,"proxyType":"network_turbo"}'
+响应示例
+"code"
+"log"
+"ComfyUI 启动脚本已触发\\n"
+"alreadyRunning"
+false
+启动 ComfyUI（已运行会直接返回 alreadyRunning=true）
+useProxy=true 时，proxyType 选 &quot;network_turbo&quot;（学术加速，推荐）或 &quot;clash&quot;（自建代理）。disableCopilot=true 可关闭 ComfyUI-Copilot 插件提速。
+POST
+/api/comfy/stop
+停止 ComfyUI（pkill 当前 ComfyUI 进程）
+/api/comfy/status
+响应示例
+"running"
+true
+"starting"
+false
+"reason"
+"ready"
+"port"
+6006
+"listen"
+"127.0.0.1"
+"url"
+"http://127.0.0.1:6006"
+当前 ComfyUI 是否运行 + 启动阶段
+推荐直接用两个布尔字段判断三阶段：
+• running=true               → 启动成功，可直接 generate
+• running=false, starting=true → 启动中（进程刚起 HTTP 还未就绪、或面板自启动窗口期）
+• running=false, starting=false → 未启动
+reason 字段是调试用的细分原因，可选值：
+• &quot;ready&quot;             ：进程在且 ComfyUI /system_stats 已就绪（== running:true）
+• &quot;starting&quot;          ：进程已起但 HTTP 未就绪，或面板正在自启动等待期
+• &quot;process_not_found&quot; ：进程不存在，且没有任何启动流程在跑
+建议 generate 前每 2~5 秒轮询一次直到 running=true。
+/api/comfy/queue-status
+ComfyUI 队列是否繁忙（busy=true 表示有任务正在跑或排队）
+/api/comfy/version
+当前 ComfyUI 版本号
+由面板从 ComfyUI 安装目录里的版本文件读取，不依赖 ComfyUI 进程，没启动也能查。
+/api/comfy/external-url
+ComfyUI 6006 端口的 AutoDL 外网地址（暴露原生 ComfyUI 网页）
+/api/comfy/check-port/{port}
+探测某端口是否被占用（一般查 6006 / 6008）
+POST
+/api/comfy/kill-port/{port}
+强杀占用该端口的进程（解决&quot;端口已占用&quot;启动失败）
+/api/comfy/logs
+调用示例
+// 浏览器：实时打印日志
+const
+es =
+EventSource(BASE_URL +
+'/api/comfy/logs'
+es.onmessage = e =&gt; console.log(
+'[Comfy]'
+, e.data);
+es.onerror = () =&gt; es.close();
+SSE 流式获取 ComfyUI 实时日志
+返回 text/event-stream，浏览器用 EventSource 持续接收。每条 message 是一行日志文本；适合做&quot;启动调试控制台&quot;。
+我的资产 / 输出管理
+12 个接口
+管理 ComfyUI output 目录的产出（图片/视频/音频）和 input 目录的素材。资产文件以相对路径返回，可直接拼上 BASE_URL + /output/... 显示或下载。
+/api/images
+调用示例
+const
+await
+fetch(BASE_URL +
+'/api/images'
+const
+list =
+await
+r.json();
+list.forEach(item =&gt; console.log(item.relativePath));
+列出 output 目录的所有资产（图片 + 视频 + 音频）
+递归扫描 OUTPUT_DIR，返回相对路径、大小、修改时间。
+/api/input-assets
+列出 ComfyUI input 目录的素材（已上传给工作流当输入用的文件）
+DELETE
+/api/images/delete
+"paths"
+"2025/zealman_00001.png"
+"2025/zealman_00002.png"
+调用示例
+await
+fetch(BASE_URL +
+'/api/images/delete'
+method:
+'DELETE'
+headers: {
+'Content-Type'
+'application/json'
+body: JSON.stringify({ paths: [
+'2025/zealman_00001.png'
+] })
+批量删除 output 资产（按相对路径数组）
+DELETE
+/api/input-assets/delete
+"paths"
+"ref.png"
+"voice.mp3"
+批量删除 input 素材
+POST
+/api/outputs/clear
+"recursive"
+false
+清空 output 目录
+recursive=true 会递归清掉所有子目录里的文件；默认 false 只清根目录第一层。
+POST
+/api/input/clear
+"recursive"
+true
+清空 ComfyUI input 目录
+与 output/clear 相同：recursive=true 递归删除所有文件。
+POST
+/api/images/zip
+"paths"
+"2025/a.png"
+"2025/b.png"
+响应示例
+"zipPath"
+"/output/zips/output_1733900000000.zip"
+"filename"
+"output_1733900000000.zip"
+把一组资产（或全部）打包成 zip，立即返回 zip URL
+paths 不传则打包 output 根目录所有支持的图片/视频文件；返回的 zipPath 可直接 GET 下载。
+POST
+/api/assets/package/jobs
+"range"
+"preset"
+"today"
+响应示例
+"success"
+true
+"id"
+"a1b2-…"
+"status"
+"queued"
+"progress"
+"assetCount"
+创建打包任务（支持按时间范围 / 来源筛选，异步执行）
+range 支持 preset=today/week/month 或自定义 startDate/endDate；任务 ID 返回后用下面的 jobs/{id} 轮询进度。
+/api/assets/package/jobs
+查询所有打包任务列表（按时间倒序）
+/api/assets/package/jobs/{id}
+查询单个打包任务进度（progress / status / 输出文件）
+/api/assets/package/files
+列出已生成的打包 zip 文件（含下载链接）
+DELETE
+/api/assets/package/files/{id}
+删除一个已生成的打包 zip 文件
+3. 并发接口 API
+调度多台 AutoDL 镜像机做批量生成
+把多台 AutoDL 实例（镜像机）当成一个&quot;远程 ComfyUI 算力池&quot;。调用方的项目只需要维护一组镜像机地址，把任务批量提交给调度接口；调度器会根据每台机器的忙闲状态做负载均衡：有空闲机器就立即分配任务，所有机器都在跑时任务进入队列，等某台机器空出来后继续派发。AutoDL 实例的开关机、释放等接口都需要 AutoDL Token；镜像机 ComfyUI 控制和任务调度接口只需要 mirror_url。
+完整示例 · 用 2 台镜像机批量跑同一个工作流
+QUICKSTART
+从 Token 到多机批跑、拉回结果。左侧为完整脚本；右侧 Step 解释各段含义。
+完整调用示例
+const
+BASE_URL =
+"https://uu1021136-781466526648.bjb2.seetacloud.com:8443"
+const
+TOKEN =
+'AUTODL_TOKEN_xxxxxxxxxxxxxxxx'
+const
+list =
+await
+fetch(BASE_URL +
+'/api/concurrent/instance/list'
+method:
+'POST'
+headers: {
+'Content-Type'
+'application/json'
+body: JSON.stringify({
+token: TOKEN,
+page_index:
+page_size:
+}).then(r =&gt; r.json());
+const
+candidates = list.list
+.filter(x =&gt; x.status ===
+'shutdown'
+.slice(
+const
+candidates) {
+await
+fetch(BASE_URL +
+'/api/concurrent/instance/power_on'
+method:
+'POST'
+headers: {
+'Content-Type'
+'application/json'
+body: JSON.stringify({
+token: TOKEN,
+instance_uuid: ins.instance_uuid
+const
+mirrors = [];
+const
+candidates) {
+while
+true
+const
+url =
+`${BASE_URL}/api/concurrent/instance/snapshot`
+`?token=${TOKEN}&amp;instance_uuid=${ins.instance_uuid}`
+const
+await
+fetch(url).then(r =&gt; r.json());
+const
+dom = r.snapshot?.service_6008_domain;
+(dom) {
+mirrors.push(
+'https://'
++ dom);
+break
+await
+Promise(res =&gt; setTimeout(res,
+5000
+const
+mirrors) {
+await
+fetch(BASE_URL +
+'/api/concurrent/mirror/start'
+method:
+'POST'
+headers: {
+'Content-Type'
+'application/json'
+body: JSON.stringify({ mirror_url: m })
+const
+inputs = [
+'a.png'
+'b.png'
+'c.png'
+'d.png'
+const
+submit =
+await
+fetch(BASE_URL +
+'/api/concurrent/run-batch-async'
+method:
+'POST'
+headers: {
+'Content-Type'
+'application/json'
+body: JSON.stringify({
+workflow_id:
+'my-workflow'
+targets: mirrors,
+jobs: inputs.map((name, i) =&gt; ({
+'job-'
++ i,
+input_values: {
+'12:image'
+'https://example.com/'
++ name
+}).then(r =&gt; r.json());
+const
+runId = submit.run_id;
+while
+true
+const
+url =
+`${BASE_URL}/api/concurrent/run-batch-status?run_id=${runId}`
+const
+await
+fetch(url).then(r =&gt; r.json());
+console.log(
+`${s.done}/${s.total} 完成，错误 ${s.error}`
+'completed'
+'cancelled'
+'error'
+].includes(s.status)) {
+const
+s.results || []) {
+(job.status ===
+'done'
+const
+await
+fetch(
+job.target_url +
+'/api/workflow/result?prompt_id='
++ job.prompt_id
+).then(r =&gt; r.json());
+// r.results 里是镜像机上的产出 URL。
+// 用户自己的程序应把这些文件下载到自己的项目存储。
+const
+file
+r.results || []) {
+const
+fileUrl = job.target_url + file.url;
+console.log(job.id,
+, fileUrl);
+break
+await
+Promise(r =&gt; setTimeout(r,
+2000
+Step 1 · 面板地址与 AutoDL Token
+BASE_URL 是当前调度接口服务地址；TOKEN 在 AutoDL 控制台申请。用户自己的集群程序可以把它当作调度 API 地址，不需要依赖面板内置的资产管理流程。
+Step 2 · 列出实例并挑选镜像机
+返回 { list: [{ instance_uuid, status, machine_alias, ... }] }。
+status 可能是 running / shutdown / starting。这里挑两台 shutdown 的当镜像机。
+Step 3 · 开机（有卡模式）
+默认 power_on 是有卡模式（跑生成必须有卡）。省钱场景可加 mode: &quot;shutdown&quot; 走无卡模式，但无卡模式下跑不了生成。
+Step 4 · 等待开机并解析镜像机面板 URL
+每台镜像机内部也运行着一份面板服务（端口 6008），AutoDL 给它一个对外域名 snapshot.service_6008_domain，前面拼 https:// 就是该镜像机的 mirror_url。
+开机需要时间，所以轮询 snapshot 接口直到出现这个字段（5 秒查一次）。
+Step 5 · 在各镜像机上启动 ComfyUI
+该接口非阻塞，命令发出后镜像机会异步启动 ComfyUI；要确认是否启动完毕，需要轮询 /api/concurrent/mirror/comfy-status。
+Step 6 · 提交异步批跑任务
+这是并发接口的核心：调度器会在 mirrors/targets 里寻找空闲机器，空闲机器立即接收下一个 job；如果多台机器都在跑，剩余 job 会留在队列里等待，等任意机器完成当前任务后继续派发。这样用户程序只需要提交一批 jobs，不需要自己判断哪台机器空闲。
+• workflow_id：要跑的工作流（注意：每台镜像机里都要先有这个工作流文件，否则得先用 /api/workflow/files/update 同步过去）
+• jobs：每个 job 是一次独立生成；id 任意填，用来在结果里对回去
+• targets：可选，不传则用全部可用镜像机
+返回 { run_id }，是这次批跑的 ID，用它查进度。
+Step 7 · 轮询进度并自行下载结果
+每隔 2 秒查一次 run-batch-status：返回 { status, done, total, error, results: [...] }。
+当 status 是 completed/cancelled/error 时，遍历 results：每个完成的 job 都有 target_url（哪台镜像机跑的）和 prompt_id（结果 ID）。用户自己的程序应使用 target_url + prompt_id 去对应镜像机查询结果，再把文件下载到自己的项目目录、数据库或对象存储中。
+AutoDL 实例管理
+7 个接口
+所有接口都需要 AutoDL Token（在 https://www.autodl.com/console/center/settings/token 获取）。Token 仅在内存中转发到 AutoDL 官方 API，不写入服务器文件。
+POST
+/api/concurrent/instance/list
+"token"
+"AUTODL_TOKEN"
+"page_index"
+"page_size"
+调用示例
+const
+await
+fetch(BASE_URL +
+'/api/concurrent/instance/list'
+method:
+'POST'
+headers: {
+'Content-Type'
+'application/json'
+body: JSON.stringify({ token, page_index:
+, page_size:
+const
+{ list, result_total } =
+await
+r.json();
+响应示例
+"success"
+true
+"result_total"
+"list"
+"instance_uuid"
+"pro-xxx"
+"status"
+"shutdown"
+"gpu_name"
+"RTX 4090"
+"service_6008_domain"
+"u123-app.openbayes.net"
+分页列出账号下的所有 AutoDL 实例
+POST
+/api/concurrent/instance/create
+"token"
+"AUTODL_TOKEN"
+"gpu_spec_uuid"
+"spec-rtx4090-…"
+"req_gpu_amount"
+"expand_system_disk_by_gb"
+"instance_name"
+"并发生成-镜像机"
+响应示例
+"success"
+true
+"instance_uuid"
+"pro-new-…"
+基于 Zealman 公共镜像应用，开一台新的 AutoDL 实例（默认即可用作镜像机）
+默认 application_uuid 指向 Zealman 公共镜像应用、application_version=latest——也就是说新实例开起来就是一台「干净的 Zealman 镜像机」，不会拷贝调用方当前容器里的运行时数据或自定义模型。需要带过自定义内容请走 AutoDL 自有的&quot;打包成镜像&quot;流程后再传 application_uuid / application_version。
+gpu_spec_uuid 是 AutoDL 后台的 GPU 规格 ID；data_center_list 可选限定机房；req_gpu_amount 默认 1。创建成功立即返回新实例的 instance_uuid，还需要 power_on 才能用。
+/api/concurrent/instance/status?token=&amp;instance_uuid=
+调用示例
+const
+await
+fetch(
+`${BASE_URL}/api/concurrent/instance/status?token=${token}&amp;instance_uuid=${uuid}`
+const
+{ status } =
+await
+r.json();
+// shutdown / running / starting / ...
+查询单个实例的开关机/计费状态（轻量，可频繁轮询）
+/api/concurrent/instance/snapshot?token=&amp;instance_uuid=
+查询实例完整快照（含 service_6008_domain，即镜像机的对外面板地址）
+snapshot.service_6008_domain 拼成 &quot;https://&quot; + 它，就是这台镜像机的 mirror_url，可直接传给后续 mirror/start、generate 接口。
+POST
+/api/concurrent/instance/power_on
+"token"
+"AUTODL_TOKEN"
+"instance_uuid"
+"pro-xxx"
+开机指定实例（默认开机即按 GPU 规格计费）
+POST
+/api/concurrent/instance/power_off
+"token"
+"AUTODL_TOKEN"
+"instance_uuid"
+"pro-xxx"
+关机指定实例（停止计费，但实例和数据保留）
+POST
+/api/concurrent/instance/release
+"token"
+"AUTODL_TOKEN"
+"instance_uuid"
+"pro-xxx"
+释放（销毁）实例（必须先关机；释放后数据丢失，不可恢复）
+镜像机 ComfyUI 控制
+6 个接口
+镜像机 power_on 之后还需要再启动它里面的 ComfyUI 才能跑工作流。这一组接口本质上就是把请求转发到镜像机自己的 /api/comfy/* 接口；mirror_url 即镜像机面板的对外地址（带 https://）。
+POST
+/api/concurrent/mirror/start
+"mirror_url"
+"https://u123-app.openbayes.net"
+调用示例
+await
+fetch(BASE_URL +
+'/api/concurrent/mirror/start'
+method:
+'POST'
+headers: {
+'Content-Type'
+'application/json'
+body: JSON.stringify({ mirror_url })
+远程启动镜像机的 ComfyUI
+本接口会把请求转发到 mirror_url 对应镜像机自身的 /api/comfy/start 上执行。返回 success=true 仅表示&quot;启动命令已发出&quot;，是否真的启动好需要轮询 comfy-status。
+/api/concurrent/mirror/comfy-status?mirror_url=
+代理查询镜像机 ComfyUI 是否运行
+返回内容与普通 /api/comfy/status 一致；建议每 2~5 秒查一次直到 running=true。
+POST
+/api/concurrent/mirror/interrupt
+"mirror_url"
+"https://u123-app.openbayes.net"
+中断镜像机 ComfyUI 当前任务
+POST
+/api/concurrent/mirror/free
+"mirror_url"
+"https://u123-app.openbayes.net"
+释放镜像机显存（卸载模型 + 清显存）
+POST
+/api/concurrent/mirror/stop
+"mirror_url"
+"https://u123-app.openbayes.net"
+停止镜像机的 ComfyUI 进程（不影响 AutoDL 计费）
+/api/concurrent/probe?mirror_url=
+探测镜像机连通性（综合检查面板可达 + ComfyUI 是否启动）
+任务调度
+7 个接口
+单任务可用 generate 指定某台镜像机；多任务建议用 run-batch / run-batch-async，由调度器统一排队、负载均衡和失败重试。运行中拿进度用 poll/status；跑完后用户程序根据 target_url + prompt_id 到对应镜像机读取结果，并保存到自己的项目目录、数据库或对象存储。
+POST
+/api/concurrent/generate
+"workflow_id"
+"example-workflow.json"
+"jobs"
+"id"
+"job-1"
+"target_url"
+"https://mirror-a.example.com"
+"input_values"
+"12:image"
+"https://example.com/in1.png"
+"id"
+"job-2"
+"target_url"
+"https://u123-app.openbayes.net"
+"input_values"
+"12:image"
+"https://example.com/in2.png"
+响应示例
+"success"
+true
+"results"
+"id"
+"job-1"
+"target"
+"mirror"
+"success"
+true
+"prompt_id"
+"id"
+"job-2"
+"target"
+"mirror"
+"success"
+true
+"prompt_id"
+在指定镜像机上提交一组任务（每个任务可独立指定 target_url）
+workflow_id 必须是已保存的工作流；jobs 是数组，每个 job 含 id / target_url（镜像机面板地址）/ input_values。同步并发提交，返回 results 数组（每项含 prompt_id），后续用 poll/result 拿进度与产物。多任务场景更推荐 run-batch-async，由调度器自动分配空闲机器。
+POST
+/api/concurrent/run-batch
+"workflow_id"
+"example-workflow.json"
+"jobs"
+"id"
+"job-1"
+"input_values"
+"12:image"
+"https://example.com/a.png"
+"id"
+"job-2"
+"input_values"
+"12:image"
+"https://example.com/b.png"
+同步批跑（队列调度 + 失败重试，阻塞直到全部任务结束才返回）
+面板会自动按机器忙闲做动态分配：空闲镜像机立即接收任务，全部机器都忙时任务留在队列等待；扩容（加镜像机）后未开始任务可被新机器接管。耗时长，建议异步版本。
+POST
+/api/concurrent/run-batch-async
+"workflow_id"
+"example-workflow.json"
+"jobs"
+"id"
+"job-1"
+"input_values"
+"12:image"
+"https://example.com/a.png"
+响应示例
+"success"
+true
+"run_id"
+"run-9f3c…"
+推荐：异步批跑，立刻返回 run_id，再用 status 接口轮询
+请求格式与 run-batch 相同。提交后立即返回 run_id；后台持续按空闲机器派发队列任务，机器忙时不丢任务、只排队等待。用 GET /api/concurrent/run-batch-status?run_id=… 拉进度；想取消用 run-batch-cancel。
+/api/concurrent/run-batch-status?run_id=
+调用示例
+async
+function
+waitBatch(runId) {
+while
+true
+const
+await
+fetch(
+`${BASE_URL}/api/concurrent/run-batch-status?run_id=${runId}`
+const
+data =
+await
+r.json();
+console.log(
+`${data.done}/${data.total} 完成，错误 ${data.error} 个`
+'completed'
+'cancelled'
+'error'
+].includes(data.status))
+return
+data;
+await
+Promise(r =&gt; setTimeout(r,
+2000
+查询异步批跑进度（按 run_id）
+status 取值：queued / running / completed / cancelled / error。results 数组里每项含 status（queued/running/done/error）、stage、progress（0~100）、retry_count。
+POST
+/api/concurrent/run-batch-cancel
+"run_id"
+"run-9f3c…"
+取消正在运行的批跑（已经在跑的任务会跑完，未开始的不再调度）
+/api/concurrent/poll?mirror_url=&amp;prompt_id=
+代理轮询某镜像机上单个任务的 history（进度 + 节点状态）
+本质是把请求转给镜像机的 /api/comfy/proxy/history，用于&quot;细粒度查看某个 prompt&quot;。
+{target_url}/api/workflow/result?prompt_id={prompt_id}
+调用示例
+// job 来自 /api/concurrent/run-batch-status 的 results[]
+const
+result =
+await
+fetch(
+job.target_url +
+'/api/workflow/result?prompt_id='
++ job.prompt_id
+).then(r =&gt; r.json());
+const
+item
+result.results || []) {
+const
+fileUrl = job.target_url + item.url;
+const
+blob =
+await
+fetch(fileUrl).then(r =&gt; r.blob());
+// 这里换成你自己的保存逻辑：
+// - 上传到 S3 / OSS / MinIO
+// - 写入你的业务项目目录
+// - 登记到自己的数据库
+await
+saveToYourProjectStorage({
+jobId: job.id,
+type: item.type,
+url: fileUrl,
+blob
+响应示例
+"success"
+true
+"pending"
+false
+"results"
+"type"
+"image"
+"url"
+"/output/2026/zealman_00001.png"
+"filename"
+"zealman_00001.png"
+无主控推荐：到实际执行任务的镜像机读取结果，再由用户程序自行保存
+run-batch-status 的每个完成 job 会带 target_url 与 prompt_id。target_url 是那台镜像机的面板地址；prompt_id 是该机器上的任务 ID。用户自己的集群软件应直接请求 target_url + /api/workflow/result?prompt_id=...，拿到 results 后把文件下载到自己的项目目录、数据库、NAS 或对象存储中，而不是依赖面板内置的主控资产回收。

@@ -1,0 +1,258 @@
+{
+  "success": true,
+  "workflows": [
+    {
+      "id": "A01-鏂囩敓鍥�-Qwen2512楂樻竻鏀惧ぇ",
+      "name": "A01-鏂囩敓鍥�-Qwen2512楂樻竻鏀惧ぇ.json",
+      "mtime": "2026-06-15T03:23:23.849Z",
+      "run_count": 46,
+      "last_run_at": "2026-05-12T14:06:26.594Z",
+      "last_prompt_id": "b9d5b415-f920-4eab-b829-55c52f32dfa6",
+      "kind": "image",
+      "color": "lime",
+      "pinned": true
+    },
+    {
+      "id": "P02-鍔ㄤ綔杩佺Щ-Wan2.2Animate瑙掕壊杩佺Щ",
+      "name": "P02-鍔ㄤ綔杩佺Щ-Wan2.2Animate瑙掕壊杩佺Щ.json",
+      "mtime": "2026-06-15T03:16:57.335Z",
+      "run_count": 0,
+      "last_run_at": null,
+      "last_prompt_id": "",
+      "kind": "digital_human",
+      "color": "cream",
+      "pinned": false
+    },
+    {
+      "id": "D14-鍒嗛暅-Flux鍏嬭幈鍥�9B澶氳�掑害澶氬満鏅�",
+      "name": "D14-鍒嗛暅-Flux鍏嬭幈鍥�9B澶氳�掑害澶氬満鏅�.json",
+      "mtime": "2026-06-05T16:00:41.000Z",
+      "run_count": 0,
+      "last_run_at": null,
+      "last_prompt_id": "",
+      "kind": "image",
+      "color": "lime",
+      "pinned": true
+    },
+    {
+      "id": "C18-璞硅惫鍠靛憸鍒朵綔-鐧界帀AIO涓夐噰瓒呴珮娓呭啓鐪熺敓鎴�",
+      "name": "C18-璞硅惫鍠靛憸鍒朵綔-鐧界帀AIO涓夐噰瓒呴珮娓呭啓鐪熺敓鎴�.json",
+      "mtime": "2026-06-03T10:51:06.000Z",
+      "run_count": 0,
+      "last_run_at": null,
+      "last_prompt_id": "",
+      "kind": "none",
+      "color": "auto",
+      "pinned": false
+    },
+    {
+      "id": "D18-klein9b鐪熶汉鍓у埗閫犳満-澶氬浘缂栬緫",
+      "name": "D18-klein9b鐪熶汉鍓у埗閫犳満-澶氬浘缂栬緫.json",
+      "mtime": "2026-06-03T10:04:40.000Z",
+      "run_count": 7,
+      "last_run_at": "2026-06-03T09:37:53.919Z",
+      "last_prompt_id": "62ba4b5c-e46b-413d-a821-a911897683b6",
+      "kind": "image",
+      "color": "lime",
+      "pinned": true
+    },
+    {
+      "id": "B13-鍗冮棶瑙掕壊涓�閿�澶氳�掑害_multiple_character_angles-v1.0",
+      "name": "B13-鍗冮棶瑙掕壊涓�閿�澶氳�掑害_multiple_character_angles-v1.0.json",
+      "mtime": "2026-06-03T09:21:12.000Z",
+      "run_count": 1,
+      "last_run_at": "2026-06-03T09:21:15.894Z",
+      "last_prompt_id": "0f7248b7-fd3c-4b29-9083-7af060af6ac6",
+      "kind": "image",
+      "color": "lime",
+      "pinned": false
+    },
+    {
+      "id": "H17-鏂囧浘鐢熻�嗛��-LTX2.3鍏ㄩ潰浼樺寲鐗�",
+      "name": "H17-鏂囧浘鐢熻�嗛��-LTX2.3鍏ㄩ潰浼樺寲鐗�.json",
+      "mtime": "2026-05-28T16:20:59.000Z",
+      "run_count": 0,
+      "last_run_at": null,
+      "last_prompt_id": "",
+      "kind": "video",
+      "color": "lavender",
+      "pinned": false
+    },
+    {
+      "id": "P17-鍔ㄤ綔杩佺Щ4090-48G鏄惧崱涓撶敤V8",
+      "name": "P17-鍔ㄤ綔杩佺Щ4090-48G鏄惧崱涓撶敤V8.json",
+      "mtime": "2026-05-14T10:24:17.000Z",
+      "run_count": 0,
+      "last_run_at": null,
+      "last_prompt_id": "",
+      "kind": "video",
+      "color": "lavender",
+      "pinned": false
+    },
+    {
+      "id": "Y08-鍥涘��鏍�-LTX-2.3鍥剧敓瑙嗛�戜紭鍖栫増",
+      "name": "Y08-鍥涘��鏍�-LTX-2.3鍥剧敓瑙嗛�戜紭鍖栫増.json",
+      "mtime": "2026-05-14T09:53:52.000Z",
+      "run_count": 0,
+      "last_run_at": null,
+      "last_prompt_id": "",
+      "kind": "video",
+      "color": "lavender",
+      "pinned": true
+    },
+    {
+      "id": "P07-鍔ㄤ綔杩佺Щ-Wan2.2AnimateV4",
+      "name": "P07-鍔ㄤ綔杩佺Щ-Wan2.2AnimateV4.json",
+      "mtime": "2026-05-14T09:53:49.000Z",
+      "run_count": 0,
+      "last_run_at": null,
+      "last_prompt_id": "",
+      "kind": "digital_human",
+      "color": "cream",
+      "pinned": false
+    },
+    {
+      "id": "H31-ltx2.3澹伴煶-鍥惧儚鐢熸垚瑙嗛��",
+      "name": "H31-ltx2.3澹伴煶-鍥惧儚鐢熸垚瑙嗛��.json",
+      "mtime": "2026-05-14T09:53:43.000Z",
+      "run_count": 0,
+      "last_run_at": null,
+      "last_prompt_id": "",
+      "kind": "video",
+      "color": "lavender",
+      "pinned": false
+    },
+    {
+      "id": "H28-LTX2.3-楂樺姩鎬佸浘鐢熻�嗛��",
+      "name": "H28-LTX2.3-楂樺姩鎬佸浘鐢熻�嗛��.json",
+      "mtime": "2026-05-14T09:53:39.000Z",
+      "run_count": 0,
+      "last_run_at": null,
+      "last_prompt_id": "",
+      "kind": "video",
+      "color": "lavender",
+      "pinned": false
+    },
+    {
+      "id": "G07-鍥剧敓瑙嗛��-Wan2.2+LightX2V-WorkFisher",
+      "name": "G07-鍥剧敓瑙嗛��-Wan2.2+LightX2V-WorkFisher.json",
+      "mtime": "2026-05-14T09:53:25.000Z",
+      "run_count": 0,
+      "last_run_at": null,
+      "last_prompt_id": "",
+      "kind": "video",
+      "color": "lavender",
+      "pinned": false
+    },
+    {
+      "id": "G03-鍥剧敓瑙嗛��-Wan2.2SmoothMix",
+      "name": "G03-鍥剧敓瑙嗛��-Wan2.2SmoothMix.json",
+      "mtime": "2026-05-14T09:53:21.000Z",
+      "run_count": 0,
+      "last_run_at": null,
+      "last_prompt_id": "",
+      "kind": "video",
+      "color": "lavender",
+      "pinned": false
+    },
+    {
+      "id": "G02-棣栧熬甯�-Wan2.2棣栧熬甯ц�嗛��",
+      "name": "G02-棣栧熬甯�-Wan2.2棣栧熬甯ц�嗛��.json",
+      "mtime": "2026-05-14T09:53:18.000Z",
+      "run_count": 0,
+      "last_run_at": null,
+      "last_prompt_id": "",
+      "kind": "video",
+      "color": "lavender",
+      "pinned": false
+    },
+    {
+      "id": "G01-鍥剧敓瑙嗛��-Wan2.2涓囩浉鍩虹��鐗�",
+      "name": "G01-鍥剧敓瑙嗛��-Wan2.2涓囩浉鍩虹��鐗�.json",
+      "mtime": "2026-05-14T09:53:09.000Z",
+      "run_count": 0,
+      "last_run_at": null,
+      "last_prompt_id": "",
+      "kind": "video",
+      "color": "lavender",
+      "pinned": false
+    },
+    {
+      "id": "J11-LTX2.3楂樻竻瓒呰嚜鐒剁數鍟嗘暟瀛椾汉",
+      "name": "J11-LTX2.3楂樻竻瓒呰嚜鐒剁數鍟嗘暟瀛椾汉.json",
+      "mtime": "2026-05-14T09:35:07.000Z",
+      "run_count": 0,
+      "last_run_at": null,
+      "last_prompt_id": "",
+      "kind": "digital_human",
+      "color": "cream",
+      "pinned": false
+    },
+    {
+      "id": "D20-RAW鐢昏川閲嶅缓Adonis_Workflow",
+      "name": "D20-RAW鐢昏川閲嶅缓Adonis_Workflow.json",
+      "mtime": "2026-05-14T09:34:02.000Z",
+      "run_count": 0,
+      "last_run_at": null,
+      "last_prompt_id": "",
+      "kind": "image",
+      "color": "lime",
+      "pinned": true
+    },
+    {
+      "id": "N2-鍗曚汉澹伴煶鍏嬮殕FishAudio S2pro",
+      "name": "N2-鍗曚汉澹伴煶鍏嬮殕FishAudio S2pro.json",
+      "mtime": "2026-05-14T09:32:46.000Z",
+      "run_count": 0,
+      "last_run_at": null,
+      "last_prompt_id": "",
+      "kind": "audio",
+      "color": "auto",
+      "pinned": false
+    },
+    {
+      "id": "C07-鏂囩敓鍥�-Zimage-Nunchaku鍔犻��",
+      "name": "C07-鏂囩敓鍥�-Zimage-Nunchaku鍔犻��.json",
+      "mtime": "2026-05-14T09:19:20.000Z",
+      "run_count": 0,
+      "last_run_at": null,
+      "last_prompt_id": "",
+      "kind": "image",
+      "color": "lime",
+      "pinned": false
+    },
+    {
+      "id": "A08-娲楀浘-Qwen浜屾�″厓杞�鐪熶汉楂樻竻鏀惧ぇ",
+      "name": "A08-娲楀浘-Qwen浜屾�″厓杞�鐪熶汉楂樻竻鏀惧ぇ.json",
+      "mtime": "2026-05-14T09:18:49.000Z",
+      "run_count": 0,
+      "last_run_at": null,
+      "last_prompt_id": "",
+      "kind": "image",
+      "color": "lime",
+      "pinned": false
+    },
+    {
+      "id": "G10-鍥剧敓瑙嗛��-Wan2.2SmoothMixV2",
+      "name": "G10-鍥剧敓瑙嗛��-Wan2.2SmoothMixV2.json",
+      "mtime": "2026-05-14T09:12:29.000Z",
+      "run_count": 0,
+      "last_run_at": null,
+      "last_prompt_id": "",
+      "kind": "video",
+      "color": "lavender",
+      "pinned": false
+    },
+    {
+      "id": "C16-鐭�鍓ф枃鐢熷浘涓撶敤-鏀�鎸佸満鏅�-瑙掕壊",
+      "name": "C16-鐭�鍓ф枃鐢熷浘涓撶敤-鏀�鎸佸満鏅�-瑙掕壊.json",
+      "mtime": "2026-05-14T09:09:23.000Z",
+      "run_count": 2,
+      "last_run_at": "2026-05-13T03:28:14.111Z",
+      "last_prompt_id": "dc47aa9e-1cd0-4287-a753-6fbfec8b1a0a",
+      "kind": "image",
+      "color": "lime",
+      "pinned": true
+    }
+  ]
+}

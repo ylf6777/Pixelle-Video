@@ -1,0 +1,8 @@
+G03 工作流节点映射：
+输入：
+  52:image - 图片上传（LoadImage）
+  88:text  - 提示词（CLIPTextEncode - 无负向提示词，Wan2.2内置）
+采样：
+  采样参数由 WanVideoSamplerSettings 控制（steps/cfg/seed/scheduler）
+输出：
+  待确认
