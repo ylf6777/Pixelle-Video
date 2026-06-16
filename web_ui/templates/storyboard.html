@@ -18,8 +18,10 @@
       </select>
       <input type="number" x-model="nScenes" min="1" max="30" value="5"
         class="pv-input" style="width:80px;flex-shrink:0" title="分镜数量">
-      <button class="pv-btn-save" @click="generate()" :disabled="loading || !article.trim()"
-        x-text="loading ? '生成中...' : '生成分镜'"></button>
+      <button class="pv-btn-save" @click="generate()" :disabled="loading || !article.trim()">
+        <span x-show="!loading">生成分镜</span>
+        <span x-show="loading">生成中...</span>
+      </button>
       <span x-show="error" x-text="error" class="pv-text-error"></span>
     </div>
   </div>

@@ -64,7 +64,8 @@
       <div class="pv-quick__generate">
         <span class="pv-quick__hint">Ctrl+Enter</span>
         <button class="pv-btn-save pv-quick__btn" @click="generate()" :disabled="generating || !prompt.trim()">
-          生成
+          <span x-show="!generating">生成</span>
+          <span x-show="generating">生成中...</span>
         </button>
       </div>
 
