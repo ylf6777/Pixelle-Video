@@ -11,30 +11,47 @@
   </div>
 </section>
 
-{# 注入数据 + Alpine.js 筛选逻辑 #}
-<script>
-  window.__WORKFLOWS__ = {{ workflows | tojson | safe }};
-  window.__CATEGORIES__ = {{ categories | tojson | safe }};
-</script>
+{# Alpine.js 筛选控制器 — x-data 在容器上，共享给 filter + cards #}
+<div class="pv-browser" x-data="workflowBrowser()" x-init="init()">
 
-<div x-data="workflowBrowser()" x-init="init()">
-  {% include "components/filter_bar.html" %}
+  {# 筛选栏标签 #}
+  <nav class="pv-filter" role="tablist" aria-label="分类筛选">
+    <button class="pv-filter__tab" :class="{ 'pv-filter__tab--active': activeCategory === '' }"
+      @click="selectCategory('')" type="button">全部</button>
+    <template x-for="cat in categories" :key="cat">
+      <button class="pv-filter__tab" :class="{ 'pv-filter__tab--active': activeCategory === cat }"
+        @click="selectCategory(cat)" type="button"
+        x-text="cat === 'image' ? '文生图' : cat === 'video' ? '图生视频' : cat === 'digital_human' ? '数字人' : cat === 'audio' ? '音频' : cat === 'action' ? '动作迁移' : cat === 'analysis' ? '分析' : cat">
+      </button>
+    </template>
+  </nav>
 
   {# 搜索框 #}
   <div class="pv-search-bar">
     <input type="search" x-model="query" @input="filter()"
-           placeholder="搜索工作流..." class="pv-input pv-input--search">
+      placeholder="搜索工作流..." class="pv-input pv-input--search">
   </div>
 
+  {# 卡片网格 — 服务端渲染 + Alpine.js show/hide 过滤 #}
   <section class="pv-masonry" id="workflow-grid">
-    <template x-for="wf in filtered" :key="wf.id">
-      <div class="pv-card" x-html="renderCard(wf)"></div>
-    </template>
-    <div class="pv-empty" x-show="filtered.length === 0" x-cloak>
+    {% for wf in workflows %}
+    <div class="pv-card"
+         x-show="matchCard({{ wf | tojson | safe }})"
+         style="animation-delay:{{ loop.index0 * 50 }}ms">
+      {{ render_workflow_card(wf) }}
+    </div>
+    {% endfor %}
+
+    <div class="pv-empty" x-show="!hasVisible()" x-cloak>
       <div class="pv-empty__icon">🔍</div>
       <h2 class="pv-empty__title">没有找到匹配的工作流</h2>
       <p class="pv-empty__text">尝试调整筛选条件或搜索关键词</p>
     </div>
   </section>
 </div>
+
+{# 注入分类数据供 Alpine.js 使用 #}
+<script>
+  window.__CATEGORIES__ = {{ categories | tojson | safe }};
+</script>
 {% endblock %}

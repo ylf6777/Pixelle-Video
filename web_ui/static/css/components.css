@@ -731,6 +731,45 @@
 }
 
 /* 筛选栏横向标签组 */
+.pv-filter__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pv-filter__tab {
+  padding: 6px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--pv-glass-border);
+  background: var(--pv-glass-bg);
+  color: var(--pv-text-muted);
+  font-size: var(--pv-text-sm);
+  font-family: var(--pv-font-body);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--pv-duration-fast) var(--pv-ease);
+  white-space: nowrap;
+  min-height: 36px;
+}
+
+.pv-filter__tab:hover {
+  border-color: var(--pv-accent);
+  color: var(--pv-accent);
+  background: rgba(0,212,255,0.08);
+}
+
+.pv-filter__tab--active {
+  background: var(--pv-accent);
+  color: #000;
+  border-color: var(--pv-accent);
+  font-weight: 600;
+}
+
+.pv-filter__tab--active:hover {
+  background: var(--pv-accent);
+  color: #000;
+}
+
 .pv-filter__group {
   display: flex;
   align-items: center;
