@@ -107,11 +107,7 @@
 document.addEventListener('alpine:init', () => {
   Alpine.data('templatePage', () => ({
     selected: '', editingParams: {}, errors: {}, submitError: '', submitOk: '',
-    allParams: {
-      {% for s in images %}'{{ s.key }}': {{ s.params|tojson|safe }},{% endfor %}
-      {% for s in videos %}'{{ s.key }}': {{ s.params|tojson|safe }},{% endfor %}
-      {% for s in prompts %}'{{ s.key }}': {{ s.params|tojson|safe }},{% endfor %}
-    },
+    allParams: {{ all_params_json|safe }},
 
     get selectedName() {
       const allCards = document.querySelectorAll('.pv-style-card');

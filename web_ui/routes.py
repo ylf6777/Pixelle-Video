@@ -519,10 +519,16 @@ async def styles_page(request: Request):
             "frame_template": tpl.frame_template or "",
         })
 
+    import json as _json
+    all_params = {}
+    for t in image_list + video_list + prompt_list:
+        if t.get("params"):
+            all_params[t["key"]] = t["params"]
     active_tab = request.query_params.get("tab", "images")
     return templates.TemplateResponse("styles.html", {
         "request": request, "active_tab": active_tab,
         "images": image_list, "videos": video_list, "prompts": prompt_list,
+        "all_params_json": _json.dumps(all_params, ensure_ascii=False),
     })
 
 
