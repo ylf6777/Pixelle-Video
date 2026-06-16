@@ -1427,13 +1427,11 @@
   margin-top: var(--pv-space-6);
   border-radius: var(--pv-radius-md);
   overflow: hidden;
-  background: #000;
   border: 1px solid var(--pv-glass-border);
-  position: relative;
 }
 .pv-preview-window__toolbar {
-  display: flex; gap: 4px; padding: 8px;
-  background: rgba(0,0,0,0.8);
+  display: flex; gap: 4px; padding: 6px 8px;
+  background: rgba(0,0,0,0.9);
   justify-content: center;
   position: sticky; top: 0; z-index: 1;
 }
@@ -1444,9 +1442,8 @@
 .pv-preview-window__toolbar button:hover { background: rgba(255,255,255,0.2); }
 .pv-preview-window__content {
   display: flex; align-items: center; justify-content: center;
-  min-height: 200px; padding: var(--pv-space-4);
+  background: #000;
   transition: transform 0.2s ease;
-  overflow: auto;
 }
 .pv-preview-window__content img,
 .pv-preview-window__content video {
@@ -1455,11 +1452,10 @@
   width: auto;
   height: auto;
   object-fit: contain;
-  border-radius: 4px;
 }
 .pv-preview-window__loading, .pv-preview-window__error {
   color: var(--pv-text-muted); font-size: var(--pv-text-base); text-align: center;
-  padding: var(--pv-space-12);
+  padding: var(--pv-space-8);
 }
 .pv-preview-window__error { color: var(--pv-error); }
 
