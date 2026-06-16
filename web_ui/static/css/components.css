@@ -1219,6 +1219,48 @@
 .pv-quick__result-info { padding: var(--pv-space-2) var(--pv-space-3); display: flex; justify-content: space-between; font-size: var(--pv-text-xs); color: var(--pv-text-muted); }
 .pv-quick__history { margin-top: var(--pv-space-10); }
 
+/* ---- 上传区域 ---- */
+.pv-quick__uploads { display: flex; gap: 8px; flex-wrap: wrap; margin-top: var(--pv-space-3); }
+.pv-quick__upload-name { font-size: var(--pv-text-xs); color: var(--pv-text-muted); margin-left: 8px; }
+.pv-quick__refs { display: flex; gap: 8px; margin-top: var(--pv-space-3); }
+.pv-quick__ref-thumb { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid var(--pv-glass-border); }
+
+.pv-upload-progress { margin: var(--pv-space-3) 0; text-align: center; font-size: var(--pv-text-sm); color: var(--pv-text-muted); }
+
+/* ---- 预览窗口 ---- */
+.pv-preview-window {
+  margin-top: var(--pv-space-6);
+  border-radius: var(--pv-radius-md);
+  overflow: hidden;
+  background: #000;
+  border: 1px solid var(--pv-glass-border);
+  position: relative;
+}
+.pv-preview-window__toolbar {
+  display: flex; gap: 4px; padding: 8px;
+  background: rgba(0,0,0,0.8);
+  justify-content: center;
+  position: sticky; top: 0; z-index: 1;
+}
+.pv-preview-window__toolbar button {
+  background: rgba(255,255,255,0.1); border: none; color: #fff;
+  padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 16px;
+}
+.pv-preview-window__toolbar button:hover { background: rgba(255,255,255,0.2); }
+.pv-preview-window__content {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 200px; padding: var(--pv-space-4);
+  transition: transform 0.2s ease;
+}
+.pv-preview-window__content img, .pv-preview-window__content video {
+  max-width: 100%; max-height: 60vh; border-radius: 4px;
+}
+.pv-preview-window__loading, .pv-preview-window__error {
+  color: var(--pv-text-muted); font-size: var(--pv-text-base); text-align: center;
+  padding: var(--pv-space-12);
+}
+.pv-preview-window__error { color: var(--pv-error); }
+
 @media (max-width: 767px) {
   .pv-quick__layout { grid-template-columns: 1fr; }
   .pv-quick__tabs { flex-direction: row; overflow-x: auto; }

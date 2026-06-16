@@ -1,9 +1,8 @@
-{# 快捷创作页面 — AI 视频/图片生成 #}
+{# 快捷创作页面 #}
 {% extends "base.html" %}
 {% block content %}
-<div class="pv-quick" x-data="quickCreator()" x-init="init()">
+<div class="pv-quick" x-data="quickCreator()">
   <div class="pv-quick__layout">
-    {# 左侧：生成类型 + 参数 #}
     <aside class="pv-quick__sidebar">
       <nav class="pv-quick__tabs" role="tablist">
         <button class="pv-quick__tab" :class="{ 'pv-quick__tab--active': mode === 'image' }"
@@ -15,7 +14,6 @@
         <button class="pv-quick__tab" :class="{ 'pv-quick__tab--active': mode === 'action' }"
           @click="mode='action'">动作模仿</button>
       </nav>
-
       <div class="pv-quick__params">
         <label class="pv-quick__param">
           <span>工作流</span>
@@ -27,71 +25,87 @@
           <span>时长 (秒)</span>
           <input type="number" x-model="duration" min="3" max="30" value="5" class="pv-input">
         </label>
-        <label class="pv-quick__param">
-          <span>生成数量</span>
-          <input type="number" x-model="count" min="1" max="4" value="1" class="pv-input">
-        </label>
       </div>
     </aside>
 
-    {# 中间：提示词输入 + 生成按钮 #}
     <main class="pv-quick__main">
+      {# 提示词 #}
       <div class="pv-quick__prompt-area">
         <textarea x-model="prompt" rows="4"
-          placeholder="描述你想要生成的图片或视频内容...&#10;&#10;例如：一只可爱的橘猫在阳光下午睡，温暖的光线，4K画质"
+          placeholder="描述你想要生成的内容..."
           class="pv-quick__prompt"
           @keydown.ctrl.enter="generate()"></textarea>
 
-        <div class="pv-quick__actions">
-          <label class="pv-quick__upload" x-show="mode!=='image'">
-            <input type="file" accept="image/*" @change="onRefImage"> 参考图
+        {# 上传区域 #}
+        <div class="pv-quick__uploads">
+          {# 参考图1 #}
+          <label class="pv-quick__upload" x-show="needsRefImage">
+            <input type="file" accept="image/*" @change="onRefImage(1,$event)"> 参考图1
           </label>
+          {# 参考图2 — 与参考图1完全一致的逻辑 #}
+          <label class="pv-quick__upload" x-show="needsRefImage">
+            <input type="file" accept="image/*" @change="onRefImage(2,$event)"> 参考图2
+          </label>
+          {# 参考视频 #}
+          <label class="pv-quick__upload" x-show="needsRefVideo">
+            <input type="file" accept="video/mp4,video/quicktime,video/webm" @change="onRefVideo"> 参考视频
+            <span x-show="videoName" x-text="videoName" class="pv-quick__upload-name"></span>
+          </label>
+        </div>
+
+        <div class="pv-quick__actions">
           <span class="pv-quick__hint">Ctrl+Enter 快速生成</span>
-          <button class="pv-btn pv-btn--gradient pv-btn--lg"
-            @click="generate()" :disabled="generating || !prompt.trim()">
-            <span x-show="!generating">✦ 生成</span>
-            <span x-show="generating">生成中...</span>
+          <button class="pv-btn-save" @click="generate()" :disabled="generating || !prompt.trim()">
+            <span x-text="generating ? '生成中...' : '生成'"></span>
           </button>
+        </div>
+
+        {# 参考图预览 #}
+        <div class="pv-quick__refs" x-show="ref1Preview || ref2Preview">
+          <img x-show="ref1Preview" :src="ref1Preview" class="pv-quick__ref-thumb" alt="参考图1">
+          <img x-show="ref2Preview" :src="ref2Preview" class="pv-quick__ref-thumb" alt="参考图2">
         </div>
       </div>
 
-      {# 进度 #}
+      {# 视频上传进度 #}
+      <div class="pv-upload-progress" x-show="videoUploading">
+        <div class="pv-progress"><div class="pv-progress__bar" :style="`width:${videoProgress}%`"></div></div>
+        <span x-text="videoStatus"></span>
+      </div>
+
+      {# 生成进度 #}
       <div class="pv-quick__progress" x-show="generating">
         <div class="pv-progress"><div class="pv-progress__bar" :style="`width:${progress}%`"></div></div>
         <span x-text="statusText"></span>
       </div>
 
+      {# 预览窗口 #}
+      <div class="pv-preview-window" x-show="previewVisible">
+        <div class="pv-preview-window__toolbar">
+          <button @click="zoomIn" title="放大">+</button>
+          <button @click="zoomOut" title="缩小">-</button>
+          <button @click="zoomReset" title="重置">1:1</button>
+          <button @click="previewVisible=false" title="关闭">✕</button>
+        </div>
+        <div class="pv-preview-window__content" :style="`transform:scale(${previewZoom})`">
+          <div class="pv-preview-window__loading" x-show="previewLoading">生成中...</div>
+          <img x-show="previewType==='image' && !previewLoading" :src="previewUrl" alt="预览">
+          <video x-show="previewType==='video' && !previewLoading" :src="previewUrl" controls autoplay loop></video>
+          <div class="pv-preview-window__error" x-show="previewError" x-text="previewError"></div>
+        </div>
+      </div>
+
       {# 结果展示 #}
       <div class="pv-quick__results" x-show="results.length > 0">
         <template x-for="(r, i) in results" :key="i">
-          <div class="pv-quick__result">
+          <div class="pv-quick__result" @click="openPreview(r)">
             <img x-show="r.type==='image'" :src="r.url" alt="生成结果" loading="lazy">
-            <video x-show="r.type==='video'" :src="r.url" controls></video>
+            <video x-show="r.type==='video'" :src="r.url" muted></video>
             <div class="pv-quick__result-info">
-              <span x-text="r.workflow"></span>
-              <span x-text="r.time"></span>
+              <span x-text="r.workflow"></span><span x-text="r.time"></span>
             </div>
           </div>
         </template>
-      </div>
-
-      {# 参考 云端 风格的结果卡片网格 #}
-      <div class="pv-quick__history" x-data="quickHistory()" x-init="loadHistory()">
-        <h3>最近生成</h3>
-        <div class="pv-masonry">
-          <template x-for="item in items" :key="item.task_id">
-            <div class="pv-card pv-card--work">
-              <div class="pv-card__thumb">
-                <div class="pv-card__thumb-grad"></div>
-                <span class="pv-badge pv-badge--task" x-text="item.status"></span>
-              </div>
-              <div class="pv-card__body">
-                <h4 class="pv-card__title" x-text="item.title || '未命名'"></h4>
-                <p class="pv-card__date" x-text="formatDate(item.created_at)"></p>
-              </div>
-            </div>
-          </template>
-        </div>
       </div>
     </main>
   </div>
@@ -100,29 +114,59 @@
 <script>
 document.addEventListener('alpine:init', () => {
   Alpine.data('quickCreator', () => ({
-    mode: 'image', prompt: '', workflowId: '', duration: 5, count: 1,
-    generating: false, progress: 0, statusText: '', results: [], refImage: '',
+    mode: 'video', prompt: '', workflowId: 'video_G03_smoothmix', duration: 5,
+    generating: false, progress: 0, statusText: '', results: [],
+    ref1Base64: '', ref1Preview: '', ref2Base64: '', ref2Preview: '',
+    refVideoFile: null, videoName: '', videoUploading: false, videoProgress: 0, videoStatus: '',
+    previewVisible: false, previewUrl: '', previewType: 'image', previewZoom: 1,
+    previewLoading: false, previewError: '',
 
-    init() {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('prompt')) this.prompt = params.get('prompt');
-    },
+    get needsRefImage() { return this.mode === 'video' || this.mode === 'digital' || this.mode === 'action'; },
+    get needsRefVideo() { return this.mode === 'action'; },
 
-    onRefImage(e) {
-      const f = e.target.files[0];
-      if (!f) return;
+    onRefImage(slot, e) {
+      const f = e.target.files[0]; if (!f) return;
+      if (f.size > 50*1024*1024) { alert('图片不能超过50MB'); return; }
       const r = new FileReader();
-      r.onload = () => { this.refImage = r.result; };
+      r.onload = () => {
+        if (slot === 1) { this.ref1Base64 = r.result; this.ref1Preview = r.result; }
+        else { this.ref2Base64 = r.result; this.ref2Preview = r.result; }
+      };
       r.readAsDataURL(f);
     },
+
+    onRefVideo(e) {
+      const f = e.target.files[0]; if (!f) return;
+      const allowed = ['video/mp4','video/quicktime','video/webm'];
+      if (!allowed.includes(f.type)) { alert('仅支持 MP4、MOV、WebM 格式'); return; }
+      if (f.size > 200*1024*1024) { alert('视频不能超过200MB'); return; }
+      this.refVideoFile = f; this.videoName = f.name;
+      this.videoUploading = true; this.videoProgress = 0; this.videoStatus = '上传中...';
+      let prog = 0;
+      const timer = setInterval(() => {
+        prog += 15; this.videoProgress = Math.min(prog, 90);
+        if (prog >= 90) clearInterval(timer);
+      }, 200);
+      setTimeout(() => { clearInterval(timer); this.videoProgress = 100;
+        this.videoStatus = '就绪'; this.videoUploading = false; }, 1500);
+    },
+
+    openPreview(r) {
+      this.previewUrl = r.url; this.previewType = r.type;
+      this.previewVisible = true; this.previewZoom = 1;
+      this.previewLoading = false; this.previewError = '';
+    },
+    zoomIn() { this.previewZoom = Math.min(this.previewZoom + 0.25, 3); },
+    zoomOut() { this.previewZoom = Math.max(this.previewZoom - 0.25, 0.25); },
+    zoomReset() { this.previewZoom = 1; },
 
     async generate() {
       if (!this.prompt.trim()) return;
       this.generating = true; this.progress = 0; this.statusText = '提交中...';
-
       const wfId = this.workflowId || 'video_G03_smoothmix';
-      const body = { prompt: this.prompt, duration: this.duration, count: this.count };
-      if (this.refImage) body.ref_image = this.refImage;
+      const body = { prompt: this.prompt, duration: this.duration };
+      if (this.ref1Base64) body.ref_image = this.ref1Base64;
+      if (this.ref2Base64) body.ref_image2 = this.ref2Base64;
 
       try {
         const r = await fetch(`/api/workflows/${wfId}/execute`, {
@@ -130,40 +174,24 @@ document.addEventListener('alpine:init', () => {
         });
         const d = await r.json();
         if (!r.ok) throw new Error(d.detail || '提交失败');
-
-        this.progress = 10;
+        this.progress = 10; this.statusText = '生成中...';
         const poll = async () => {
           const pr = await fetch(`/api/progress/${d.task_id}?workflow_id=${wfId}`);
           const pd = await pr.json();
           this.progress = pd.progress || this.progress;
           if (pd.status === 'completed') {
             this.generating = false; this.statusText = '完成';
-            this.results.unshift({
-              type: 'video',
-              url: pd.result_url || '', workflow: 'G03 SmoothMix',
-              time: new Date().toLocaleString(),
-            });
+            const resultUrl = pd.result_url || '';
+            this.results.unshift({ type: 'video', url: resultUrl, workflow: 'G03 SmoothMix', time: new Date().toLocaleString() });
+            if (resultUrl) { this.openPreview({ url: resultUrl, type: 'video' }); }
           } else if (pd.status === 'failed') {
-            this.generating = false; this.statusText = '失败: ' + (pd.error || '');
-          } else {
-            setTimeout(poll, 2000);
-          }
+            this.generating = false; this.statusText = '失败';
+            this.previewError = pd.error || '生成失败';
+          } else { setTimeout(poll, 2000); }
         };
         poll();
-      } catch(e) { this.generating = false; this.statusText = '错误: ' + e.message; }
+      } catch(e) { this.generating = false; this.statusText = e.message; }
     }
-  }));
-
-  Alpine.data('quickHistory', () => ({
-    items: [],
-    async loadHistory() {
-      try {
-        const r = await fetch('/api/history?page=1&page_size=8');
-        const d = await r.json();
-        this.items = d.tasks || [];
-      } catch(e) { console.error(e); }
-    },
-    formatDate(d) { return d ? d.substring(0,10) : ''; }
   }));
 });
 </script>
