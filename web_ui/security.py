@@ -202,7 +202,7 @@ class CSPMiddleware(BaseHTTPMiddleware):
         "img-src 'self' data: https:; "
         "media-src 'self'; "
         "connect-src 'self'; "
-        "frame-ancestors 'none'; "
+        "frame-ancestors 'self'; "
         "base-uri 'self'; "
         "form-action 'self'"
     )
