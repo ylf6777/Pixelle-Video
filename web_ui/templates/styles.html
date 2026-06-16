@@ -83,7 +83,7 @@
 </div>
 
   {# 参数编辑面板 — 选中模板后显示 #}
-  <div class="pv-card" x-show="selected && hasParams()" x-cloak style="margin-top:24px;padding:20px">
+  <div class="pv-card" x-show="showPanel" style="display:none;margin-top:24px;padding:20px">
     <h3 style="margin-bottom:12px">⚙️ 编辑参数 — <span x-text="selectedName"></span></h3>
     <div class="pv-settings__grid">
       <template x-for="(val, key) in editingParams" :key="key">
@@ -106,36 +106,21 @@
 <script>
 document.addEventListener('alpine:init', () => {
   Alpine.data('templatePage', () => ({
-    selected: '', editingParams: {}, errors: {}, submitError: '', submitOk: '',
+    selected: '', showPanel: false, editingParams: {}, errors: {}, submitError: '', submitOk: '',
     allParams: {{ all_params_json|safe }},
-
-    get selectedName() {
-      const allCards = document.querySelectorAll('.pv-style-card');
-      for (const c of allCards) {
-        if (c.dataset.key === this.selected) {
-          const t = c.querySelector('.pv-card__title');
-          if (t) return t.textContent;
-        }
-      }
-      return this.selected;
-    },
-
-    hasParams() {
-      const p = this.allParams[this.selected];
-      return p && Object.keys(p).length > 0;
-    },
 
     getPlaceholder(key) {
       return key === 'brand' ? '填写品牌名' : key === 'author' ? '填写作者名' : key;
     },
 
     select(key) {
-      if (this.selected === key) { this.selected = ''; this.editingParams = {}; this.errors = {}; return; }
+      if (this.selected === key) { this.selected = ''; this.showPanel = false; this.editingParams = {}; this.errors = {}; return; }
       this.selected = key;
       this.submitError = ''; this.submitOk = '';
       const p = this.allParams[key] || {};
       this.editingParams = JSON.parse(JSON.stringify(p));
       this.errors = {};
+      this.showPanel = Object.keys(p).length > 0;
     },
 
     submitParams() {
