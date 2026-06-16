@@ -865,6 +865,53 @@
   font-weight: 600;
 }
 
+/* ---- 历史作品区 ---- */
+.pv-history-section {
+  margin-top: var(--pv-space-12);
+  padding-top: var(--pv-space-8);
+  border-top: 1px solid var(--pv-glass-border);
+}
+
+.pv-showcase__count {
+  font-size: var(--pv-text-sm);
+  color: var(--pv-text-muted);
+}
+
+.pv-card__date {
+  font-size: var(--pv-text-xs);
+  color: var(--pv-text-faint);
+  margin: var(--pv-space-1) 0;
+  font-family: var(--pv-font-mono);
+}
+
+.pv-card__type-tag {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: var(--pv-radius-sm);
+  border: 1px solid var(--pv-glass-border);
+  background: rgba(255,255,255,0.04);
+  color: var(--pv-text-muted);
+  font-size: var(--pv-text-xs);
+  font-family: var(--pv-font-body);
+}
+
+.pv-badge--task {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  background: rgba(0,212,255,0.15);
+  color: var(--pv-accent);
+}
+
+.pv-load-more {
+  display: flex;
+  justify-content: center;
+  padding: var(--pv-space-8) 0;
+}
+
 /* ============================================================
    12. 筛选栏 .pv-filter (legacy)
    ============================================================ */

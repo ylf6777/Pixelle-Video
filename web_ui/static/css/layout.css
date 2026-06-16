@@ -19,12 +19,20 @@
 
 /* ---- 搜索框在筛选栏中 ---- */
 
-/* ---- 瀑布流网格 ---- */
+/* ---- 瀑布流网格: 桌面4列 / 平板3列 / 手机2列 ---- */
 .pv-masonry {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 20px;
   align-items: start;
+}
+
+@media (max-width: 1199px) {
+  .pv-masonry { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 767px) {
+  .pv-masonry { grid-template-columns: repeat(2, 1fr); gap: 12px; }
 }
 
 /* ---- Hero 英雄区 ---- */
