@@ -16,7 +16,7 @@
         <div class="pv-detail__meta-item">
           <dt>来源</dt>
           <dd><span class="pv-badge pv-badge--{{ workflow.source }}">
-            {% if workflow.source == 'runninghub' %}RunningHub
+            {% if workflow.source == 'cloud' %}云端
             {% elif workflow.source == 'selfhost' %}本地 ComfyUI
             {% elif workflow.source == 'api' %}API 模型
             {% elif workflow.source == 'zealman' %}Zealman

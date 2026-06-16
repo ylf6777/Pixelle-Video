@@ -23,12 +23,12 @@
 
   {# ComfyUI 配置 #}
   <section class="pv-card pv-settings__section">
-    <h2>ComfyUI / RunningHub</h2>
+    <h2>ComfyUI / 云端</h2>
     <div class="pv-settings__grid">
       <label>ComfyUI URL <input type="url" x-model="comfyui.comfyui_url" class="pv-input" placeholder="http://127.0.0.1:8188"></label>
       <label>ComfyUI API Key <input type="password" x-model="comfyui.comfyui_api_key" class="pv-input" placeholder="可选"></label>
-      <label>RunningHub API Key <input type="password" x-model="comfyui.runninghub_api_key" class="pv-input" placeholder="rhu_..."></label>
-      <label>并发限制 <input type="number" x-model="comfyui.runninghub_concurrent_limit" class="pv-input" min="1" max="10"></label>
+      <label>云端 API Key <input type="password" x-model="comfyui.cloud_api_key" class="pv-input" placeholder="rhu_..."></label>
+      <label>并发限制 <input type="number" x-model="comfyui.cloud_concurrent_limit" class="pv-input" min="1" max="10"></label>
     </div>
     <div class="pv-settings__actions">
       <button class="pv-btn pv-btn--sm" @click="testComfy()" :disabled="testingComfy">测试 ComfyUI</button>

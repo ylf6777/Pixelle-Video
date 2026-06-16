@@ -7,7 +7,7 @@
     - id: 工作流唯一标识
     - name: 工作流名称
     - description: 描述文本
-    - source: 来源 (runninghub / selfhost / api / zealman)
+    - source: 来源 (cloud / selfhost / api / zealman)
     - tags: 标签列表
     - thumbnail: 缩略图 URL(可选，无则显示渐变色占位)
 #}
@@ -25,7 +25,7 @@
     {% endif %}
     {# 来源徽章 #}
     <span class="pv-badge pv-badge--{{ workflow.source }}">
-      {% if workflow.source == 'runninghub' %}RunningHub
+      {% if workflow.source == 'cloud' %}云端
       {% elif workflow.source == 'selfhost' %}本地
       {% elif workflow.source == 'api' %}API
       {% elif workflow.source == 'zealman' %}Zealman
