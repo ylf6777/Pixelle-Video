@@ -3,7 +3,6 @@
      x-data="{ theme: localStorage.getItem('pv-theme') || 'dark' }"
      :class="theme === 'dark' ? 'pv-navbar--dark' : 'pv-navbar--light'">
   <div class="pv-navbar__inner">
-    {# 品牌标识 #}
     <a href="/" class="pv-navbar__brand" aria-label="ylf_Video 首页">
       <svg class="pv-navbar__logo" width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
         <rect width="32" height="32" rx="8" fill="url(#pv-logo-grad)"/>
@@ -16,25 +15,12 @@
       <span class="pv-navbar__title">ylf_Video</span>
     </a>
 
-    {# 核心导航 #}
     <ul class="pv-navbar__links" role="menubar">
-      <li role="none" class="pv-navbar__dropdown" x-data="{ open: false }"
-          @mouseenter="open=true" @mouseleave="open=false">
-        <a href="/" class="pv-navbar__link" role="menuitem"
-          :class="{ 'pv-navbar__link--active': window.location.pathname === '/' }">作品展示 ▾</a>
-        <ul class="pv-navbar__sub" x-show="open" x-cloak @click="open=false">
-          <li><a href="/category/数字人">数字人</a></li>
-          <li><a href="/category/图片生成">图片生成</a></li>
-          <li><a href="/category/视频生成">视频生成</a></li>
-          <li><a href="/category/动作模仿">动作模仿</a></li>
-        </ul>
-      </li>
       <li role="none"><a href="/?tab=quick" class="pv-navbar__link" role="menuitem">快捷创作</a></li>
       <li role="none"><a href="/?tab=ai" class="pv-navbar__link" role="menuitem">AI应用</a></li>
       <li role="none"><a href="/workflows" class="pv-navbar__link" role="menuitem">ComfyUI 工作流</a></li>
     </ul>
 
-    {# 右侧操作 #}
     <div class="pv-navbar__actions">
       <a href="/history" class="pv-navbar__link">历史</a>
       <a href="/settings" class="pv-navbar__link">设置</a>
@@ -45,5 +31,19 @@
         <svg x-show="theme==='light'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       </button>
     </div>
+  </div>
+</nav>
+
+{# 分类导航栏 — 独立一行，横向平铺 #}
+<nav class="pv-catbar" role="navigation" aria-label="作品分类">
+  <div class="pv-catbar__inner">
+    <a href="/" class="pv-catbar__link {% if request.url.path == '/' %}pv-catbar__link--active{% endif %}">全部</a>
+    {% set cats = [
+      ('/category/数字人', '数字人'), ('/category/图片生成', '图片生成'),
+      ('/category/视频生成', '视频生成'), ('/category/动作模仿', '动作模仿'),
+    ] %}
+    {% for url, label in cats %}
+    <a href="{{ url }}" class="pv-catbar__link {% if request.url.path == url %}pv-catbar__link--active{% endif %}">{{ label }}</a>
+    {% endfor %}
   </div>
 </nav>
