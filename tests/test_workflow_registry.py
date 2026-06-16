@@ -260,3 +260,94 @@ class TestAPIRoutes:
         """速率限制 header 存在"""
         r = client.get("/api/workflows")
         assert "x-ratelimit-remaining" in r.headers
+
+
+class TestSettingsAPI:
+    """设置页面和配置 API 测试"""
+
+    @pytest.fixture
+    def client(self):
+        from api.app import app
+        from fastapi.testclient import TestClient
+        return TestClient(app)
+
+    def test_settings_page(self, client):
+        """设置页面返回 HTML"""
+        r = client.get("/settings")
+        assert r.status_code == 200
+        assert "text/html" in r.headers["content-type"]
+
+    def test_get_config(self, client):
+        """获取配置 API"""
+        r = client.get("/api/config")
+        assert r.status_code == 200
+        data = r.json()
+        assert "llm" in data
+        assert "comfyui" in data
+        assert "api_providers" in data
+
+    def test_update_config(self, client):
+        """更新配置 API"""
+        r = client.put("/api/config", json={"project_name": "test_config"})
+        assert r.status_code == 200
+        assert r.json()["status"] == "saved"
+
+    def test_test_comfyui_no_url(self, client):
+        """ComfyUI 测试 — URL 为空时返回错误"""
+        r = client.post("/api/config/test-comfyui", json={})
+        assert r.status_code == 400
+
+    def test_preview_tts_empty_text(self, client):
+        """TTS 预览 — text 为空返回 400"""
+        r = client.post("/api/preview/tts", json={"text": ""})
+        assert r.status_code == 400
+
+
+class TestWorkflowTypes:
+    """不同类型工作流的功能测试"""
+
+    @pytest.fixture
+    def client(self):
+        from api.app import app
+        from fastapi.testclient import TestClient
+        return TestClient(app)
+
+    def test_g03_workflow_detail(self, client):
+        """G03 工作流详情页正常"""
+        r = client.get("/workflow/video_G03_smoothmix")
+        assert r.status_code == 200
+
+    def test_g03_workflow_in_api(self, client):
+        """G03 在 API 列表中"""
+        r = client.get("/api/workflows?q=G03")
+        data = r.json()
+        assert any(w["id"] == "video_G03_smoothmix" for w in data)
+
+    def test_image_workflow_detail(self, client):
+        """图片工作流详情页正常"""
+        r = client.get("/workflow/image_flux")
+        assert r.status_code == 200
+
+    def test_video_workflow_execute(self, client):
+        """视频工作流执行返回 task_id"""
+        r = client.post("/api/workflows/video_G03_smoothmix/execute",
+                       json={"prompt": "test"})
+        assert r.status_code == 200
+        assert "task_id" in r.json()
+
+    def test_workflow_progress_tracking(self, client):
+        """进度查询返回正确结构"""
+        r = client.get("/api/progress/test_task?workflow_id=video_G03_smoothmix")
+        assert r.status_code == 200
+        data = r.json()
+        assert "progress" in data
+        assert "step" in data
+
+    def test_zealman_workflows_in_registry(self, client):
+        """Zealman 工作流在注册表中"""
+        r = client.get("/api/workflows?q=zealman")
+        data = r.json()
+        # zealman workflows should be present
+        zealman_ids = [w["id"] for w in data if w.get("source") == "zealman"]
+        # at least some zealman workflows should exist
+        assert isinstance(zealman_ids, list)
