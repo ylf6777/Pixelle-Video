@@ -426,16 +426,26 @@ async def api_preview_tts(request: Request):
         return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
 
 
-# ── 作品上传与审核 API ──────────────────────────────────────
+# ── 上传作品页面 ────────────────────────────────────────────
+
+@router.get("/upload", response_class=HTMLResponse)
+async def upload_page(request: Request):
+    """独立上传作品页面"""
+    return templates.TemplateResponse("upload.html", {"request": request})
+
+
+# ── 作品 API ────────────────────────────────────────────────
 
 @router.post("/api/works/upload")
 async def api_upload_work(request: Request):
-    """上传原创作品到待审核队列（multipart/form-data）"""
+    """上传作品（multipart/form-data），上传成功即发布"""
     from web_ui.works_storage import add_work
 
     form = await request.form()
     title = str(form.get("title", "未命名作品"))
     author = str(form.get("author", "匿名"))
+    category = str(form.get("category", ""))
+    description = str(form.get("description", ""))
     file = form.get("file")
     if not file or not hasattr(file, "filename"):
         raise HTTPException(400, "请上传作品文件")
@@ -452,33 +462,16 @@ async def api_upload_work(request: Request):
     with open(file_path, "wb") as f:
         f.write(content)
 
-    work = add_work(title=title, author=author, file_path=file_path, media_type=media_type)
-    return JSONResponse({"status": "submitted", "work_id": work["work_id"]})
+    work = add_work(title=title, author=author, file_path=file_path,
+                    media_type=media_type, category=category, description=description)
+    return JSONResponse({"status": "uploaded", "work_id": work["work_id"]})
 
 
-@router.get("/api/works/approved")
-async def api_approved_works(page: int = 1, page_size: int = 12):
-    """获取已审核通过的作品（分页）"""
-    from web_ui.works_storage import get_approved
-    return get_approved(page=page, page_size=page_size)
-
-
-@router.post("/api/works/{work_id}/approve")
-async def api_approve_work(work_id: str):
-    """审核通过"""
-    from web_ui.works_storage import approve_work
-    if not approve_work(work_id):
-        raise HTTPException(404, "作品不存在或状态异常")
-    return {"status": "approved"}
-
-
-@router.post("/api/works/{work_id}/reject")
-async def api_reject_work(work_id: str):
-    """拒绝作品"""
-    from web_ui.works_storage import reject_work
-    if not reject_work(work_id):
-        raise HTTPException(404, "作品不存在或状态异常")
-    return {"status": "rejected"}
+@router.get("/api/works/uploaded")
+async def api_uploaded_works(page: int = 1, page_size: int = 12):
+    """获取上传成功的作品列表（分页）"""
+    from web_ui.works_storage import get_uploaded
+    return get_uploaded(page=page, page_size=page_size)
 
 
 @router.get("/api/history")

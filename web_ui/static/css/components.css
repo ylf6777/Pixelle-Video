@@ -974,6 +974,107 @@
 .pv-text-success { color: var(--pv-success); }
 .pv-text-error { color: var(--pv-error); }
 
+/* ---- 上传按钮（主页） ---- */
+.pv-btn--upload {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* ---- 上传页面 ---- */
+.pv-upload-page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: var(--pv-space-6);
+}
+
+.pv-upload-page__layout {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: var(--pv-space-8);
+  margin-top: var(--pv-space-6);
+}
+
+.pv-upload-page__title {
+  font-family: var(--pv-font-display);
+  font-size: var(--pv-text-2xl);
+  font-weight: 700;
+  color: var(--pv-text);
+  margin-bottom: var(--pv-space-2);
+}
+
+.pv-upload-page__desc {
+  color: var(--pv-text-muted);
+  margin-bottom: var(--pv-space-6);
+}
+
+.pv-upload-page__form {
+  padding: var(--pv-space-8);
+}
+
+.pv-upload-page__form .pv-run-form__label {
+  display: block;
+  margin-bottom: var(--pv-space-4);
+  font-size: var(--pv-text-sm);
+  color: var(--pv-text-secondary);
+}
+
+.pv-upload-page__form .pv-input {
+  width: 100%;
+  margin-top: var(--pv-space-1);
+  padding: var(--pv-space-2) var(--pv-space-3);
+  border-radius: var(--pv-radius-sm);
+  border: 1px solid var(--pv-glass-border);
+  background: var(--pv-glass-bg);
+  color: var(--pv-text);
+  font-size: var(--pv-text-base);
+  font-family: var(--pv-font-body);
+}
+
+.pv-upload-page__form .pv-btn { margin-top: var(--pv-space-5); }
+
+.pv-upload-page__preview {
+  margin: var(--pv-space-4) 0;
+  border-radius: var(--pv-radius-sm);
+  overflow: hidden;
+  max-height: 300px;
+}
+
+.pv-upload-page__preview img,
+.pv-upload-page__preview video {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  background: #000;
+}
+
+.pv-upload-page__progress {
+  margin: var(--pv-space-4) 0;
+}
+
+.pv-run-form__hint {
+  display: block;
+  font-size: var(--pv-text-xs);
+  color: var(--pv-text-muted);
+  margin-top: var(--pv-space-1);
+}
+
+.pv-upload-page__guide ul {
+  padding-left: var(--pv-space-4);
+  color: var(--pv-text-muted);
+  font-size: var(--pv-text-sm);
+  line-height: 2;
+}
+
+.pv-upload-page__result {
+  margin-top: var(--pv-space-4);
+}
+
+@media (max-width: 767px) {
+  .pv-upload-page__layout {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ============================================================
    12. 筛选栏 .pv-filter (legacy)
    ============================================================ */

@@ -3,45 +3,21 @@
 {% block content %}
 
 <div class="pv-browser">
-
-  {# 作品展示区头部 #}
   <div class="pv-showcase-header">
     <h2 class="pv-showcase__title">作品展示</h2>
-    <p class="pv-showcase__subtitle">优质原创作品 · 人工审核展示</p>
+    <p class="pv-showcase__subtitle">原创作品 · 上传即展示</p>
+    <a href="/upload" class="pv-btn pv-btn--gradient pv-btn--upload">📤 上传作品</a>
   </div>
 
-  {# 上传入口 #}
-  <div class="pv-upload-card" x-data="workUploader()">
-    <div class="pv-upload-card__inner">
-      <div class="pv-upload-card__icon">📤</div>
-      <h3 class="pv-upload-card__title">上传原创作品</h3>
-      <p class="pv-upload-card__desc">分享你的优质创作，审核通过后展示在作品区</p>
-      <form @submit.prevent="upload" enctype="multipart/form-data">
-        <div class="pv-upload-card__form">
-          <input type="text" x-model="title" placeholder="作品标题" required class="pv-input">
-          <input type="text" x-model="author" placeholder="作者署名" class="pv-input">
-          <input type="file" accept="image/*,video/*" @change="onFileSelected" required class="pv-input pv-input--file">
-        </div>
-        <button type="submit" class="pv-btn pv-btn--gradient" :disabled="uploading">
-          <span x-show="!uploading">提交审核</span>
-          <span x-show="uploading">提交中...</span>
-        </button>
-      </form>
-      <p x-show="msg" x-text="msg" :class="msgOk ? 'pv-text-success' : 'pv-text-error'"
-         class="pv-upload-card__msg"></p>
-    </div>
-  </div>
-
-  {# 已审核作品画廊 #}
+  {# 已上传作品画廊 #}
   <section class="pv-gallery" x-data="galleryLoader()" x-init="init()">
-    <h2 class="pv-showcase__title">精选作品</h2>
     <div class="pv-masonry" id="gallery-grid">
       <template x-for="w in works" :key="w.work_id">
         <div class="pv-card pv-card--work">
           <div class="pv-card__thumb">
-            <img x-show="w.media_type==='image'" :src="'/works/'+w.work_id+'/'+(w.file_path.split('/').pop())"
+            <img x-show="w.media_type==='image'" :src="thumbUrl(w)"
                  alt="" loading="lazy" class="pv-card__thumb-img">
-            <video x-show="w.media_type==='video'" :src="'/works/'+w.work_id+'/'+(w.file_path.split('/').pop())"
+            <video x-show="w.media_type==='video'" :src="thumbUrl(w)"
                    muted loop playsinline class="pv-card__thumb-img"></video>
             <div class="pv-card__thumb-grad" x-show="!w.file_path"></div>
           </div>
@@ -49,6 +25,7 @@
             <h3 class="pv-card__title" x-text="w.title"></h3>
             <p class="pv-card__author" x-text="w.author"></p>
             <p class="pv-card__date" x-text="formatDate(w.created_at)"></p>
+            <span class="pv-card__type-tag" x-show="w.category" x-text="w.category"></span>
           </div>
         </div>
       </template>
@@ -69,29 +46,6 @@
 
 <script>
 document.addEventListener('alpine:init', () => {
-  Alpine.data('workUploader', () => ({
-    title: '', author: '', file: null, uploading: false, msg: '', msgOk: false,
-    onFileSelected(e) { this.file = e.target.files[0]; },
-    async upload() {
-      if (!this.file) { this.msg = '请选择文件'; this.msgOk = false; return; }
-      this.uploading = true; this.msg = '';
-      try {
-        const fd = new FormData();
-        fd.append('file', this.file);
-        fd.append('title', this.title || '未命名');
-        fd.append('author', this.author || '匿名');
-        const r = await fetch('/api/works/upload', { method: 'POST', body: fd });
-        const d = await r.json();
-        this.msg = d.status === 'submitted'
-          ? `作品已提交审核 (ID: ${d.work_id})，审核通过后将公开展示`
-          : '上传失败，请重试';
-        this.msgOk = d.status === 'submitted';
-        if (this.msgOk) { this.title = ''; this.author = ''; this.file = null; }
-      } catch(e) { this.msg = '上传失败: ' + e.message; this.msgOk = false; }
-      this.uploading = false;
-    }
-  }));
-
   Alpine.data('galleryLoader', () => ({
     works: [], page: 1, total: 0, hasMore: true, loading: false,
     async init() {
@@ -106,7 +60,7 @@ document.addEventListener('alpine:init', () => {
     async loadMore() {
       this.loading = true;
       try {
-        const r = await fetch(`/api/works/approved?page=${this.page}&page_size=12`);
+        const r = await fetch(`/api/works/uploaded?page=${this.page}&page_size=12`);
         const d = await r.json();
         this.works = [...this.works, ...(d.works || [])];
         this.total = d.total;
@@ -114,6 +68,11 @@ document.addEventListener('alpine:init', () => {
         this.page++;
       } catch(e) { console.error(e); }
       this.loading = false;
+    },
+    thumbUrl(w) {
+      if (!w.file_path) return '';
+      const name = w.file_path.replace(/\\/g,'/').split('/').pop();
+      return '/works/' + w.work_id + '/' + name;
     },
     formatDate(d) { return d ? d.substring(0, 10) : ''; }
   }));

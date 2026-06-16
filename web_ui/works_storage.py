@@ -1,10 +1,7 @@
 """
 作品存储模块 — 管理用户上传作品的审核与展示
 
-作品状态流转:
-    pending → approved (审核通过，进入展示队列)
-    pending → rejected (审核拒绝)
-    系统自动生成的内容不会进入此存储
+作品状态: uploaded (上传成功，直接进入展示队列)
 
 存储位置: works/ 目录
     works/.index.json  — 作品元数据索引
@@ -43,18 +40,21 @@ def _save_index(works: list[dict]) -> None:
         json.dump(works, f, ensure_ascii=False, indent=2)
 
 
-def add_work(title: str, author: str, file_path: str, media_type: str) -> dict:
+def add_work(title: str, author: str, file_path: str, media_type: str,
+             category: str = "", description: str = "") -> dict:
     """
-    添加作品到待审核队列
+    添加作品（上传成功即发布）
 
     Args:
         title: 作品标题
         author: 作者/上传者
         file_path: 作品文件路径
         media_type: image 或 video
+        category: 分类（可选）
+        description: 简介（可选）
 
     Returns:
-        作品元数据字典，含 work_id 和 status=pending
+        作品元数据字典，含 work_id 和 status=uploaded
     """
     work_id = str(uuid.uuid4())[:12]
     works = _load_index()
@@ -65,9 +65,10 @@ def add_work(title: str, author: str, file_path: str, media_type: str) -> dict:
         "author": author,
         "file_path": file_path,
         "media_type": media_type,
-        "status": "pending",
+        "category": category,
+        "description": description,
+        "status": "uploaded",
         "created_at": datetime.now().isoformat(),
-        "reviewed_at": None,
     }
     works.insert(0, work)
     _save_index(works)
@@ -101,9 +102,9 @@ def reject_work(work_id: str) -> Optional[dict]:
     return None
 
 
-def get_approved(page: int = 1, page_size: int = 12) -> dict:
+def get_uploaded(page: int = 1, page_size: int = 12) -> dict:
     """
-    分页获取已审核通过的作品
+    分页获取上传成功的作品
 
     Args:
         page: 页码（从1开始）
@@ -113,12 +114,12 @@ def get_approved(page: int = 1, page_size: int = 12) -> dict:
         {"works": list, "total": int, "page": int, "total_pages": int}
     """
     works = _load_index()
-    approved = [w for w in works if w["status"] == "approved"]
-    total = len(approved)
+    uploaded = [w for w in works if w["status"] == "uploaded"]
+    total = len(uploaded)
     total_pages = max(1, (total + page_size - 1) // page_size)
     start = (page - 1) * page_size
     return {
-        "works": approved[start:start + page_size],
+        "works": uploaded[start:start + page_size],
         "total": total,
         "page": page,
         "total_pages": total_pages,

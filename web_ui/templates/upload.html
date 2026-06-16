@@ -1,0 +1,167 @@
+{# 上传作品页面 #}
+{% extends "base.html" %}
+{% block content %}
+<div class="pv-upload-page" x-data="uploadForm()">
+  <nav class="pv-breadcrumb" aria-label="面包屑">
+    <a href="/" class="pv-breadcrumb__link">首页</a>
+    <span class="pv-breadcrumb__sep">/</span>
+    <span class="pv-breadcrumb__current">上传作品</span>
+  </nav>
+
+  <div class="pv-upload-page__layout">
+    {# 左侧：上传表单 #}
+    <section class="pv-card pv-upload-page__form">
+      <h1 class="pv-upload-page__title">上传原创作品</h1>
+      <p class="pv-upload-page__desc">分享你的创作，上传成功后将直接展示在作品区</p>
+
+      <form @submit.prevent="submit" enctype="multipart/form-data">
+        {# 作品名称 #}
+        <label class="pv-run-form__label">
+          作品名称 <span class="pv-text-error">*</span>
+          <input type="text" x-model="title" required maxlength="100"
+            placeholder="给你的作品起个名字" class="pv-input">
+        </label>
+
+        {# 分类 #}
+        <label class="pv-run-form__label">
+          作品分类
+          <select x-model="category" class="pv-input">
+            <option value="">请选择分类</option>
+            <option value="数字人">数字人</option>
+            <option value="图片生成">图片生成</option>
+            <option value="视频生成">视频生成</option>
+            <option value="动作模仿">动作模仿</option>
+            <option value="其他">其他</option>
+          </select>
+        </label>
+
+        {# 作者署名 #}
+        <label class="pv-run-form__label">
+          作者署名
+          <input type="text" x-model="author" maxlength="50"
+            placeholder="你的名字或昵称" class="pv-input">
+        </label>
+
+        {# 简介 #}
+        <label class="pv-run-form__label">
+          作品简介
+          <textarea x-model="description" rows="3" maxlength="500"
+            placeholder="简单介绍一下你的作品..." class="pv-input pv-input--textarea"></textarea>
+        </label>
+
+        {# 文件上传 #}
+        <label class="pv-run-form__label">
+          作品文件 <span class="pv-text-error">*</span>
+          <input type="file" @change="onFileSelected" required
+            accept="image/*,video/*" class="pv-input pv-input--file">
+          <span class="pv-run-form__hint" x-text="fileHint"></span>
+        </label>
+
+        {# 预览 #}
+        <div class="pv-upload-page__preview" x-show="previewUrl">
+          <img x-show="isImage" :src="previewUrl" alt="预览">
+          <video x-show="!isImage" :src="previewUrl" controls></video>
+        </div>
+
+        {# 上传进度 #}
+        <div class="pv-upload-page__progress" x-show="uploading">
+          <div class="pv-progress">
+            <div class="pv-progress__bar" :style="`width:${progress}%`"></div>
+          </div>
+          <span x-text="progressText"></span>
+        </div>
+
+        {# 提交按钮 #}
+        <button type="submit" class="pv-btn pv-btn--gradient pv-btn--block"
+          :disabled="uploading || !canSubmit">
+          <span x-show="!uploading">上传作品</span>
+          <span x-show="uploading">上传中 <span x-text="progress+'%'"></span></span>
+        </button>
+      </form>
+
+      {# 结果反馈 #}
+      <div class="pv-upload-page__result pv-run-result" x-show="result.show" x-cloak
+        :class="result.ok ? '' : 'pv-run-result--error'">
+        <p x-text="result.msg"></p>
+        <a href="/" class="pv-btn pv-btn--sm" x-show="result.ok">返回首页查看</a>
+      </div>
+    </section>
+
+    {# 右侧：上传说明 #}
+    <aside class="pv-upload-page__guide">
+      <div class="pv-card">
+        <h3>上传须知</h3>
+        <ul>
+          <li>仅支持原创作品，请勿上传他人作品</li>
+          <li>图片格式：JPG、PNG、WebP</li>
+          <li>视频格式：MP4、MOV、WebM</li>
+          <li>文件大小不超过 50MB</li>
+          <li>上传成功后将直接展示在首页作品区</li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+document.addEventListener('alpine:init', () => {
+  Alpine.data('uploadForm', () => ({
+    title: '', category: '', author: '', description: '',
+    file: null, previewUrl: '', isImage: true,
+    uploading: false, progress: 0, progressText: '准备上传...',
+    result: { show: false, ok: false, msg: '' },
+
+    get fileHint() {
+      return this.file ? `已选择: ${this.file.name} (${(this.file.size/1024/1024).toFixed(1)}MB)` : '';
+    },
+    get canSubmit() {
+      return this.title.trim() && this.file;
+    },
+
+    onFileSelected(e) {
+      this.file = e.target.files[0];
+      if (!this.file) return;
+      this.isImage = this.file.type.startsWith('image/');
+      this.previewUrl = URL.createObjectURL(this.file);
+    },
+
+    async submit() {
+      if (!this.file) return;
+      this.uploading = true; this.progress = 0; this.result.show = false;
+      this.progressText = '上传中...';
+
+      const fd = new FormData();
+      fd.append('file', this.file);
+      fd.append('title', this.title);
+      fd.append('category', this.category);
+      fd.append('author', this.author || '匿名');
+      fd.append('description', this.description);
+
+      // 模拟进度
+      const progressTimer = setInterval(() => {
+        if (this.progress < 90) { this.progress += 10; this.progressText = `上传中 ${this.progress}%`; }
+      }, 200);
+
+      try {
+        const r = await fetch('/api/works/upload', { method: 'POST', body: fd });
+        clearInterval(progressTimer);
+        this.progress = 100;
+        const d = await r.json();
+        if (r.ok) {
+          this.result = { show: true, ok: true,
+            msg: `上传成功！作品 "${this.title}" 已发布到作品展示区` };
+          this.title = ''; this.category = ''; this.author = ''; this.description = '';
+          this.file = null; this.previewUrl = '';
+        } else {
+          this.result = { show: true, ok: false, msg: d.detail || d.message || '上传失败' };
+        }
+      } catch(e) {
+        clearInterval(progressTimer);
+        this.result = { show: true, ok: false, msg: '上传失败: ' + e.message };
+      }
+      this.uploading = false;
+    }
+  }));
+});
+</script>
+{% endblock %}
