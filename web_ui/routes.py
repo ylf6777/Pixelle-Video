@@ -471,8 +471,21 @@ async def styles_page(request: Request):
     }
     style_list = []
     for key, (name, desc, cat) in TEMPLATE_INFO.items():
-        style_list.append({"key": key, "name": name, "desc": desc, "category": cat})
+        style_list.append({
+            "key": key, "name": name, "desc": desc, "category": cat,
+            "tpl_path": f"/templates/1080x1920/{key}.html",
+        })
     return templates.TemplateResponse("styles.html", {"request": request, "styles": style_list})
+
+
+@router.get("/templates/{size}/{name}")
+async def serve_template(size: str, name: str):
+    """直接提供模板 HTML 文件"""
+    from fastapi.responses import FileResponse
+    tpl_path = Path(f"templates/{size}/{name}")
+    if tpl_path.exists():
+        return FileResponse(str(tpl_path), media_type="text/html")
+    raise HTTPException(404, "模板不存在")
 
 
 @router.get("/storyboard", response_class=HTMLResponse)

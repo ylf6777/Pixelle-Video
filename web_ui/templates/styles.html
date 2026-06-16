@@ -28,7 +28,10 @@
       <div class="pv-card__body">
         <h3 class="pv-card__title">{{ s.name }}</h3>
         <p class="pv-card__desc">{{ s.desc }}</p>
-        <span class="pv-style-card__check" x-show="selected === '{{ s.key }}'">✓ 已选中</span>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <a href="{{ s.tpl_path }}" target="_blank" class="pv-btn-save" style="padding:4px 12px;font-size:12px;text-decoration:none">查看</a>
+          <span class="pv-style-card__check" x-show="selected === '{{ s.key }}'">✓ 已选中</span>
+        </div>
       </div>
     </div>
     {% endfor %}
