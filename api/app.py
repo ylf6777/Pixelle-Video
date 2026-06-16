@@ -131,6 +131,18 @@ if api_config.cors_enabled:
     )
     logger.info(f"CORS 已启用，允许来源: {api_config.cors_origins}")
 
+# === 安全中间件 ===
+from web_ui.security import (
+    ErrorMonitoringMiddleware,
+    CSPMiddleware,
+    RateLimitMiddleware,
+)
+
+app.add_middleware(ErrorMonitoringMiddleware)
+app.add_middleware(CSPMiddleware)
+app.add_middleware(RateLimitMiddleware)
+logger.info("安全中间件已启用: 错误监控 + CSP + 速率限制")
+
 # === 注册路由 ===
 
 # 健康检查（无前缀）

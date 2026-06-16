@@ -249,6 +249,9 @@ async def api_execute_workflow(workflow_id: str, request: Request):
     if not wf:
         raise HTTPException(404, f"工作流不存在: {workflow_id}")
 
+    from web_ui.security import rate_limit_execute
+    rate_limit_execute(request)
+
     executor = EXECUTORS.get(wf.source)
     if not executor:
         raise HTTPException(400, f"不支持的来源: {wf.source}")
