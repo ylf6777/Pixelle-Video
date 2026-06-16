@@ -1,152 +1,153 @@
-{# 模板展示页 — 三分类独立路由 #}
+{# 模板展示页 — 原代码选中逻辑复刻 #}
 {% extends "base.html" %}
+{% macro card(s, is_prompt=False) -%}
+<div class="pv-card pv-style-card" data-path="{{ s.key }}" onclick="selectCard('{{ s.key }}','{{ s.name }}')">
+  <div class="pv-card__thumb">
+    {% if s.preview %}<img src="{{ s.preview }}" alt="{{ s.name }}" loading="lazy">
+    {% elif is_prompt %}<div class="pv-card__thumb-grad" style="background:linear-gradient(135deg,{{ loop.cycle('#667eea,#764ba2','#4facfe,#00f2fe') }});min-height:200px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:700">{{ s.name }}</div>
+    {% else %}<div class="pv-card__thumb-grad" style="min-height:200px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3)">{{ s.name }}</div>{% endif %}
+  </div>
+  <div class="pv-card__body">
+    <h3 class="pv-card__title">{{ s.name }}</h3>
+    <p class="pv-card__desc">{{ s.desc }}</p>
+    {% if s.params %}<div style="margin-top:6px;font-size:11px;color:var(--pv-text-faint)">{% for k,v in s.params.items() %}<span style="margin-right:8px">{{ k }}: {{ v[:20] }}</span>{% endfor %}</div>{% endif %}
+    <button class="btn-select btn-select--secondary" style="margin-top:8px;width:100%;padding:6px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.15)">选择模板</button>
+  </div>
+</div>
+{%- endmacro %}
 {% block content %}
-<div class="pv-browser" x-data="templatePage()">
+<div class="pv-browser">
   <div class="pv-showcase-header">
     <h2 class="pv-showcase__title">模板中心</h2>
     <p class="pv-showcase__subtitle">{{ images|length + videos|length + prompts|length }} 个模板</p>
   </div>
 
-  {# 主导航条 — 用 <a> 链接支持浏览器前进后退 #}
+  {# 主导航条 #}
   <nav class="pv-template-nav" role="tablist">
     <a href="?tab=images" class="pv-template-nav__tab {{ 'pv-template-nav__tab--active' if active_tab == 'images' }}">插图模板 ({{ images|length }})</a>
     <a href="?tab=videos" class="pv-template-nav__tab {{ 'pv-template-nav__tab--active' if active_tab == 'videos' }}">视频模板 ({{ videos|length }})</a>
     <a href="?tab=prompts" class="pv-template-nav__tab {{ 'pv-template-nav__tab--active' if active_tab == 'prompts' }}">提示词模板 ({{ prompts|length }})</a>
   </nav>
 
-  {# 插图模板 #}
-  <div id="tab-images" class="pv-template-tab" {% if active_tab != 'images' %}style="display:none"{% endif %}>
-    <div class="pv-masonry">
-      {% for s in images %}
-      <div class="pv-card pv-style-card"
-        :class="{ 'pv-style-card--selected': selected === '{{ s.key }}' }" @click="select('{{ s.key }}')">
-        <div class="pv-card__thumb">
-          {% if s.preview %}<img src="{{ s.preview }}" alt="{{ s.name }}" loading="lazy">{% else %}<div class="pv-card__thumb-grad" style="min-height:200px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3)">{{ s.name }}</div>{% endif %}
-        </div>
-        <div class="pv-card__body">
-          <h3 class="pv-card__title">{{ s.name }}</h3>
-          <p class="pv-card__desc">{{ s.desc }}</p>
-          {% if s.params %}
-          <div style="margin-top:6px;font-size:11px;color:var(--pv-text-faint)">
-            {% for k,v in s.params.items() %}<span style="margin-right:8px">{{ k }}: {{ v[:20] }}</span>{% endfor %}
-          </div>
-          {% endif %}
-          <span class="pv-style-card__check" x-show="selected === '{{ s.key }}'">✓</span>
-        </div>
-      </div>
-      {% endfor %}
-    </div>
+  {# 图片模板 #}
+  <div id="tab-images" style="{{ 'display:none' if active_tab != 'images' }}">
+    <div class="pv-masonry">{% for s in images %}{{ card(s)|safe }}{% endfor %}</div>
   </div>
 
   {# 视频模板 #}
-  <div id="tab-videos" class="pv-template-tab" {% if active_tab != 'videos' %}style="display:none"{% endif %}>
-    <div class="pv-masonry">
-      {% for s in videos %}
-      <div class="pv-card pv-style-card"
-        :class="{ 'pv-style-card--selected': selected === '{{ s.key }}' }" @click="select('{{ s.key }}')">
-        <div class="pv-card__thumb">
-          {% if s.preview %}<img src="{{ s.preview }}" alt="{{ s.name }}" loading="lazy">{% else %}<div class="pv-card__thumb-grad" style="min-height:200px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3)">{{ s.name }}</div>{% endif %}
-        </div>
-        <div class="pv-card__body">
-          <h3 class="pv-card__title">{{ s.name }}</h3>
-          <p class="pv-card__desc">{{ s.desc }}</p>
-          <span class="pv-style-card__check" x-show="selected === '{{ s.key }}'">✓</span>
-        </div>
-      </div>
-      {% endfor %}
-    </div>
+  <div id="tab-videos" style="{{ 'display:none' if active_tab != 'videos' }}">
+    <div class="pv-masonry">{% for s in videos %}{{ card(s)|safe }}{% endfor %}</div>
   </div>
 
   {# 提示词模板 #}
-  <div id="tab-prompts" class="pv-template-tab" {% if active_tab != 'prompts' %}style="display:none"{% endif %}>
-    <div class="pv-masonry">
-      {% for s in prompts %}
-      <div class="pv-card pv-style-card"
-        :class="{ 'pv-style-card--selected': selected === '{{ s.key }}' }" @click="select('{{ s.key }}')">
-        <div class="pv-card__thumb">
-          <div class="pv-card__thumb-grad" style="background:linear-gradient(135deg,{{ loop.cycle('#667eea,#764ba2','#4facfe,#00f2fe') }});min-height:200px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:700">{{ s.name }}</div>
-        </div>
-        <div class="pv-card__body">
-          <h3 class="pv-card__title">{{ s.name }}</h3>
-          <p class="pv-card__desc">{{ s.desc }}</p>
-          {% if s.params %}
-          <div style="margin-top:6px;font-size:11px;color:var(--pv-text-faint)">
-            {% for k,v in s.params.items() %}<span style="margin-right:8px">{{ k }}: {{ v }}</span>{% endfor %}
-          </div>
-          {% endif %}
-          <span class="pv-style-card__check" x-show="selected === '{{ s.key }}'">✓</span>
-        </div>
-      </div>
-      {% endfor %}
-    </div>
+  <div id="tab-prompts" style="{{ 'display:none' if active_tab != 'prompts' }}">
+    <div class="pv-masonry">{% for s in prompts %}{{ card(s, is_prompt=True)|safe }}{% endfor %}</div>
   </div>
 </div>
 
-  {# 参数编辑面板 — 选中模板后显示 #}
-  <div class="pv-card" x-show="showPanel" style="display:none;margin-top:24px;padding:20px">
-    <h3 style="margin-bottom:12px">⚙️ 编辑参数 — <span x-text="selectedName"></span></h3>
-    <div class="pv-settings__grid">
-      <template x-for="(val, key) in editingParams" :key="key">
-        <label>
-          <span x-text="key"></span>
-          <input type="text" x-model="editingParams[key]" class="pv-input"
-            :placeholder="getPlaceholder(key)">
-          <span class="pv-text-error" style="font-size:12px" x-show="errors[key]" x-text="errors[key]"></span>
-        </label>
-      </template>
-    </div>
+{# 编辑面板 — 原代码 st.container(border=True) 复刻 #}
+<div class="pv-edit-panel" id="editPanel" style="display:none">
+  <div class="pv-card" style="padding:20px">
+    <h3 style="margin-bottom:12px">⚙️ 编辑参数 — <span id="panelTitle"></span></h3>
+    <div class="pv-settings__grid" id="paramFields"></div>
     <div style="display:flex;gap:12px;margin-top:16px">
-      <button class="pv-btn-save" @click="submitParams()" :disabled="!selected">使用模板</button>
-      <span class="pv-text-error" x-text="submitError"></span>
-      <span class="pv-text-success" x-text="submitOk"></span>
+      <button class="pv-btn-save" onclick="submitParams()">使用模板</button>
+      <span style="color:var(--pv-error);font-size:13px" id="submitError"></span>
+      <span style="color:var(--pv-success);font-size:13px" id="submitOk"></span>
     </div>
   </div>
 </div>
 
 <script>
-document.addEventListener('alpine:init', () => {
-  Alpine.data('templatePage', () => ({
-    selected: '', showPanel: false, editingParams: {}, errors: {}, submitError: '', submitOk: '',
-    allParams: {{ all_params_json|safe }},
+// === 原代码逻辑：st.session_state['selected_template'] ===
+const ALL_PARAMS = {{ all_params_json|safe }};
+let selectedPath = localStorage.getItem('selected_template') || '';
 
-    getPlaceholder(key) {
-      return key === 'brand' ? '填写品牌名' : key === 'author' ? '填写作者名' : key;
-    },
+function selectCard(path, name) {
+  // 与原代码完全一致: st.session_state['selected_template'] = template.template_path
+  if (selectedPath === path) {
+    selectedPath = '';
+    localStorage.removeItem('selected_template');
+  } else {
+    selectedPath = path;
+    localStorage.setItem('selected_template', path);
+  }
+  updateAllCards();
+  showEditPanel(name, path);
+}
 
-    select(key) {
-      if (this.selected === key) { this.selected = ''; this.showPanel = false; this.editingParams = {}; this.errors = {}; return; }
-      this.selected = key;
-      this.submitError = ''; this.submitOk = '';
-      const p = this.allParams[key] || {};
-      this.editingParams = JSON.parse(JSON.stringify(p));
-      this.errors = {};
-      this.showPanel = Object.keys(p).length > 0;
-    },
-
-    submitParams() {
-      this.errors = {}; this.submitError = ''; this.submitOk = '';
-      let hasError = false;
-      for (const [k, v] of Object.entries(this.editingParams)) {
-        const placeholder = this.getPlaceholder(k);
-        if (!v || v === placeholder || v.trim() === '') {
-          if (v === '' || v === placeholder) {
-            this.errors[k] = `请填写${k}，或主动清空内容后确认留空`;
-            hasError = true;
-          }
-        }
-        // 用户主动清空（删除占位文本后留空）→ 允许通过
-        if (v === '' && this.allParams[this.selected][k] !== '') {
-          this.editingParams[k] = '';  // 确认为留空
-        }
-      }
-      if (hasError) {
-        this.submitError = '请补充必填参数，或主动清空后确认留空';
-        return;
-      }
-      this.submitOk = '参数已确认，模板准备就绪';
-      setTimeout(() => this.submitOk = '', 3000);
+function updateAllCards() {
+  document.querySelectorAll('.pv-style-card').forEach(card => {
+    const path = card.dataset.path;
+    const btn = card.querySelector('.btn-select');
+    const isSel = (selectedPath === path);
+    card.classList.toggle('pv-style-card--selected', isSel);
+    if (btn) {
+      btn.textContent = isSel ? '✓ 已选中' : '选择模板';
+      btn.className = 'btn-select ' + (isSel ? 'btn-select--primary' : 'btn-select--secondary');
     }
-  }));
-});
+  });
+}
+
+function showEditPanel(name, path) {
+  const panel = document.getElementById('editPanel');
+  const title = document.getElementById('panelTitle');
+  const fields = document.getElementById('paramFields');
+  document.getElementById('submitError').textContent = '';
+  document.getElementById('submitOk').textContent = '';
+
+  const params = ALL_PARAMS[path] || {};
+  if (!selectedPath || Object.keys(params).length === 0) {
+    panel.style.display = 'none';
+    return;
+  }
+
+  title.textContent = name;
+  fields.innerHTML = '';
+  for (const [key, val] of Object.entries(params)) {
+    const ph = key === 'brand' ? '填写品牌名' : key === 'author' ? '填写作者名' : key;
+    fields.innerHTML += `<label><span>${key}</span>
+      <input type="text" class="pv-input param-input" data-key="${key}" value="${escHtml(val)}" placeholder="${ph}">
+      <span class="pv-text-error" style="font-size:12px;display:none" data-error="${key}"></span></label>`;
+  }
+  panel.style.display = 'block';
+  panel.scrollIntoView({behavior:'smooth'});
+}
+
+function submitParams() {
+  document.getElementById('submitError').textContent = '';
+  document.getElementById('submitOk').textContent = '';
+  let hasErr = false;
+  document.querySelectorAll('.param-input').forEach(inp => {
+    const key = inp.dataset.key;
+    const ph = inp.placeholder;
+    const val = inp.value;
+    const errEl = document.querySelector(`[data-error="${key}"]`);
+    if (!val || val === ph || val.trim() === '') {
+      if (val === '' || val === ph) {
+        errEl.textContent = `请填写${key}，或主动清空内容后确认留空`;
+        errEl.style.display = 'block';
+        hasErr = true;
+      }
+    } else {
+      errEl.style.display = 'none';
+    }
+  });
+  if (hasErr) {
+    document.getElementById('submitError').textContent = '请补充必填参数，或主动清空确认留空';
+    return;
+  }
+  document.getElementById('submitOk').textContent = '✓ 参数已确认，模板准备就绪';
+  setTimeout(() => document.getElementById('submitOk').textContent = '', 3000);
+}
+
+function escHtml(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// 初始化选中状态
+updateAllCards();
+if (selectedPath) {
+  const card = document.querySelector(`[data-path="${selectedPath}"]`);
+  if (card) showEditPanel(card.querySelector('.pv-card__title')?.textContent || '', selectedPath);
+}
 </script>
 {% endblock %}
