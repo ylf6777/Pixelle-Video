@@ -1285,6 +1285,8 @@
 }
 
 .pv-style-card { cursor: pointer; border: 2px solid transparent; transition: border-color 0.2s; }
+.pv-style-card .pv-card__thumb { aspect-ratio: auto; max-height: 320px; background: #000; }
+.pv-style-card .pv-card__thumb img { object-fit: contain; background: #000; }
 .pv-style-card:hover { border-color: var(--pv-glass-border); }
 .pv-style-card--selected { border-color: var(--pv-accent) !important; box-shadow: 0 0 16px rgba(0,212,255,0.15); }
 .pv-style-card__check { color: var(--pv-accent); font-size: 14px; font-weight: 600; margin-top: 8px; }
