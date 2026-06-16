@@ -22,7 +22,11 @@
          @click="select('{{ s.key }}')"
          x-show="!filterCat || filterCat==='{{ s.category }}'">
       <div class="pv-card__thumb">
-        <div class="pv-card__thumb-grad" style="background:linear-gradient(135deg,{{ loop.cycle('#667eea,#764ba2','#f093fb,#f5576c','#4facfe,#00f2fe','#43e97b,#38f9d7','#fa709a,#fee140') }})"></div>
+        {% if s.preview %}
+        <img src="{{ s.preview }}" alt="{{ s.name }}" loading="lazy" style="width:100%;height:100%;object-fit:cover">
+        {% else %}
+        <div class="pv-card__thumb-grad" style="background:linear-gradient(135deg,{{ loop.cycle('#667eea,#764ba2','#f093fb,#f5576c','#4facfe,#00f2fe') }})"></div>
+        {% endif %}
         <span class="pv-badge pv-badge--{{ s.category }}" style="position:absolute;top:8px;right:8px;z-index:1">{{ s.category }}</span>
       </div>
       <div class="pv-card__body">

@@ -181,6 +181,7 @@ if _web_ui_dir.exists():
     _works_dir = _project_root / "works"
     _works_dir.mkdir(exist_ok=True)
     app.mount("/works", StaticFiles(directory=str(_works_dir)), name="works")
+    app.mount("/docs/images", StaticFiles(directory=str(_project_root / "docs" / "images")), name="docs_images")
 
     from web_ui.routes import router as web_ui_router
     app.include_router(web_ui_router)

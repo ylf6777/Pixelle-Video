@@ -469,38 +469,49 @@ async def styles_page(request: Request):
         "static_excerpt": ("静态文摘", "文摘卡片静态版", "静态"),
         "asset_default": ("素材默认", "自定义素材模板", "其他"),
     }
+    import os as _os
     style_list = []
     for key, (name, desc, cat) in TEMPLATE_INFO.items():
-        style_list.append({"key": key, "name": name, "desc": desc, "category": cat})
+        # 找预览图片（原网站已预生成 48 张截图）
+        preview = ""
+        for ext in [".jpg", ".png"]:
+            for suffix in ["", "_en"]:
+                p = f"docs/images/1080x1920/{key}{suffix}{ext}"
+                if _os.path.exists(p):
+                    preview = "/" + p
+                    break
+            if preview: break
+        style_list.append({
+            "key": key, "name": name, "desc": desc, "category": cat, "preview": preview,
+        })
     return templates.TemplateResponse("styles.html", {"request": request, "styles": style_list})
 
 
 @router.get("/templates/{size}/{name}")
 async def serve_template(size: str, name: str):
-    """提供模板 HTML，替换占位符为示例文本"""
+    """提供模板 HTML，替换占位符 + 添加 viewport 适配"""
     import re
     tpl_path = Path(f"templates/{size}/{name}")
     if not tpl_path.exists():
         raise HTTPException(404, "模板不存在")
     html = tpl_path.read_text(encoding="utf-8")
-    # 替换所有 {{...}} 占位符为示例文本
-    replacements = {
-        "{{title}}": "示例标题",
-        "{{subtitle}}": "示例副标题",
-        "{{narration}}": "示例旁白文本，用于展示模板排版效果。",
-        "{{image}}": "",
-        "{{author}}": "作者名",
-        "{{brand}}": "品牌名",
-        "{{describe}}": "示例描述文字",
-        "{{text}}": "示例文本",
-        "{{subtitle=作者}}": "作者名",
-    }
-    for k, v in replacements.items():
-        html = html.replace(k, v)
-    # 替换带默认值的占位符 {{key=default}} → default
+    # 替换占位符
+    for old, new in {
+        "{{title}}":"示例标题","{{subtitle}}":"示例副标题",
+        "{{narration}}":"示例旁白文本，用于展示模板排版效果。",
+        "{{image}}":"","{{author}}":"作者名","{{brand}}":"品牌名",
+        "{{describe}}":"示例描述文字","{{text}}":"示例文本",
+        "{{subtitle=作者}}":"作者名",
+    }.items():
+        html = html.replace(old, new)
     html = re.sub(r"\{\{\w+=(.+?)\}\}", r"\1", html)
-    # 替换剩余未匹配的占位符为空
     html = re.sub(r"\{\{.*?\}\}", "", html)
+    # 注入 viewport 缩放：让 1080x1920 的模板适应浏览器窗口
+    html = html.replace("</head>",
+        '<meta name="viewport" content="width=1080,initial-scale=0.4">'
+        '<style>body{background:#fafafa!important}'
+        '.pv-template-wrapper{max-width:1080px;margin:0 auto;overflow-x:hidden}'
+        '</style></head>')
     return HTMLResponse(html)
 
 
