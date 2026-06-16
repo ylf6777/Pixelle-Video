@@ -430,14 +430,8 @@ async def api_preview_tts(request: Request):
 
 @router.get("/quick", response_class=HTMLResponse)
 async def quick_create_page(request: Request):
-    """快捷创作页面 — 参考 RunningHub AI 生成器"""
-    from web_ui.workflow_registry import workflow_registry
-    workflows = workflow_registry.get_all()
-    wf_dicts = [{k: v for k, v in w.__dict__.items() if not k.startswith("_")} for w in workflows]
-    return templates.TemplateResponse("quick.html", {
-        "request": request,
-        "workflows": wf_dicts,
-    })
+    """快捷创作页面"""
+    return templates.TemplateResponse("quick.html", {"request": request})
 
 
 @router.get("/upload", response_class=HTMLResponse)

@@ -20,10 +20,7 @@
         <label class="pv-quick__param">
           <span>工作流</span>
           <select x-model="workflowId" class="pv-input">
-            <option value="">自动选择</option>
-            {% for wf in workflows %}
-            <option value="{{ wf.id }}">{{ wf.name }} ({{ wf.source }})</option>
-            {% endfor %}
+            <option value="video_G03_smoothmix" selected>G03 SmoothMix (已验证)</option>
           </select>
         </label>
         <label class="pv-quick__param" x-show="mode==='video'||mode==='digital'">
@@ -123,35 +120,27 @@ document.addEventListener('alpine:init', () => {
       if (!this.prompt.trim()) return;
       this.generating = true; this.progress = 0; this.statusText = '提交中...';
 
-      const catMap = { image: 'image', video: 'video', digital: 'digital_human', action: 'action' };
-      const wfs = {{ workflows | tojson | safe }};
-      const matched = wfs.filter(w => w.category === catMap[this.mode]);
-      const wf = this.workflowId ? matched.find(w => w.id === this.workflowId) : matched[0];
-
-      if (!wf) {
-        this.statusText = '未找到匹配的工作流'; this.generating = false; return;
-      }
-
+      const wfId = this.workflowId || 'video_G03_smoothmix';
       const body = { prompt: this.prompt, duration: this.duration, count: this.count };
       if (this.refImage) body.ref_image = this.refImage;
 
       try {
-        const r = await fetch(`/api/workflows/${wf.id}/execute`, {
+        const r = await fetch(`/api/workflows/${wfId}/execute`, {
           method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)
         });
         const d = await r.json();
         if (!r.ok) throw new Error(d.detail || '提交失败');
 
-        this.statusText = '生成中...';
+        this.progress = 10;
         const poll = async () => {
-          const pr = await fetch(`/api/progress/${d.task_id}?workflow_id=${wf.id}`);
+          const pr = await fetch(`/api/progress/${d.task_id}?workflow_id=${wfId}`);
           const pd = await pr.json();
-          this.progress = pd.progress || 0;
+          this.progress = pd.progress || this.progress;
           if (pd.status === 'completed') {
             this.generating = false; this.statusText = '完成';
             this.results.unshift({
-              type: this.mode === 'image' ? 'image' : 'video',
-              url: pd.result_url || '', workflow: wf.name,
+              type: 'video',
+              url: pd.result_url || '', workflow: 'G03 SmoothMix',
               time: new Date().toLocaleString(),
             });
           } else if (pd.status === 'failed') {
