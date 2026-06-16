@@ -59,31 +59,56 @@
     </div>
   </section>
 
-  {# 保存 #}
+  {# 保存 + 重置 #}
   <div class="pv-settings__save">
-    <button class="pv-btn pv-btn--gradient" @click="save()" :disabled="saving">
-      <span x-show="!saving">保存配置</span><span x-show="saving">保存中...</span>
+    <button class="pv-btn pv-btn--gradient" @click="save()" :disabled="saving || !isDirty">
+      <span x-show="!saving">💾 保存配置</span><span x-show="saving">保存中...</span>
     </button>
-    <span x-show="saveMsg" x-text="saveMsg"></span>
+    <button class="pv-btn pv-btn--secondary" @click="reset()" :disabled="saving || isDefault">
+      🔄 重置配置
+    </button>
+    <span x-show="saveMsg" x-text="saveMsg" :class="saveOk ? 'pv-text-success' : 'pv-text-error'"></span>
   </div>
 </div>
 
 <script>
 document.addEventListener('alpine:init', () => {
   Alpine.data('settingsForm', () => ({
-    llm: {}, comfyui: {}, providers: {},
+    llm: {}, comfyui: {}, providers: {}, _snapshot: '',
     testing: false, llmStatus: '', llmOk: false,
     testingComfy: false, comfyStatus: '', comfyOk: false,
-    saving: false, saveMsg: '',
+    saving: false, saveMsg: '', saveOk: false,
 
-    async init() {
+    get isDirty() {
+      return JSON.stringify({llm:this.llm,comfyui:this.comfyui,providers:this.providers}) !== this._snapshot;
+    },
+    get isDefault() {
+      const def = {api_key:'',base_url:'',model:''};
+      const empty = JSON.stringify({llm:def,comfyui:{comfyui_url:'',comfyui_api_key:'',runninghub_api_key:'',runninghub_concurrent_limit:1},providers:{}});
+      return JSON.stringify({llm:this.llm,comfyui:this.comfyui,providers:this.providers}) === empty;
+    },
+
+    async init() { await this.loadConfig(); },
+    async loadConfig() {
       try {
         const r = await fetch('/api/config');
         const cfg = await r.json();
         this.llm = cfg.llm || {};
         this.comfyui = cfg.comfyui || {};
         this.providers = cfg.api_providers || {};
+        this._snapshot = JSON.stringify({llm:this.llm,comfyui:this.comfyui,providers:this.providers});
       } catch(e) { console.error(e); }
+    },
+
+    async reset() {
+      if (!confirm('确定要重置所有配置为默认值吗？此操作不可撤销。')) return;
+      this.llm = {api_key:'',base_url:'',model:''};
+      this.comfyui = {comfyui_url:'',comfyui_api_key:'',runninghub_api_key:'',runninghub_concurrent_limit:1};
+      this.providers = {};
+      this._snapshot = '';
+      this.saveMsg = '已重置为默认值，请点击保存';
+      this.saveOk = true;
+      setTimeout(() => this.saveMsg = '', 3000);
     },
 
     async testComfy() {
@@ -95,8 +120,8 @@ document.addEventListener('alpine:init', () => {
         });
         const d = await r.json();
         this.comfyOk = d.status === 'ok';
-        this.comfyStatus = this.comfyOk ? `✅ 连接成功 — 设备: ${d.device}` : `❌ ${d.message}`;
-      } catch(e) { this.comfyStatus = '❌ ' + e.message; this.comfyOk = false; }
+        this.comfyStatus = this.comfyOk ? `连接成功: ${d.device}` : d.message;
+      } catch(e) { this.comfyStatus = e.message; this.comfyOk = false; }
       this.testingComfy = false;
     },
 
@@ -109,21 +134,23 @@ document.addEventListener('alpine:init', () => {
         });
         const d = await r.json();
         this.llmOk = d.status === 'ok';
-        this.llmStatus = this.llmOk ? `✅ 连接成功 — ${d.model}: ${d.response}` : `❌ ${d.message}`;
-      } catch(e) { this.llmStatus = '❌ ' + e.message; this.llmOk = false; }
+        this.llmStatus = this.llmOk ? `连接成功: ${d.response}` : d.message;
+      } catch(e) { this.llmStatus = e.message; this.llmOk = false; }
       this.testing = false;
     },
 
     async save() {
-      this.saving = true; this.saveMsg = '';
+      this.saving = true; this.saveMsg = ''; this.saveOk = false;
       try {
         const r = await fetch('/api/config', {
           method: 'PUT', headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({ llm: this.llm, comfyui: this.comfyui, api_providers: this.providers })
         });
         const d = await r.json();
-        this.saveMsg = d.status === 'saved' ? '✅ 配置已保存' : '❌ 保存失败';
-      } catch(e) { this.saveMsg = '❌ ' + e.message; }
+        this.saveOk = d.status === 'saved';
+        this.saveMsg = this.saveOk ? '配置已保存' : ('保存失败: ' + (d.detail || ''));
+        if (this.saveOk) this._snapshot = JSON.stringify({llm:this.llm,comfyui:this.comfyui,providers:this.providers});
+      } catch(e) { this.saveMsg = '错误: ' + e.message; this.saveOk = false; }
       this.saving = false;
       setTimeout(() => this.saveMsg = '', 3000);
     }
