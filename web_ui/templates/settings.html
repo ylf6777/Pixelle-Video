@@ -53,7 +53,7 @@
 
   <div class="pv-settings__save">
     <button class="pv-btn-save" @click="save($el)">保存配置</button>
-    <button class="pv-btn-reset" @click="reset()">重置配置</button>
+    <button class="pv-btn-save" @click="reset()">重置配置</button>
     <span x-show="saveMsg" x-text="saveMsg" :class="saveOk ? 'pv-text-success' : 'pv-text-error'"></span>
   </div>
 </div>

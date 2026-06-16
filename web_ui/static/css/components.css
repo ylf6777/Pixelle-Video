@@ -1057,18 +1057,6 @@
 .pv-btn-save:active { transform: translateY(0); }
 .pv-btn-save:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
 
-.pv-btn-reset {
-  background: transparent;
-  color: var(--pv-text-muted);
-  border: 1px solid var(--pv-glass-border);
-}
-.pv-btn-reset:hover {
-  color: var(--pv-text);
-  border-color: var(--pv-text-muted);
-  background: var(--pv-glass-hover-bg);
-}
-.pv-btn-reset:active { background: rgba(255,255,255,0.08); }
-
 .pv-text-success { color: var(--pv-success); }
 .pv-text-error { color: var(--pv-error); }
 
