@@ -1,0 +1,114 @@
+{# 系统配置管理页面 #}
+{% extends "base.html" %}
+{% block content %}
+<div class="pv-settings" x-data="settingsForm()">
+  <header class="pv-settings__header">
+    <h1>系统配置</h1>
+    <p>管理 LLM、ComfyUI 和 API 供应商的连接配置</p>
+  </header>
+
+  {# LLM 配置 #}
+  <section class="pv-card pv-settings__section">
+    <h2>LLM 大语言模型</h2>
+    <div class="pv-settings__grid">
+      <label>API Key <input type="password" x-model="llm.api_key" class="pv-input" placeholder="sk-..."></label>
+      <label>Base URL <input type="url" x-model="llm.base_url" class="pv-input" placeholder="https://api.openai.com/v1"></label>
+      <label>Model <input type="text" x-model="llm.model" class="pv-input" placeholder="gpt-4o"></label>
+    </div>
+    <div class="pv-settings__actions">
+      <button class="pv-btn pv-btn--sm" @click="testLLM()" :disabled="testing">测试连接</button>
+      <span x-show="llmStatus" x-text="llmStatus" :class="llmOk ? 'pv-text-success' : 'pv-text-error'"></span>
+    </div>
+  </section>
+
+  {# ComfyUI 配置 #}
+  <section class="pv-card pv-settings__section">
+    <h2>ComfyUI / RunningHub</h2>
+    <div class="pv-settings__grid">
+      <label>ComfyUI URL <input type="url" x-model="comfyui.comfyui_url" class="pv-input" placeholder="http://127.0.0.1:8188"></label>
+      <label>ComfyUI API Key <input type="password" x-model="comfyui.comfyui_api_key" class="pv-input" placeholder="可选"></label>
+      <label>RunningHub API Key <input type="password" x-model="comfyui.runninghub_api_key" class="pv-input" placeholder="rhu_..."></label>
+      <label>并发限制 <input type="number" x-model="comfyui.runninghub_concurrent_limit" class="pv-input" min="1" max="10"></label>
+    </div>
+  </section>
+
+  {# API 供应商 #}
+  <section class="pv-card pv-settings__section">
+    <h2>API 供应商</h2>
+    {% set providers = [
+      ('openai', 'OpenAI'), ('dashscope', 'DashScope (阿里)'),
+      ('ark', '火山 ARK'), ('kling', 'Kling 可灵')
+    ] %}
+    <div class="pv-settings__providers">
+      {% for key, name in providers %}
+      <details class="pv-settings__provider">
+        <summary>{{ name }}</summary>
+        <div class="pv-settings__grid">
+          <label>API Key <input type="password" x-model="providers.{{ key }}.api_key" class="pv-input"></label>
+          <label>Base URL <input type="url" x-model="providers.{{ key }}.base_url" class="pv-input"></label>
+          <label class="pv-settings__checkbox">
+            <input type="checkbox" x-model="providers.{{ key }}.use_proxy"> 使用代理
+          </label>
+        </div>
+      </details>
+      {% endfor %}
+    </div>
+  </section>
+
+  {# 保存 #}
+  <div class="pv-settings__save">
+    <button class="pv-btn pv-btn--gradient" @click="save()" :disabled="saving">
+      <span x-show="!saving">保存配置</span><span x-show="saving">保存中...</span>
+    </button>
+    <span x-show="saveMsg" x-text="saveMsg"></span>
+  </div>
+</div>
+
+<script>
+document.addEventListener('alpine:init', () => {
+  Alpine.data('settingsForm', () => ({
+    llm: {}, comfyui: {}, providers: {},
+    testing: false, llmStatus: '', llmOk: false,
+    saving: false, saveMsg: '',
+
+    async init() {
+      try {
+        const r = await fetch('/api/config');
+        const cfg = await r.json();
+        this.llm = cfg.llm || {};
+        this.comfyui = cfg.comfyui || {};
+        this.providers = cfg.api_providers || {};
+      } catch(e) { console.error(e); }
+    },
+
+    async testLLM() {
+      this.testing = true; this.llmStatus = '测试中...';
+      try {
+        const r = await fetch('/api/config/test-llm', {
+          method: 'POST', headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(this.llm)
+        });
+        const d = await r.json();
+        this.llmOk = d.status === 'ok';
+        this.llmStatus = this.llmOk ? `✅ 连接成功 — ${d.model}: ${d.response}` : `❌ ${d.message}`;
+      } catch(e) { this.llmStatus = '❌ ' + e.message; this.llmOk = false; }
+      this.testing = false;
+    },
+
+    async save() {
+      this.saving = true; this.saveMsg = '';
+      try {
+        const r = await fetch('/api/config', {
+          method: 'PUT', headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ llm: this.llm, comfyui: this.comfyui, api_providers: this.providers })
+        });
+        const d = await r.json();
+        this.saveMsg = d.status === 'saved' ? '✅ 配置已保存' : '❌ 保存失败';
+      } catch(e) { this.saveMsg = '❌ ' + e.message; }
+      this.saving = false;
+      setTimeout(() => this.saveMsg = '', 3000);
+    }
+  }));
+});
+</script>
+{% endblock %}

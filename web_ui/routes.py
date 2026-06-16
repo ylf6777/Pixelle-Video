@@ -331,7 +331,58 @@ async def api_progress_poll(workflow_id: str = "", task_id: str = ""):
     return JSONResponse(progress)
 
 
-# ── 历史记录 API ──────────────────────────────────────────────
+# ── 设置页面 ──────────────────────────────────────────────────
+
+@router.get("/settings", response_class=HTMLResponse)
+async def settings_page(request: Request):
+    """系统配置管理页面"""
+    from pixelle_video.config import config_manager
+    config = config_manager.config.to_dict()
+    return templates.TemplateResponse("settings.html", {
+        "request": request,
+        "config": config,
+    })
+
+
+# ── 配置 API ─────────────────────────────────────────────────
+
+@router.get("/api/config")
+async def api_get_config():
+    """获取完整配置"""
+    from pixelle_video.config import config_manager
+    return config_manager.config.to_dict()
+
+
+@router.put("/api/config")
+async def api_update_config(request: Request):
+    """更新配置并保存到 config.yaml"""
+    from pixelle_video.config import config_manager
+    body = await request.json()
+    config_manager.update(body)
+    config_manager.save()
+    config_manager.reload()
+    return {"status": "saved"}
+
+
+@router.post("/api/config/test-llm")
+async def api_test_llm(request: Request):
+    """测试 LLM 连接"""
+    from pixelle_video.config import config_manager
+    from openai import AsyncOpenAI
+    body = await request.json()
+    try:
+        client = AsyncOpenAI(
+            api_key=body.get("api_key") or config_manager.config.llm.api_key,
+            base_url=body.get("base_url") or config_manager.config.llm.base_url,
+        )
+        r = await client.chat.completions.create(
+            model=body.get("model") or config_manager.config.llm.model or "gpt-3.5-turbo",
+            messages=[{"role": "user", "content": "Hi"}],
+            max_tokens=10,
+        )
+        return {"status": "ok", "model": r.model, "response": r.choices[0].message.content}
+    except Exception as e:
+        return JSONResponse({"status": "error", "message": str(e)}, status_code=400)
 
 @router.get("/api/history")
 async def api_history(page: int = 1, page_size: int = 20, status: str = ""):
