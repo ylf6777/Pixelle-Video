@@ -11,28 +11,30 @@
   </div>
 </section>
 
-{% include "components/filter_bar.html" %}
-
-{# 注入工作流数据供 Alpine.js 客户端筛选 #}
+{# 注入数据 + Alpine.js 筛选逻辑 #}
 <script>
   window.__WORKFLOWS__ = {{ workflows | tojson | safe }};
+  window.__CATEGORIES__ = {{ categories | tojson | safe }};
 </script>
 
-<section class="pv-masonry" id="workflow-grid"
-         x-data="searchFilter('')"
-         x-init="window.__FILTER__ = $data">
-  {% for wf in workflows %}
-  <div class="pv-card" style="animation-delay:{{ loop.index0 * 50 }}ms">
-    {{ render_workflow_card(wf) }}
-  </div>
-  {% endfor %}
+<div x-data="workflowBrowser()" x-init="init()">
+  {% include "components/filter_bar.html" %}
 
-  {% if not workflows %}
-  <div class="pv-empty">
-    <div class="pv-empty__icon">🔌</div>
-    <h2 class="pv-empty__title">未找到工作流</h2>
-    <p class="pv-empty__text">请确保 workflows/ 目录下存在工作流 JSON 文件</p>
+  {# 搜索框 #}
+  <div class="pv-search-bar">
+    <input type="search" x-model="query" @input="filter()"
+           placeholder="搜索工作流..." class="pv-input pv-input--search">
   </div>
-  {% endif %}
-</section>
+
+  <section class="pv-masonry" id="workflow-grid">
+    <template x-for="wf in filtered" :key="wf.id">
+      <div class="pv-card" x-html="renderCard(wf)"></div>
+    </template>
+    <div class="pv-empty" x-show="filtered.length === 0" x-cloak>
+      <div class="pv-empty__icon">🔍</div>
+      <h2 class="pv-empty__title">没有找到匹配的工作流</h2>
+      <p class="pv-empty__text">尝试调整筛选条件或搜索关键词</p>
+    </div>
+  </section>
+</div>
 {% endblock %}

@@ -1,23 +1,13 @@
-{# 筛选栏 — 横向分类标签组 #}
-<div class="pv-filter" x-data="searchFilter('{{ categories[0] if categories else '' }}')">
-  <nav class="pv-filter__tabs" role="tablist" aria-label="分类筛选">
+{# 筛选栏 — 分类标签组，在父级 x-data="workflowBrowser" 作用域内 #}
+<nav class="pv-filter__tabs" role="tablist" aria-label="分类筛选">
+  <button class="pv-filter__tab"
+    :class="{ 'pv-filter__tab--active': activeCategory === '' }"
+    @click="selectCategory('')" role="tab" type="button">全部</button>
+  <template x-for="cat in categories" :key="cat">
     <button class="pv-filter__tab"
-      :class="{ 'pv-filter__tab--active': activeCategory === '' }"
-      @click="selectCategory('')" role="tab" type="button">全部</button>
-    {% for cat in categories %}
-    <button class="pv-filter__tab"
-      :class="{ 'pv-filter__tab--active': activeCategory === '{{ cat }}' }"
-      @click="selectCategory('{{ cat }}')" role="tab" type="button">
-      {% if cat == 'image' %}文生图
-      {% elif cat == 'video' %}图生视频
-      {% elif cat == 'digital_human' %}数字人
-      {% elif cat == 'audio' %}音频
-      {% elif cat == 'action' %}动作迁移
-      {% elif cat == 'analysis' %}分析
-      {% elif cat == 'none' %}其他
-      {% else %}{{ cat }}
-      {% endif %}
+      :class="{ 'pv-filter__tab--active': activeCategory === cat }"
+      @click="selectCategory(cat)" role="tab" type="button"
+      x-text="cat === 'image' ? '文生图' : cat === 'video' ? '图生视频' : cat === 'digital_human' ? '数字人' : cat === 'audio' ? '音频' : cat === 'action' ? '动作迁移' : cat === 'analysis' ? '分析' : cat">
     </button>
-    {% endfor %}
-  </nav>
-</div>
+  </template>
+</nav>
