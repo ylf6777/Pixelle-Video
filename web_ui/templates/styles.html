@@ -4,7 +4,7 @@
 <div class="pv-browser" x-data="stylePicker()">
   <div class="pv-showcase-header">
     <h2 class="pv-showcase__title">画面模板</h2>
-    <p class="pv-showcase__subtitle">{{ styles|length }} 种模板</p>
+    <p class="pv-showcase__subtitle">{{ styles|length }} 种模板 · 点击卡片查看效果</p>
   </div>
 
   <div class="pv-showcase__cats" style="margin-bottom:20px">
@@ -22,16 +22,15 @@
          @click="select('{{ s.key }}')"
          x-show="!filterCat || filterCat==='{{ s.category }}'">
       <div class="pv-card__thumb">
-        <div class="pv-card__thumb-grad" style="background:linear-gradient(135deg,{{ loop.cycle('#667eea,#764ba2','#f093fb,#f5576c','#4facfe,#00f2fe','#43e97b,#38f9d7','#fa709a,#fee140') }})"></div>
-        <span class="pv-badge pv-badge--{{ s.category }}" style="position:absolute;top:8px;right:8px">{{ s.category }}</span>
+        <iframe src="{{ s.tpl_path }}" frameborder="0" scrolling="no"
+          style="width:540px;height:960px;transform:scale(0.24);transform-origin:0 0;pointer-events:none;border:none"
+          loading="lazy"></iframe>
+        <span class="pv-badge pv-badge--{{ s.category }}" style="position:absolute;top:8px;right:8px;z-index:1">{{ s.category }}</span>
       </div>
       <div class="pv-card__body">
         <h3 class="pv-card__title">{{ s.name }}</h3>
         <p class="pv-card__desc">{{ s.desc }}</p>
-        <div style="display:flex;gap:8px;margin-top:8px">
-          <a href="{{ s.tpl_path }}" target="_blank" class="pv-btn-save" style="padding:4px 12px;font-size:12px;text-decoration:none">查看</a>
-          <span class="pv-style-card__check" x-show="selected === '{{ s.key }}'">✓ 已选中</span>
-        </div>
+        <span class="pv-style-card__check" x-show="selected === '{{ s.key }}'">✓ 已选中</span>
       </div>
     </div>
     {% endfor %}
