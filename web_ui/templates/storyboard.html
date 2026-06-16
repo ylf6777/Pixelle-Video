@@ -18,10 +18,7 @@
       </select>
       <input type="number" x-model="nScenes" min="1" max="30" value="5"
         class="pv-input" style="width:80px;flex-shrink:0" title="分镜数量">
-      <button class="pv-btn-save" @click="generate()" :disabled="loading || !article.trim()">
-        <span x-show="!loading">生成分镜</span>
-        <span x-show="loading">生成中...</span>
-      </button>
+      <button class="pv-btn-save" @click="generate($el)" :disabled="loading || !article.trim()">生成</button>
       <span x-show="error" x-text="error" class="pv-text-error"></span>
     </div>
   </div>
@@ -80,22 +77,17 @@ document.addEventListener('alpine:init', () => {
     article: '', mediaType: 'image', nScenes: 5,
     loading: false, error: '', scenes: [],
 
-    async generate() {
+    generate(btn) {
       this.loading = true; this.error = '';
-      try {
-        const r = await fetch('/api/storyboard/generate', {
-          method: 'POST', headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({article:this.article, media_type:this.mediaType, n_scenes:this.nScenes})
-        });
-        if (!r.ok) { const d = await r.json(); throw new Error(d.detail || '生成失败'); }
-        const d = await r.json();
-        this.scenes = (d.scenes || []).map(s => ({
-          narration: s.narration || s,
-          image_prompt: s.image_prompt || '',
-          _uid: Math.random().toString(36).slice(2,10)
-        }));
-      } catch(e) { this.error = e.message; }
-      this.loading = false;
+      btn.textContent = '生成中...'; btn.disabled = true;
+      fetch('/api/storyboard/generate', {method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({article:this.article,media_type:this.mediaType,n_scenes:this.nScenes})})
+      .then(r=>r.json()).then(d=>{
+        this.scenes = (d.scenes||[]).map(s=>({
+          narration:s.narration||s,image_prompt:s.image_prompt||'',
+          _uid:Math.random().toString(36).slice(2,10)}));
+      }).catch(e=>{this.error=e.message})
+      .finally(()=>{this.loading=false;btn.textContent='生成';btn.disabled=false;});
     },
 
     addScene() {
