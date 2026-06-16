@@ -49,70 +49,86 @@
   const errorEl = document.getElementById('errorMsg');
   let scenesData = [];
 
-  function renderScenes() {
-    sceneList.innerHTML = '';
-    scenesData.forEach((s, i) => {
-      const card = document.createElement('div');
-      card.className = 'pv-scene-card pv-card';
-      card.innerHTML = `
-        <div class="pv-scene-card__header">
-          <span class="pv-scene-card__num">#${i+1}</span>
-          <div class="pv-scene-card__actions">
-            <button data-action="up" data-idx="${i}" ${i===0?'disabled':''}>↑</button>
-            <button data-action="down" data-idx="${i}" ${i===scenesData.length-1?'disabled':''}>↓</button>
-            <button data-action="insert" data-idx="${i}">＋</button>
-            <button data-action="delete" data-idx="${i}">✕</button>
-          </div>
-        </div>
-        <div class="pv-scene-card__body">
-          <label><span>旁白 (Narration)</span>
-            <textarea data-field="narration" data-idx="${i}" rows="2" class="pv-input pv-input--textarea">${esc(s.narration)}</textarea>
-          </label>
-          <label><span>画面提示词 (Image Prompt)</span>
-            <textarea data-field="image_prompt" data-idx="${i}" rows="2" class="pv-input pv-input--textarea">${esc(s.image_prompt)}</textarea>
-          </label>
-        </div>`;
-      sceneList.appendChild(card);
-    });
-    sceneCount.textContent = scenesData.length + ' 个分镜';
-    resultArea.style.display = 'block';
-    bindCardEvents();
-  }
-
   function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-  function bindCardEvents() {
-    sceneList.querySelectorAll('button[data-action]').forEach(b => {
-      b.onclick = function() {
-        const idx = parseInt(this.dataset.idx);
-        const action = this.dataset.action;
-        if (action === 'up' && idx > 0) {
-          [scenesData[idx-1], scenesData[idx]] = [scenesData[idx], scenesData[idx-1]];
-        } else if (action === 'down' && idx < scenesData.length - 1) {
-          [scenesData[idx], scenesData[idx+1]] = [scenesData[idx+1], scenesData[idx]];
-        } else if (action === 'insert') {
-          scenesData.splice(idx+1, 0, {narration:'', image_prompt:''});
-        } else if (action === 'delete') {
-          if (scenesData.length <= 1) { errorEl.textContent = '至少保留一个分镜'; return; }
-          scenesData.splice(idx, 1);
-        }
-        syncTextareas(); renderScenes();
-      };
-    });
-    sceneList.querySelectorAll('textarea[data-field]').forEach(ta => {
-      ta.oninput = function() {
-        const idx = parseInt(this.dataset.idx);
-        scenesData[idx][this.dataset.field] = this.value;
-      };
-    });
+  function renderAllScenes() {
+    sceneList.innerHTML = '';
+    scenesData.forEach((s, i) => { sceneList.appendChild(buildCard(s, i)); });
+    sceneCount.textContent = scenesData.length + ' 个分镜';
+    resultArea.style.display = 'block';
   }
 
-  function syncTextareas() {
-    sceneList.querySelectorAll('textarea[data-field]').forEach(ta => {
-      const idx = parseInt(this.dataset.idx);
-      ta.value = scenesData[idx] ? (scenesData[idx][ta.dataset.field] || '') : '';
-    });
+  function buildCard(s, i) {
+    const card = document.createElement('div');
+    card.className = 'pv-scene-card pv-card';
+    card.dataset.idx = i;
+    card.innerHTML = `
+      <div class="pv-scene-card__header">
+        <span class="pv-scene-card__num">#${i+1}</span>
+        <div class="pv-scene-card__actions">
+          <button data-action="up" data-idx="${i}" ${i===0?'disabled':''}>↑</button>
+          <button data-action="down" data-idx="${i}" ${i===scenesData.length-1?'disabled':''}>↓</button>
+          <button data-action="insert" data-idx="${i}">＋</button>
+          <button data-action="delete" data-idx="${i}">✕</button>
+        </div>
+      </div>
+      <div class="pv-scene-card__body">
+        <label><span>旁白</span>
+          <textarea data-field="narration" data-idx="${i}" rows="2" class="pv-input pv-input--textarea">${esc(s.narration)}</textarea>
+        </label>
+        <label><span>画面提示词</span>
+          <textarea data-field="image_prompt" data-idx="${i}" rows="2" class="pv-input pv-input--textarea">${esc(s.image_prompt)}</textarea>
+        </label>
+      </div>`;
+    return card;
   }
+
+  function reindexCards() {
+    sceneList.querySelectorAll('.pv-scene-card').forEach((card, i) => {
+      card.dataset.idx = i;
+      card.querySelector('.pv-scene-card__num').textContent = '#' + (i+1);
+      card.querySelectorAll('button[data-action]').forEach(b => { b.dataset.idx = i; });
+      card.querySelectorAll('textarea[data-field]').forEach(ta => { ta.dataset.idx = i; });
+      card.querySelector('button[data-action="up"]').disabled = (i === 0);
+      card.querySelector('button[data-action="down"]').disabled = (i === scenesData.length - 1);
+    });
+    sceneCount.textContent = scenesData.length + ' 个分镜';
+  }
+
+  sceneList.addEventListener('click', function(e) {
+    const btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+    const idx = parseInt(btn.dataset.idx);
+    const action = btn.dataset.action;
+    const card = btn.closest('.pv-scene-card');
+
+    if (action === 'up' && idx > 0) {
+      [scenesData[idx-1], scenesData[idx]] = [scenesData[idx], scenesData[idx-1]];
+      card.parentNode.insertBefore(card, card.previousElementSibling);
+      reindexCards();
+    } else if (action === 'down' && idx < scenesData.length - 1) {
+      [scenesData[idx], scenesData[idx+1]] = [scenesData[idx+1], scenesData[idx]];
+      card.parentNode.insertBefore(card.nextElementSibling, card);
+      reindexCards();
+    } else if (action === 'insert') {
+      scenesData.splice(idx+1, 0, {narration:'', image_prompt:''});
+      const newCard = buildCard({narration:'', image_prompt:''}, idx+1);
+      card.parentNode.insertBefore(newCard, card.nextElementSibling);
+      reindexCards();
+    } else if (action === 'delete') {
+      if (scenesData.length <= 1) { errorEl.textContent = '至少保留一个分镜'; return; }
+      scenesData.splice(idx, 1);
+      card.remove();
+      reindexCards();
+    }
+  });
+
+  sceneList.addEventListener('input', function(e) {
+    const ta = e.target.closest('textarea[data-field]');
+    if (!ta) return;
+    const idx = parseInt(ta.dataset.idx);
+    if (scenesData[idx]) scenesData[idx][ta.dataset.field] = ta.value;
+  });
 
   btn.addEventListener('click', async () => {
     const article = articleEl.value.trim();
@@ -136,7 +152,7 @@
         narration: s.narration || (typeof s==='string'?s:''),
         image_prompt: Array.isArray(s.image_prompts||s.image_prompt) ? (s.image_prompts||s.image_prompt).join(', ') : (s.image_prompts||s.image_prompt||'')
       }));
-      renderScenes();
+      renderAllScenes();
     } catch(e) { errorEl.textContent = e.message; }
 
     btn.textContent = '生成分镜'; btn.disabled = false;
@@ -145,7 +161,9 @@
 
   document.getElementById('btnAddScene').addEventListener('click', () => {
     scenesData.push({narration:'', image_prompt:''});
-    renderScenes();
+    sceneList.appendChild(buildCard({narration:'', image_prompt:''}, scenesData.length-1));
+    sceneCount.textContent = scenesData.length + ' 个分镜';
+    resultArea.style.display = 'block';
   });
 })();
 </script>
