@@ -1,53 +1,30 @@
-{# 快捷创作页面 — AI 视频/图片生成 #}
+{# 快捷创作页面 #}
 {% extends "base.html" %}
 {% block content %}
-<div class="pv-quick" x-data="quickCreator()" x-init="init()">
+<div class="pv-quick" x-data="quickCreator()">
   <div class="pv-quick__layout">
-    {# 左侧：生成类型 + 参数 #}
     <aside class="pv-quick__sidebar">
       <nav class="pv-quick__tabs" role="tablist">
-        <button class="pv-quick__tab" :class="{ 'pv-quick__tab--active': mode === 'image' }"
-          @click="mode='image'">图片生成</button>
-        <button class="pv-quick__tab" :class="{ 'pv-quick__tab--active': mode === 'video' }"
-          @click="mode='video'">视频生成</button>
-        <button class="pv-quick__tab" :class="{ 'pv-quick__tab--active': mode === 'digital' }"
-          @click="mode='digital'">数字人</button>
-        <button class="pv-quick__tab" :class="{ 'pv-quick__tab--active': mode === 'action' }"
-          @click="mode='action'">动作模仿</button>
+        <button class="pv-quick__tab pv-quick__tab--active">视频生成</button>
       </nav>
-
       <div class="pv-quick__params">
         <label class="pv-quick__param">
-          <span>工作流</span>
-          <select x-model="workflowId" class="pv-input">
-            <option value="">自动选择</option>
-            {% for wf in workflows %}
-            <option value="{{ wf.id }}">{{ wf.name }} ({{ wf.source }})</option>
-            {% endfor %}
-          </select>
-        </label>
-        <label class="pv-quick__param" x-show="mode==='video'||mode==='digital'">
           <span>时长 (秒)</span>
           <input type="number" x-model="duration" min="3" max="30" value="5" class="pv-input">
-        </label>
-        <label class="pv-quick__param">
-          <span>生成数量</span>
-          <input type="number" x-model="count" min="1" max="4" value="1" class="pv-input">
         </label>
       </div>
     </aside>
 
-    {# 中间：提示词输入 + 生成按钮 #}
     <main class="pv-quick__main">
       <div class="pv-quick__prompt-area">
         <textarea x-model="prompt" rows="4"
-          placeholder="描述你想要生成的图片或视频内容...&#10;&#10;例如：一只可爱的橘猫在阳光下午睡，温暖的光线，4K画质"
+          placeholder="描述你想要生成的视频内容...&#10;&#10;例如：一只可爱的橘猫在阳光下午睡，温暖的光线，4K画质"
           class="pv-quick__prompt"
           @keydown.ctrl.enter="generate()"></textarea>
 
         <div class="pv-quick__actions">
-          <label class="pv-quick__upload" x-show="mode!=='image'">
-            <input type="file" accept="image/*" @change="onRefImage"> 参考图
+          <label class="pv-quick__upload">
+            <input type="file" accept="image/*" @change="onRefImage"> 📎 参考图
           </label>
           <span class="pv-quick__hint">Ctrl+Enter 快速生成</span>
           <button class="pv-btn pv-btn--gradient pv-btn--lg"
@@ -58,43 +35,22 @@
         </div>
       </div>
 
-      {# 进度 #}
       <div class="pv-quick__progress" x-show="generating">
         <div class="pv-progress"><div class="pv-progress__bar" :style="`width:${progress}%`"></div></div>
         <span x-text="statusText"></span>
       </div>
 
-      {# 结果展示 #}
       <div class="pv-quick__results" x-show="results.length > 0">
         <template x-for="(r, i) in results" :key="i">
           <div class="pv-quick__result">
-            <img x-show="r.type==='image'" :src="r.url" alt="生成结果" loading="lazy">
             <video x-show="r.type==='video'" :src="r.url" controls></video>
+            <img x-show="r.type==='image'" :src="r.url" alt="生成结果" loading="lazy">
             <div class="pv-quick__result-info">
               <span x-text="r.workflow"></span>
               <span x-text="r.time"></span>
             </div>
           </div>
         </template>
-      </div>
-
-      {# 参考 RunningHub 风格的结果卡片网格 #}
-      <div class="pv-quick__history" x-data="quickHistory()" x-init="loadHistory()">
-        <h3>最近生成</h3>
-        <div class="pv-masonry">
-          <template x-for="item in items" :key="item.task_id">
-            <div class="pv-card pv-card--work">
-              <div class="pv-card__thumb">
-                <div class="pv-card__thumb-grad"></div>
-                <span class="pv-badge pv-badge--task" x-text="item.status"></span>
-              </div>
-              <div class="pv-card__body">
-                <h4 class="pv-card__title" x-text="item.title || '未命名'"></h4>
-                <p class="pv-card__date" x-text="formatDate(item.created_at)"></p>
-              </div>
-            </div>
-          </template>
-        </div>
       </div>
     </main>
   </div>
@@ -103,13 +59,8 @@
 <script>
 document.addEventListener('alpine:init', () => {
   Alpine.data('quickCreator', () => ({
-    mode: 'image', prompt: '', workflowId: '', duration: 5, count: 1,
-    generating: false, progress: 0, statusText: '', results: [], refImage: '',
-
-    init() {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('prompt')) this.prompt = params.get('prompt');
-    },
+    prompt: '', duration: 5, generating: false, progress: 0, statusText: '',
+    results: [], refImage: '',
 
     onRefImage(e) {
       const f = e.target.files[0];
@@ -123,58 +74,41 @@ document.addEventListener('alpine:init', () => {
       if (!this.prompt.trim()) return;
       this.generating = true; this.progress = 0; this.statusText = '提交中...';
 
-      const catMap = { image: 'image', video: 'video', digital: 'digital_human', action: 'action' };
-      const wfs = {{ workflows | tojson | safe }};
-      const matched = wfs.filter(w => w.category === catMap[this.mode]);
-      const wf = this.workflowId ? matched.find(w => w.id === this.workflowId) : matched[0];
-
-      if (!wf) {
-        this.statusText = '未找到匹配的工作流'; this.generating = false; return;
-      }
-
-      const body = { prompt: this.prompt, duration: this.duration, count: this.count };
+      const body = { prompt: this.prompt, duration: this.duration };
       if (this.refImage) body.ref_image = this.refImage;
 
       try {
-        const r = await fetch(`/api/workflows/${wf.id}/execute`, {
+        const wfId = 'video_G03_smoothmix';
+        const r = await fetch(`/api/workflows/${wfId}/execute`, {
           method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)
         });
         const d = await r.json();
         if (!r.ok) throw new Error(d.detail || '提交失败');
 
         this.statusText = '生成中...';
+        this.progress = 10;
         const poll = async () => {
-          const pr = await fetch(`/api/progress/${d.task_id}?workflow_id=${wf.id}`);
+          const pr = await fetch(`/api/progress/${d.task_id}?workflow_id=${wfId}`);
           const pd = await pr.json();
-          this.progress = pd.progress || 0;
+          this.progress = pd.progress || this.progress;
           if (pd.status === 'completed') {
             this.generating = false; this.statusText = '完成';
             this.results.unshift({
-              type: this.mode === 'image' ? 'image' : 'video',
-              url: pd.result_url || '', workflow: wf.name,
-              time: new Date().toLocaleString(),
+              type: 'video', url: pd.result_url || '',
+              workflow: 'G03 SmoothMix', time: new Date().toLocaleString(),
             });
           } else if (pd.status === 'failed') {
-            this.generating = false; this.statusText = '失败: ' + (pd.error || '');
+            this.generating = false;
+            this.statusText = '失败: ' + (pd.error || '未知错误');
           } else {
             setTimeout(poll, 2000);
           }
         };
         poll();
-      } catch(e) { this.generating = false; this.statusText = '错误: ' + e.message; }
+      } catch(e) {
+        this.generating = false; this.statusText = '错误: ' + e.message;
+      }
     }
-  }));
-
-  Alpine.data('quickHistory', () => ({
-    items: [],
-    async loadHistory() {
-      try {
-        const r = await fetch('/api/history?page=1&page_size=8');
-        const d = await r.json();
-        this.items = d.tasks || [];
-      } catch(e) { console.error(e); }
-    },
-    formatDate(d) { return d ? d.substring(0,10) : ''; }
   }));
 });
 </script>
