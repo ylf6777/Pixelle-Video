@@ -61,11 +61,11 @@
 
   {# 保存 + 重置 #}
   <div class="pv-settings__save">
-    <button class="pv-btn pv-btn--gradient" @click="save()" :disabled="saving || !isDirty">
-      <span x-show="!saving">💾 保存配置</span><span x-show="saving">保存中...</span>
+    <button class="pv-btn pv-btn--gradient" @click="save()" :disabled="saving">
+      <span x-show="!saving">保存配置</span><span x-show="saving">保存中...</span>
     </button>
-    <button class="pv-btn pv-btn--secondary" @click="reset()" :disabled="saving || isDefault">
-      🔄 重置配置
+    <button class="pv-btn pv-btn--secondary" @click="reset()" :disabled="saving">
+      重置配置
     </button>
     <span x-show="saveMsg" x-text="saveMsg" :class="saveOk ? 'pv-text-success' : 'pv-text-error'"></span>
   </div>
@@ -78,15 +78,6 @@ document.addEventListener('alpine:init', () => {
     testing: false, llmStatus: '', llmOk: false,
     testingComfy: false, comfyStatus: '', comfyOk: false,
     saving: false, saveMsg: '', saveOk: false,
-
-    get isDirty() {
-      return JSON.stringify({llm:this.llm,comfyui:this.comfyui,providers:this.providers}) !== this._snapshot;
-    },
-    get isDefault() {
-      const def = {api_key:'',base_url:'',model:''};
-      const empty = JSON.stringify({llm:def,comfyui:{comfyui_url:'',comfyui_api_key:'',runninghub_api_key:'',runninghub_concurrent_limit:1},providers:{}});
-      return JSON.stringify({llm:this.llm,comfyui:this.comfyui,providers:this.providers}) === empty;
-    },
 
     async init() { await this.loadConfig(); },
     async loadConfig() {
@@ -140,19 +131,19 @@ document.addEventListener('alpine:init', () => {
     },
 
     async save() {
-      this.saving = true; this.saveMsg = ''; this.saveOk = false;
+      this.saving = true; this.saveMsg = ''
       try {
         const r = await fetch('/api/config', {
           method: 'PUT', headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ llm: this.llm, comfyui: this.comfyui, api_providers: this.providers })
-        });
-        const d = await r.json();
-        this.saveOk = d.status === 'saved';
-        this.saveMsg = this.saveOk ? '配置已保存' : ('保存失败: ' + (d.detail || ''));
-        if (this.saveOk) this._snapshot = JSON.stringify({llm:this.llm,comfyui:this.comfyui,providers:this.providers});
-      } catch(e) { this.saveMsg = '错误: ' + e.message; this.saveOk = false; }
-      this.saving = false;
-      setTimeout(() => this.saveMsg = '', 3000);
+          body: JSON.stringify({llm:this.llm,comfyui:this.comfyui,api_providers:this.providers})
+        })
+        const d = await r.json()
+        this.saveOk = d.status === 'saved'
+        this.saveMsg = this.saveOk ? '配置已保存' : '保存失败'
+        if (this.saveOk) this._snapshot = JSON.stringify({llm:this.llm,comfyui:this.comfyui,providers:this.providers})
+      } catch(e) { this.saveMsg = e.message }
+      finally { this.saving = false }
+      setTimeout(() => { this.saveMsg = '' }, 3000)
     }
   }));
 });
