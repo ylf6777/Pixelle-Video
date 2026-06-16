@@ -4,7 +4,7 @@
 <div class="pv-card pv-style-card" data-path="{{ s.key }}" onclick="selectCard('{{ s.key }}','{{ s.name }}')">
   <div class="pv-card__thumb">
     {% if s.preview %}<img src="{{ s.preview }}" alt="{{ s.name }}" loading="lazy">
-    {% elif is_prompt %}<div class="pv-card__thumb-grad" style="background:linear-gradient(135deg,{{ loop.cycle('#667eea,#764ba2','#4facfe,#00f2fe') }});min-height:200px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:700">{{ s.name }}</div>
+    {% elif is_prompt %}<div class="pv-card__thumb-grad" style="background:linear-gradient(135deg,#667eea,#764ba2);min-height:200px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:700">{{ s.name }}</div>
     {% else %}<div class="pv-card__thumb-grad" style="min-height:200px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3)">{{ s.name }}</div>{% endif %}
   </div>
   <div class="pv-card__body">
