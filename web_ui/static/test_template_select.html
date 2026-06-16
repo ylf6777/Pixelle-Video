@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>模板选择交互 — 原代码复刻测试</title>
+<style>
+* { box-sizing:border-box;margin:0;padding:0; }
+body { background:#0d0d1f;color:#fff;font-family:'PingFang SC','Microsoft YaHei',sans-serif;padding:20px; }
+h1 { text-align:center;margin:20px 0;font-size:22px; }
+h2 { font-size:16px;margin:12px 0 8px;color:#00d4ff; }
+.container { max-width:1400px;margin:0 auto; }
+.grid { display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px; }
+.card {
+  background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);
+  border-radius:8px;overflow:hidden;cursor:pointer;
+  transition:border-color 0.2s,transform 0.2s;
+}
+.card:hover { border-color:rgba(0,212,255,0.4);transform:translateY(-2px); }
+.card.selected { border:2px solid #00d4ff;box-shadow:0 0 16px rgba(0,212,255,0.2); }
+.thumb { width:100%;background:#000; }
+.thumb img { width:100%;display:block; }
+.thumb .placeholder {
+  min-height:150px;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:14px;padding:10px;
+}
+.info { padding:10px; }
+.name { font-size:13px;font-weight:600;margin-bottom:4px; }
+.desc { font-size:11px;color:rgba(255,255,255,0.5); }
+.btn-select {
+  display:block;width:100%;padding:6px;margin-top:8px;border:none;border-radius:6px;
+  font-size:12px;font-weight:600;cursor:pointer;text-align:center;
+}
+.btn-select.primary { background:#00d4ff;color:#000; }
+.btn-select.secondary { background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.15); }
+
+/* 选中后详情面板 — 复刻原代码 st.info + st.caption + 参数解析 */
+.detail-panel {
+  background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);
+  border-radius:8px;padding:16px;margin-bottom:20px;display:none;
+}
+.detail-panel.show { display:block; }
+.detail-panel .sel-name { font-size:18px;font-weight:700;color:#00d4ff;margin-bottom:8px; }
+.detail-panel .meta { font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:4px; }
+.detail-panel .params { margin-top:12px; }
+.detail-panel .param-row { display:flex;gap:8px;margin-bottom:4px;font-size:12px; }
+.detail-panel .param-label { color:rgba(255,255,255,0.4);min-width:80px; }
+.detail-panel .param-value { color:#fff;font-family:monospace; }
+
+@media (max-width:1024px) { .grid { grid-template-columns:repeat(3,1fr); } }
+@media (max-width:640px) { .grid { grid-template-columns:repeat(2,1fr); } }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>模板选择交互测试 — 原代码逻辑复刻</h1>
+  <div class="grid" id="grid"></div>
+  <div class="detail-panel" id="detail"></div>
+</div>
+
+<script>
+// === 原代码完整复刻：模板选择 + 触发配置项渲染 ===
+
+const TEMPLATES = [
+  "image_default","image_blur_card","image_book","image_cartoon","image_elegant",
+  "image_excerpt","image_fashion_vintage","image_full","image_healing","image_health_preservation",
+  "image_life_insights","image_life_insights_light","image_long_text","image_modern","image_neon",
+  "image_psychology_card","image_purple","image_satirical_cartoon","image_simple_black",
+  "image_simple_line_drawing","video_default","video_healing","static_default","static_excerpt","asset_default"
+];
+
+const NAMES = {
+  "image_default":"默认图片","image_blur_card":"毛玻璃卡片","image_book":"书本翻页",
+  "image_cartoon":"卡通动漫","image_elegant":"优雅简约","image_excerpt":"文摘卡片",
+  "image_fashion_vintage":"时尚复古","image_full":"全屏大图","image_healing":"治愈温暖",
+  "image_health_preservation":"养生保健","image_life_insights":"生活感悟",
+  "image_life_insights_light":"生活感悟浅色","image_long_text":"长文本","image_modern":"现代简约",
+  "image_neon":"霓虹灯","image_psychology_card":"心理卡片","image_purple":"紫色梦幻",
+  "image_satirical_cartoon":"讽刺漫画","image_simple_black":"极简黑",
+  "image_simple_line_drawing":"简笔画","video_default":"默认视频","video_healing":"治愈视频",
+  "static_default":"静态默认","static_excerpt":"静态文摘","asset_default":"素材默认"
+};
+
+// 模板类型检测 — 与原代码 get_template_type() 完全一致
+function getTemplateType(name) {
+  if (name.startsWith('static_')) return 'static';
+  if (name.startsWith('video_')) return 'video';
+  if (name.startsWith('image_')) return 'image';
+  return 'image';
+}
+
+// 尺寸解析 — 与原代码 parse_template_size() 一致
+function parseTemplateSize() {
+  return { width: 1080, height: 1920 };
+}
+
+let selectedKey = null;
+
+async function init() {
+  const grid = document.getElementById('grid');
+  const detail = document.getElementById('detail');
+
+  for (const key of TEMPLATES) {
+    const name = NAMES[key] || key;
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.key = key;
+
+    // 查找预览图 — 与原代码 get_template_preview_path() 一致
+    let imgUrl = '';
+    for (const ext of ['.jpg', '.png']) {
+      for (const suffix of ['', '_en']) {
+        const url = `/docs/images/1080x1920/${key}${suffix}${ext}`;
+        try { const r = await fetch(url, {method:'HEAD'}); if (r.ok) { imgUrl = url; break; } } catch(e) {}
+      }
+      if (imgUrl) break;
+    }
+
+    // 模板类型
+    const tplType = getTemplateType(key);
+    const isSelected = selectedKey === key;
+
+    card.innerHTML = `
+      <div class="thumb">${imgUrl ? `<img src="${imgUrl}" alt="${name}">` : `<div class="placeholder">${name}</div>`}</div>
+      <div class="info">
+        <div class="name">${name}</div>
+        <div class="desc">${tplType} · ${key}.html</div>
+        <button class="btn-select ${isSelected ? 'primary' : 'secondary'}" data-key="${key}">
+          ${isSelected ? '✓ 已选中' : '选择模板'}
+        </button>
+      </div>`;
+
+    // 点击卡片 = 选择模板
+    card.querySelector('.btn-select').onclick = (e) => {
+      e.stopPropagation();
+      // === 原代码逻辑: st.session_state['selected_template'] = template.template_path ===
+      selectedKey = key;
+
+      // 更新所有卡片选中状态
+      document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      document.querySelectorAll('.btn-select').forEach(b => {
+        b.className = b.dataset.key === key ? 'btn-select primary' : 'btn-select secondary';
+        b.textContent = b.dataset.key === key ? '✓ 已选中' : '选择模板';
+      });
+
+      // === 原代码逻辑: 渲染选中模板的配置信息 ===
+      const tplPath = `1080x1920/${key}.html`;
+      const size = parseTemplateSize();
+      const mediaType = getTemplateType(key);
+      const needsMedia = (mediaType === 'image' || mediaType === 'video');
+
+      detail.className = 'detail-panel show';
+      detail.innerHTML = `
+        <div class="sel-name">📋 已选模板: ${name}</div>
+        <div class="meta">路径: ${tplPath}</div>
+        <div class="meta">尺寸: ${size.width}×${size.height}</div>
+        <div class="meta">类型: ${mediaType} | ${needsMedia ? '需要AI生成媒体' : '静态模板(无需AI生成)'}</div>
+        <div class="params">
+          <div class="param-row"><span class="param-label">模板文件</span><span class="param-value">${key}.html</span></div>
+          <div class="param-row"><span class="param-label">媒体宽度</span><span class="param-value">1024px</span></div>
+          <div class="param-row"><span class="param-label">媒体高度</span><span class="param-value">1024px</span></div>
+        </div>`;
+    };
+
+    grid.appendChild(card);
+  }
+}
+
+init();
+</script>
+</body>
+</html>
