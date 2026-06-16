@@ -15,7 +15,7 @@
       <label>Model <input type="text" x-model="llm.model" class="pv-input" placeholder="gpt-4o"></label>
     </div>
     <div class="pv-settings__actions">
-      <button class="pv-btn pv-btn--gradient" @click="testLLM()" :disabled="testing">测试连接</button>
+      <button class="pv-btn-save" @click="testLLM()" :disabled="testing">测试连接</button>
       <span x-show="llmStatus" x-text="llmStatus" :class="llmOk ? 'pv-text-success' : 'pv-text-error'"></span>
     </div>
   </section>
@@ -29,7 +29,7 @@
       <label>并发限制 <input type="number" x-model="comfyui.runninghub_concurrent_limit" class="pv-input" min="1" max="10"></label>
     </div>
     <div class="pv-settings__actions">
-      <button class="pv-btn pv-btn--gradient" @click="testComfy()" :disabled="testingComfy">测试连接</button>
+      <button class="pv-btn-save" @click="testComfy()" :disabled="testingComfy">测试连接</button>
       <span x-show="comfyStatus" x-text="comfyStatus" :class="comfyOk ? 'pv-text-success' : 'pv-text-error'"></span>
     </div>
   </section>
@@ -52,8 +52,8 @@
   </section>
 
   <div class="pv-settings__save">
-    <button class="pv-btn pv-btn--gradient" @click="save($el)">保存配置</button>
-    <button class="pv-btn pv-btn--gradient" @click="reset()">重置配置</button>
+    <button class="pv-btn-save" @click="save($el)">保存配置</button>
+    <button class="pv-btn-reset" @click="reset()">重置配置</button>
     <span x-show="saveMsg" x-text="saveMsg" :class="saveOk ? 'pv-text-success' : 'pv-text-error'"></span>
   </div>
 </div>
