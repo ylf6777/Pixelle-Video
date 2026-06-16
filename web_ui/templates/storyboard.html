@@ -30,7 +30,7 @@
   </div>
 
   {# 分镜编辑区 #}
-  <div x-show="scenes.length > 0" x-cloak>
+  <div x-show="scenes.length > 0" style="display:none" x-transition>
     <div class="pv-showcase-header" style="margin-top:var(--pv-space-8)">
       <h2 class="pv-showcase__title">分镜脚本</h2>
       <span class="pv-showcase__subtitle" x-text="scenes.length + ' 个分镜'"></span>
@@ -94,7 +94,7 @@ document.addEventListener('alpine:init', () => {
             _uid: Math.random().toString(36).slice(2,10)
           });
         }
-        this.scenes = items;
+        this.scenes.splice(0, this.scenes.length, ...items);
       } catch(e) { this.error = e.message; }
       this.loading = false;
       btn.textContent = '生成'; btn.disabled = false;
