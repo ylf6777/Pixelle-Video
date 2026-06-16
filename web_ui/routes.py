@@ -18,6 +18,7 @@ Web UI 路由模块 — FastAPI Router，挂载到现有 api/app.py。
 from pathlib import Path
 import asyncio
 import json
+import uuid
 
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
@@ -423,6 +424,62 @@ async def api_preview_tts(request: Request):
         return JSONResponse({"status": "error", "message": "TTS 生成失败"}, status_code=500)
     except Exception as e:
         return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
+
+
+# ── 作品上传与审核 API ──────────────────────────────────────
+
+@router.post("/api/works/upload")
+async def api_upload_work(request: Request):
+    """上传原创作品到待审核队列（multipart/form-data）"""
+    from web_ui.works_storage import add_work
+
+    form = await request.form()
+    title = str(form.get("title", "未命名作品"))
+    author = str(form.get("author", "匿名"))
+    file = form.get("file")
+    if not file or not hasattr(file, "filename"):
+        raise HTTPException(400, "请上传作品文件")
+
+    filename = file.filename or "untitled"
+    work_id = str(uuid.uuid4())[:12]
+    work_dir = Path("works") / work_id
+    work_dir.mkdir(parents=True, exist_ok=True)
+    ext = Path(filename).suffix.lower()
+    media_type = "video" if ext in (".mp4", ".mov", ".webm", ".avi") else "image"
+    file_path = str(work_dir / filename)
+
+    content = await file.read()
+    with open(file_path, "wb") as f:
+        f.write(content)
+
+    work = add_work(title=title, author=author, file_path=file_path, media_type=media_type)
+    return JSONResponse({"status": "submitted", "work_id": work["work_id"]})
+
+
+@router.get("/api/works/approved")
+async def api_approved_works(page: int = 1, page_size: int = 12):
+    """获取已审核通过的作品（分页）"""
+    from web_ui.works_storage import get_approved
+    return get_approved(page=page, page_size=page_size)
+
+
+@router.post("/api/works/{work_id}/approve")
+async def api_approve_work(work_id: str):
+    """审核通过"""
+    from web_ui.works_storage import approve_work
+    if not approve_work(work_id):
+        raise HTTPException(404, "作品不存在或状态异常")
+    return {"status": "approved"}
+
+
+@router.post("/api/works/{work_id}/reject")
+async def api_reject_work(work_id: str):
+    """拒绝作品"""
+    from web_ui.works_storage import reject_work
+    if not reject_work(work_id):
+        raise HTTPException(404, "作品不存在或状态异常")
+    return {"status": "rejected"}
+
 
 @router.get("/api/history")
 async def api_history(page: int = 1, page_size: int = 20, status: str = ""):

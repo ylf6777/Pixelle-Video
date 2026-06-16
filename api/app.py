@@ -177,6 +177,11 @@ _web_ui_dir = _Path(__file__).resolve().parent.parent / "web_ui"
 if _web_ui_dir.exists():
     app.mount("/static", StaticFiles(directory=str(_web_ui_dir / "static")), name="static")
 
+    # 作品文件静态服务
+    _works_dir = _project_root / "works"
+    _works_dir.mkdir(exist_ok=True)
+    app.mount("/works", StaticFiles(directory=str(_works_dir)), name="works")
+
     from web_ui.routes import router as web_ui_router
     app.include_router(web_ui_router)
 

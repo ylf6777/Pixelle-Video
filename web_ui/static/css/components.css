@@ -912,6 +912,68 @@
   padding: var(--pv-space-8) 0;
 }
 
+/* ---- 上传卡片 ---- */
+.pv-upload-card {
+  margin-bottom: var(--pv-space-10);
+}
+
+.pv-upload-card__inner {
+  border: 2px dashed var(--pv-glass-border);
+  border-radius: var(--pv-radius-md);
+  padding: var(--pv-space-8);
+  text-align: center;
+  background: var(--pv-glass-bg);
+  transition: border-color var(--pv-duration-fast) var(--pv-ease);
+}
+.pv-upload-card__inner:hover {
+  border-color: var(--pv-accent);
+}
+
+.pv-upload-card__icon { font-size: 2.5rem; margin-bottom: var(--pv-space-3); }
+.pv-upload-card__title {
+  font-family: var(--pv-font-display);
+  font-size: var(--pv-text-lg);
+  font-weight: 600;
+  color: var(--pv-text);
+  margin-bottom: var(--pv-space-2);
+}
+.pv-upload-card__desc {
+  font-size: var(--pv-text-sm);
+  color: var(--pv-text-muted);
+  margin-bottom: var(--pv-space-5);
+}
+.pv-upload-card__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pv-space-3);
+  max-width: 400px;
+  margin: 0 auto var(--pv-space-4);
+}
+.pv-upload-card__msg {
+  margin-top: var(--pv-space-3);
+  font-size: var(--pv-text-sm);
+}
+
+/* ---- 画廊区 ---- */
+.pv-gallery {
+  margin-top: var(--pv-space-10);
+}
+
+.pv-showcase__subtitle {
+  font-size: var(--pv-text-sm);
+  color: var(--pv-text-muted);
+  margin-top: var(--pv-space-1);
+}
+
+.pv-card__author {
+  font-size: var(--pv-text-xs);
+  color: var(--pv-text-muted);
+  margin-top: var(--pv-space-1);
+}
+
+.pv-text-success { color: var(--pv-success); }
+.pv-text-error { color: var(--pv-error); }
+
 /* ============================================================
    12. 筛选栏 .pv-filter (legacy)
    ============================================================ */

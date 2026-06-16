@@ -1,161 +1,121 @@
-{# 主页 — 工作流作品展示 + 历史作品 #}
+{# 主页 — 作品展示 + 上传入口 #}
 {% extends "base.html" %}
-{% from "components/workflow_card.html" import render_workflow_card %}
 {% block content %}
 
-<div class="pv-browser" x-data="homePage()" x-init="init()"
-     @category-change.window="activeCategory=$event.detail;filter()">
-
-  {# 搜索功能区 #}
-  <div class="pv-search-section">
-    <form class="pv-search-box" @submit.prevent="filter()">
-      <input type="search" x-model="query" @input="filter()"
-        placeholder="搜索工作流..." class="pv-input pv-input--search pv-search-box__input">
-      <button type="submit" class="pv-btn pv-btn--gradient pv-search-box__btn">搜索</button>
-    </form>
-  </div>
+<div class="pv-browser">
 
   {# 作品展示区头部 #}
   <div class="pv-showcase-header">
     <h2 class="pv-showcase__title">作品展示</h2>
-    <nav class="pv-showcase__cats" role="tablist" aria-label="分类筛选"
-         x-data="categoryFilter()">
-      {% set cats = [
-        ('digital_human', '数字人'), ('image', '图片生成'),
-        ('video', '视频生成'), ('action', '动作模仿')
-      ] %}
-      {% for id, label in cats %}
-      <button class="pv-showcase__cat"
-        :class="{ 'pv-showcase__cat--active': activeCategory === '{{ id }}' }"
-        @click="selectCategory('{{ id }}')" type="button">{{ label }}</button>
-      {% endfor %}
-    </nav>
+    <p class="pv-showcase__subtitle">优质原创作品 · 人工审核展示</p>
   </div>
 
-  {# 作品卡片网格 #}
-  <section class="pv-masonry" id="workflow-grid">
-    {% for wf in workflows %}
-    <div class="pv-card"
-         x-show="matchCard({{ wf | tojson | safe }})"
-         style="animation-delay:{{ loop.index0 * 50 }}ms">
-      {{ render_workflow_card(wf) }}
+  {# 上传入口 #}
+  <div class="pv-upload-card" x-data="workUploader()">
+    <div class="pv-upload-card__inner">
+      <div class="pv-upload-card__icon">📤</div>
+      <h3 class="pv-upload-card__title">上传原创作品</h3>
+      <p class="pv-upload-card__desc">分享你的优质创作，审核通过后展示在作品区</p>
+      <form @submit.prevent="upload" enctype="multipart/form-data">
+        <div class="pv-upload-card__form">
+          <input type="text" x-model="title" placeholder="作品标题" required class="pv-input">
+          <input type="text" x-model="author" placeholder="作者署名" class="pv-input">
+          <input type="file" accept="image/*,video/*" @change="onFileSelected" required class="pv-input pv-input--file">
+        </div>
+        <button type="submit" class="pv-btn pv-btn--gradient" :disabled="uploading">
+          <span x-show="!uploading">提交审核</span>
+          <span x-show="uploading">提交中...</span>
+        </button>
+      </form>
+      <p x-show="msg" x-text="msg" :class="msgOk ? 'pv-text-success' : 'pv-text-error'"
+         class="pv-upload-card__msg"></p>
     </div>
-    {% endfor %}
-    <div class="pv-empty" x-show="!hasVisible()" x-cloak>
-      <div class="pv-empty__icon">🔍</div>
-      <h2 class="pv-empty__title">没有找到匹配的工作流</h2>
-      <p class="pv-empty__text">试试其他分类或搜索关键词</p>
-    </div>
-  </section>
+  </div>
 
-  {# 历史作品展示区 #}
-  <div class="pv-history-section" x-data="historyLoader()" x-init="init()">
-    <div class="pv-showcase-header">
-      <h2 class="pv-showcase__title">历史作品</h2>
-      <span class="pv-showcase__count" x-text="'共 '+total+' 条'"></span>
-    </div>
-    <section class="pv-masonry" id="history-grid">
-      <template x-for="task in tasks" :key="task.task_id">
+  {# 已审核作品画廊 #}
+  <section class="pv-gallery" x-data="galleryLoader()" x-init="init()">
+    <h2 class="pv-showcase__title">精选作品</h2>
+    <div class="pv-masonry" id="gallery-grid">
+      <template x-for="w in works" :key="w.work_id">
         <div class="pv-card pv-card--work">
           <div class="pv-card__thumb">
-            <div class="pv-card__thumb-grad"></div>
-            <span class="pv-badge pv-badge--task" x-text="task.status === 'completed' ? '已完成' : task.status"></span>
+            <img x-show="w.media_type==='image'" :src="'/works/'+w.work_id+'/'+(w.file_path.split('/').pop())"
+                 alt="" loading="lazy" class="pv-card__thumb-img">
+            <video x-show="w.media_type==='video'" :src="'/works/'+w.work_id+'/'+(w.file_path.split('/').pop())"
+                   muted loop playsinline class="pv-card__thumb-img"></video>
+            <div class="pv-card__thumb-grad" x-show="!w.file_path"></div>
           </div>
           <div class="pv-card__body">
-            <h3 class="pv-card__title" x-text="task.title || '未命名'"></h3>
-            <p class="pv-card__date" x-text="formatDate(task.created_at)"></p>
-            <span class="pv-card__type-tag" x-text="task.n_frames + '帧'"></span>
+            <h3 class="pv-card__title" x-text="w.title"></h3>
+            <p class="pv-card__author" x-text="w.author"></p>
+            <p class="pv-card__date" x-text="formatDate(w.created_at)"></p>
           </div>
         </div>
       </template>
-      <div class="pv-empty" x-show="tasks.length === 0 && !loading">
-        <div class="pv-empty__icon">📭</div>
-        <h2 class="pv-empty__title">暂无历史作品</h2>
-        <p class="pv-empty__text">运行工作流后，作品将显示在这里</p>
-      </div>
-    </section>
-    {# 加载指示器 #}
-    <div class="pv-load-more" x-show="hasMore">
-      <div x-show="loading" class="pv-load-more__spinner">加载中...</div>
-      <button x-show="!loading" @click="loadMore()" class="pv-btn pv-btn--secondary">加载更多</button>
     </div>
-  </div>
+
+    <div class="pv-empty" x-show="works.length === 0 && !loading">
+      <div class="pv-empty__icon">🎨</div>
+      <h2 class="pv-empty__title">暂无作品</h2>
+      <p class="pv-empty__text">成为第一位上传原创作品的创作者</p>
+    </div>
+
+    <div class="pv-load-more" x-show="hasMore">
+      <button x-show="!loading" @click="loadMore()" class="pv-btn pv-btn--secondary">加载更多</button>
+      <div x-show="loading" class="pv-load-more__spinner">加载中...</div>
+    </div>
+  </section>
 </div>
 
 <script>
 document.addEventListener('alpine:init', () => {
-  Alpine.data('categoryFilter', () => ({
-    activeCategory: '',
-    selectCategory(cat) {
-      this.activeCategory = this.activeCategory === cat ? '' : cat;
-      window.dispatchEvent(new CustomEvent('category-change', {detail: this.activeCategory}));
+  Alpine.data('workUploader', () => ({
+    title: '', author: '', file: null, uploading: false, msg: '', msgOk: false,
+    onFileSelected(e) { this.file = e.target.files[0]; },
+    async upload() {
+      if (!this.file) { this.msg = '请选择文件'; this.msgOk = false; return; }
+      this.uploading = true; this.msg = '';
+      try {
+        const fd = new FormData();
+        fd.append('file', this.file);
+        fd.append('title', this.title || '未命名');
+        fd.append('author', this.author || '匿名');
+        const r = await fetch('/api/works/upload', { method: 'POST', body: fd });
+        const d = await r.json();
+        this.msg = d.status === 'submitted'
+          ? `作品已提交审核 (ID: ${d.work_id})，审核通过后将公开展示`
+          : '上传失败，请重试';
+        this.msgOk = d.status === 'submitted';
+        if (this.msgOk) { this.title = ''; this.author = ''; this.file = null; }
+      } catch(e) { this.msg = '上传失败: ' + e.message; this.msgOk = false; }
+      this.uploading = false;
     }
   }));
-  Alpine.data('homePage', () => ({
-    query: '', activeCategory: '',
-    init() {
-      const p = new URLSearchParams(window.location.search);
-      this.activeCategory = p.get('category') || '';
-      this.query = p.get('q') || '';
-    },
-    filter() {
-      const url = new URL(window.location);
-      if (this.activeCategory) url.searchParams.set('category', this.activeCategory);
-      else url.searchParams.delete('category');
-      if (this.query) url.searchParams.set('q', this.query);
-      else url.searchParams.delete('q');
-      window.history.replaceState({}, '', url);
-    },
-    matchCard(wf) {
-      if (this.activeCategory && wf.category !== this.activeCategory) return false;
-      if (this.query.trim()) {
-        const q = this.query.toLowerCase();
-        const name = (wf.name || '').toLowerCase();
-        const desc = (wf.description || '').toLowerCase();
-        const tags = (wf.tags || []).join(' ').toLowerCase();
-        if (!name.includes(q) && !desc.includes(q) && !tags.includes(q)) return false;
-      }
-      return true;
-    },
-    hasVisible() {
-      const grid = document.getElementById('workflow-grid');
-      if (!grid) return true;
-      for (const card of grid.querySelectorAll('.pv-card:not(.pv-empty)')) {
-        if (card.style.display !== 'none' && getComputedStyle(card).display !== 'none') return true;
-      }
-      return false;
-    }
-  }));
-  Alpine.data('historyLoader', () => ({
-    tasks: [], page: 1, total: 0, hasMore: true, loading: false,
-    init() {
-      // 使用 Intersection Observer 实现滚动加载
+
+  Alpine.data('galleryLoader', () => ({
+    works: [], page: 1, total: 0, hasMore: true, loading: false,
+    async init() {
       const sentinel = this.$el.querySelector('.pv-load-more');
-      if (!sentinel) return;
-      const observer = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && this.hasMore && !this.loading) {
-          this.loadMore();
-        }
-      }, { rootMargin: '200px' });
-      observer.observe(sentinel);
-      this.loadMore();
+      if (sentinel) {
+        new IntersectionObserver((entries) => {
+          if (entries[0].isIntersecting && this.hasMore && !this.loading) this.loadMore();
+        }, { rootMargin: '200px' }).observe(sentinel);
+      }
+      await this.loadMore();
     },
     async loadMore() {
       this.loading = true;
       try {
-        const r = await fetch(`/api/history?page=${this.page}&page_size=10`);
+        const r = await fetch(`/api/works/approved?page=${this.page}&page_size=12`);
         const d = await r.json();
-        this.tasks = [...this.tasks, ...(d.tasks || [])];
+        this.works = [...this.works, ...(d.works || [])];
         this.total = d.total;
         this.hasMore = this.page < (d.total_pages || 1);
         this.page++;
       } catch(e) { console.error(e); }
       this.loading = false;
     },
-    formatDate(d) {
-      if (!d) return '';
-      return d.substring(0, 10); // YYYY-MM-DD
-    }
+    formatDate(d) { return d ? d.substring(0, 10) : ''; }
   }));
 });
 </script>
