@@ -458,12 +458,18 @@ async def quick_create_page(request: Request):
 # ── 纯文本记录 ──────────────────────────────────────────────
 
 @router.get("/notes", response_class=HTMLResponse)
-async def notes_page(request: Request):
-    """纯文本记录页面"""
+async def notes_page(request: Request, page: int = 1):
+    """纯文本记录页面 — 15条/页"""
     from web_ui.notes_storage import list_notes
+    all_notes = list_notes()
+    total = len(all_notes)
+    page_size = 15
+    total_pages = max(1, (total + page_size - 1) // page_size)
+    start = (page - 1) * page_size
     return templates.TemplateResponse("notes.html", {
         "request": request,
-        "notes": list_notes(),
+        "notes": all_notes[start:start + page_size],
+        "page": page, "total_pages": total_pages, "total": total,
     })
 
 
