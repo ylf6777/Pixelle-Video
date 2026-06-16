@@ -71,11 +71,16 @@ async def index(request: Request):
     """
     workflows = workflow_registry.get_all()
     categories = sorted(set(w.category for w in workflows))
+    # 转为 dict 列表以便 Jinja2 tojson 序列化
+    workflow_dicts = [
+        {k: v for k, v in w.__dict__.items() if not k.startswith("_")}
+        for w in workflows
+    ]
     return templates.TemplateResponse(
         "index.html",
         {
             "request": request,
-            "workflows": workflows,
+            "workflows": workflow_dicts,
             "categories": categories,
         },
     )
@@ -118,32 +123,31 @@ async def workflow_detail(request: Request, workflow_id: str):
 
 
 @router.get("/history", response_class=HTMLResponse)
-async def history(request: Request):
+async def history(request: Request, page: int = 1):
     """
-    生成历史页面。
-
-    展示历史生成记录的列表（当前占位页面）。
+    生成历史页面 — 从持久化服务加载真实数据
 
     Args:
         request: FastAPI Request 对象。
+        page (int): 页码，从 1 开始。默认 1。
 
     Returns:
-        HTMLResponse: 渲染后的 history.html 页面。
+        HTMLResponse: 渲染后的 history.html，含分页数据。
 
     Template Context:
-        request: Request 对象。
-
-    Requires:
-        - web_ui/templates/history.html 存在
-
-    Note:
-        当前为占位页面。后续需接入任务历史持久化存储后补充数据上下文。
-        TODO: 接入 TaskManager 历史记录 API
+        request, tasks, page, page_size, total, total_pages
     """
-    return templates.TemplateResponse(
-        "history.html",
-        {"request": request},
-    )
+    data = {"tasks": [], "total": 0, "page": page, "page_size": 20, "total_pages": 0}
+    try:
+        from pixelle_video.service import pixelle_video
+        await pixelle_video.initialize()
+        data = await pixelle_video.persistence.list_tasks_paginated(
+            page=page, page_size=20, sort_by="created_at", sort_order="desc"
+        )
+    except Exception as e:
+        logger.warning(f"无法加载历史: {e}")
+
+    return templates.TemplateResponse("history.html", {"request": request, **data})
 
 
 # ── API 路由（JSON） ────────────────────────────────────────────

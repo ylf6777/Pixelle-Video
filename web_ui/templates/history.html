@@ -1,50 +1,70 @@
-{# 历史记录页 — 继承 base.html #}
+{# 历史记录页 #}
 {% extends "base.html" %}
-
 {% block content %}
 <div class="pv-history">
-  {# 页面标题 #}
   <header class="pv-history__header">
     <h1 class="pv-history__title">生成历史</h1>
-    <p class="pv-history__subtitle">查看所有已执行的工作流任务记录</p>
+    <p class="pv-history__subtitle">{{ total }} 条记录</p>
   </header>
 
-  {# 历史记录列表容器 — htmx 加载 + 分页支持 #}
-  <section class="pv-history__list"
-           id="history-list"
-           hx-get="/api/history"
-           hx-trigger="load"
-           hx-swap="innerHTML">
-    {# 初始加载骨架屏占位 — 表格形式，5行占位 #}
-    <div class="pv-history__loading">
-      {% for i in range(5) %}
-      <div class="pv-card pv-card--skeleton pv-card--row" aria-hidden="true">
-        <div class="pv-skeleton-line pv-skeleton-line--lg" style="width:40%"></div>
-        <div class="pv-skeleton-line" style="width:15%"></div>
-        <div class="pv-skeleton-line pv-skeleton-line--sm" style="width:10%"></div>
-        <div class="pv-skeleton-line pv-skeleton-line--sm" style="width:20%"></div>
+  {% if tasks %}
+  <section class="pv-history__list">
+    {% for task in tasks %}
+    <div class="pv-card pv-card--row">
+      <div class="pv-card__body">
+        <h3 class="pv-card__title">{{ task.title or '未命名' }}</h3>
+        <div class="pv-card__meta">
+          <span class="pv-badge pv-badge--{{ task.status }}">
+            {% if task.status == 'completed' %}✅ 已完成
+            {% elif task.status == 'failed' %}❌ 失败
+            {% elif task.status == 'running' %}⏳ 运行中
+            {% else %}{{ task.status }}
+            {% endif %}
+          </span>
+          {% if task.duration %}
+          <span class="pv-card__meta-text">{{ '%.1f' | format(task.duration) }}秒</span>
+          {% endif %}
+          {% if task.created_at %}
+          <span class="pv-card__meta-text">{{ task.created_at[:10] }}</span>
+          {% endif %}
+          {% if task.n_frames %}
+          <span class="pv-card__meta-text">{{ task.n_frames }}帧</span>
+          {% endif %}
+        </div>
       </div>
-      {% endfor %}
+      {% if task.video_path %}
+      <div class="pv-card__action">
+        <a href="/output/{{ task.task_id }}/final.mp4" class="pv-btn pv-btn--sm" target="_blank">查看视频</a>
+      </div>
+      {% endif %}
+      <button class="pv-btn pv-btn--sm pv-btn--danger"
+              hx-delete="/api/history/{{ task.task_id }}"
+              hx-target="closest .pv-card--row"
+              hx-swap="outerHTML"
+              hx-confirm="确认删除此记录？">删除</button>
     </div>
+    {% endfor %}
   </section>
 
-  {# 分页区域 — ID 与 hx-target 一致，由 API 返回替换 #}
-  <nav class="pv-pagination" id="history-pagination"
-       hx-get="/api/history"
-       hx-trigger="load"
-       hx-target="#history-list"
-       hx-swap="innerHTML"
-       aria-label="分页导航">
+  {# 分页 #}
+  {% if total_pages > 1 %}
+  <nav class="pv-pagination" aria-label="分页">
+    {% if page > 1 %}
+    <a href="/history?page={{ page-1 }}" class="pv-btn pv-btn--sm">上一页</a>
+    {% endif %}
+    <span class="pv-pagination__info">{{ page }} / {{ total_pages }}</span>
+    {% if page < total_pages %}
+    <a href="/history?page={{ page+1 }}" class="pv-btn pv-btn--sm">下一页</a>
+    {% endif %}
   </nav>
+  {% endif %}
 
-  {# 空状态 — 无历史记录时显示 #}
-  <div id="history-empty" style="display:none;">
-    {% include "components/empty_state.html" %}
-    <script>
-      {# 无记录时修改空状态文案 #}
-      document.querySelector('#history-empty .pv-empty__title').textContent = '暂无生成历史';
-      document.querySelector('#history-empty .pv-empty__text').textContent = '运行第一个工作流后，记录将显示在这里';
-    </script>
+  {% else %}
+  <div class="pv-empty">
+    <div class="pv-empty__icon">📭</div>
+    <h2 class="pv-empty__title">暂无生成历史</h2>
+    <p class="pv-empty__text">运行第一个工作流后，记录将显示在这里</p>
   </div>
+  {% endif %}
 </div>
 {% endblock %}

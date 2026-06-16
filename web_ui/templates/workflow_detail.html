@@ -1,89 +1,129 @@
-{# 工作流详情/运行页 — 继承 base.html #}
+{# 工作流详情/运行页 #}
 {% extends "base.html" %}
-
 {% block content %}
-<div class="pv-detail">
-  {# 面包屑导航 #}
-  <nav class="pv-breadcrumb" aria-label="面包屑导航">
+<div class="pv-detail" x-data="executor('{{ workflow.id }}', '{{ workflow.source }}')">
+  <nav class="pv-breadcrumb" aria-label="面包屑">
     <a href="/" class="pv-breadcrumb__link">工作流</a>
-    <span class="pv-breadcrumb__sep" aria-hidden="true">/</span>
+    <span class="pv-breadcrumb__sep">/</span>
     <span class="pv-breadcrumb__current">{{ workflow.name }}</span>
   </nav>
 
   <div class="pv-detail__layout">
-    {# 左侧：工作流详情 #}
     <aside class="pv-detail__info">
-      {# 工作流名称 #}
       <h1 class="pv-detail__title">{{ workflow.name }}</h1>
-
-      {# 来源 + 分类 + 版本 等信息行 #}
       <dl class="pv-detail__meta">
         <div class="pv-detail__meta-item">
           <dt>来源</dt>
-          <dd>
-            <span class="pv-badge pv-badge--{{ workflow.source }}">
-              {% if workflow.source == 'runninghub' %}RunningHub
-              {% elif workflow.source == 'selfhost' %}本地
-              {% elif workflow.source == 'api' %}API
-              {% elif workflow.source == 'zealman' %}Zealman
-              {% else %}{{ workflow.source }}
-              {% endif %}
-            </span>
-          </dd>
+          <dd><span class="pv-badge pv-badge--{{ workflow.source }}">
+            {% if workflow.source == 'runninghub' %}RunningHub
+            {% elif workflow.source == 'selfhost' %}本地 ComfyUI
+            {% elif workflow.source == 'api' %}API 模型
+            {% elif workflow.source == 'zealman' %}Zealman
+            {% endif %}
+          </span></dd>
         </div>
         <div class="pv-detail__meta-item">
-          <dt>分类</dt>
-          <dd>{{ workflow.category }}</dd>
+          <dt>分类</dt><dd>{{ workflow.category }}</dd>
         </div>
         <div class="pv-detail__meta-item">
-          <dt>版本</dt>
-          <dd>{{ workflow.version or 'v1.0' }}</dd>
+          <dt>媒体类型</dt><dd>{{ workflow.media_type }}</dd>
         </div>
       </dl>
-
-      {# 描述 #}
+      {% if workflow.description %}
       <div class="pv-detail__desc">
-        <h2 class="pv-detail__section-title">描述</h2>
-        <p>{{ workflow.description }}</p>
+        <h2>描述</h2><p>{{ workflow.description }}</p>
       </div>
-
-      {# 标签 #}
+      {% endif %}
       {% if workflow.tags %}
       <div class="pv-detail__tags">
-        <h2 class="pv-detail__section-title">标签</h2>
-        <div class="pv-card__tags">
-          {% for tag in workflow.tags %}
-          <span class="pv-card__tag">{{ tag }}</span>
-          {% endfor %}
-        </div>
+        {% for tag in workflow.tags %}
+        <span class="pv-card__tag">{{ tag }}</span>
+        {% endfor %}
       </div>
       {% endif %}
     </aside>
 
-    {# 右侧：运行参数区域 #}
     <section class="pv-detail__run">
-      <h2 class="pv-detail__section-title">运行参数</h2>
-
-      <form class="pv-run-form"
-            hx-post="/api/workflow/{{ workflow.id }}/run"
-            hx-target="#run-result"
-            hx-swap="innerHTML">
-        {# 占位参数表单 — 后续根据实际工作流参数动态生成 #}
-        <div class="pv-run-form__params">
-          <p class="pv-run-form__placeholder">
-            参数表单将在连接后端服务后动态加载。
-          </p>
-        </div>
-
-        {# 提交按钮 — 渐变按钮，全宽 #}
-        <button type="submit" class="pv-btn pv-btn--gradient pv-btn--block">
-          执行
+      <h2>运行工作流</h2>
+      <form class="pv-run-form" @submit.prevent="execute">
+        <label class="pv-run-form__label">
+          提示词 (Prompt)
+          <textarea name="prompt" x-model="prompt" rows="3"
+            placeholder="输入生成提示词..." required
+            class="pv-input pv-input--textarea"></textarea>
+        </label>
+        <button type="submit" class="pv-btn pv-btn--gradient pv-btn--block"
+          :disabled="status === 'running'">
+          <span x-show="status !== 'running'">🚀 执行</span>
+          <span x-show="status === 'running'" class="pv-btn--loading">执行中...</span>
         </button>
       </form>
 
-      {# 执行结果反馈区域 #}
-      <div id="run-result" class="pv-run-result" role="status" aria-live="polite"></div>
+      {# 进度条 #}
+      <div class="pv-progress" x-show="status === 'running'" x-cloak>
+        <div class="pv-progress__bar" :style="`width:${progress}%`"></div>
+        <span class="pv-progress__text" x-text="step"></span>
+      </div>
+
+      {# 结果 #}
+      <div class="pv-run-result" x-show="status === 'completed'" x-cloak>
+        <p class="pv-run-result__success">✅ 执行完成</p>
+        <p x-show="resultUrl">结果: <a :href="resultUrl" x-text="resultUrl"></a></p>
+      </div>
+      <div class="pv-run-result pv-run-result--error" x-show="status === 'failed'" x-cloak>
+        <p>❌ <span x-text="errorMessage"></span></p>
+      </div>
     </section>
   </div>
 </div>
+
+<script>
+document.addEventListener('alpine:init', () => {
+  Alpine.data('executor', (workflowId, source) => ({
+    prompt: '',
+    status: 'idle',
+    progress: 0,
+    step: '',
+    resultUrl: '',
+    errorMessage: '',
+    eventSource: null,
+
+    async execute() {
+      this.status = 'running'; this.progress = 0; this.step = '提交中...';
+      try {
+        const r = await fetch(`/api/workflows/${workflowId}/execute`, {
+          method: 'POST', headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({prompt: this.prompt})
+        });
+        if (!r.ok) { const e = await r.json(); throw new Error(e.detail || '提交失败'); }
+        const {task_id} = await r.json();
+        this.listenProgress(workflowId, task_id);
+      } catch(e) {
+        this.status = 'failed'; this.errorMessage = e.message;
+      }
+    },
+
+    listenProgress(wfId, taskId) {
+      this.eventSource = new EventSource(`/api/workflows/${wfId}/progress/${taskId}`);
+      this.eventSource.onmessage = (e) => {
+        const d = JSON.parse(e.data);
+        if (d.error) { this.status = 'failed'; this.errorMessage = d.error; this.eventSource.close(); return; }
+        this.progress = d.progress || this.progress;
+        this.step = d.step || this.step;
+        if (d.status === 'completed') {
+          this.status = 'completed'; this.progress = 100;
+          this.resultUrl = d.result_url || '';
+          this.eventSource.close();
+        } else if (d.status === 'failed') {
+          this.status = 'failed'; this.errorMessage = d.error || '执行失败';
+          this.eventSource.close();
+        } else if (d.status === 'disconnected') {
+          this.eventSource.close();
+        }
+      };
+      this.eventSource.onerror = () => { this.eventSource.close(); };
+    }
+  }));
+});
+</script>
 {% endblock %}
