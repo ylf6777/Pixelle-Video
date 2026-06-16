@@ -1,0 +1,121 @@
+{# 分镜脚本生成页 #}
+{% extends "base.html" %}
+{% block content %}
+<div class="pv-browser" x-data="storyboardApp()">
+  <div class="pv-showcase-header">
+    <h2 class="pv-showcase__title">分镜脚本生成</h2>
+    <p class="pv-showcase__subtitle">输入文章/故事，AI 自动拆解为专业分镜脚本</p>
+  </div>
+
+  {# 输入区 #}
+  <div class="pv-notes-form pv-card">
+    <textarea x-model="article" rows="6" placeholder="输入文章或故事内容，AI 将自动生成分镜脚本..."
+      class="pv-input pv-input--textarea" style="min-height:150px"></textarea>
+    <div class="pv-notes-form__actions">
+      <select x-model="mediaType" class="pv-input" style="width:auto;flex-shrink:0">
+        <option value="image">图片分镜</option>
+        <option value="video">视频分镜</option>
+      </select>
+      <input type="number" x-model="nScenes" min="1" max="30" value="5"
+        class="pv-input" style="width:80px;flex-shrink:0" title="分镜数量">
+      <button class="pv-btn-save" @click="generate()" :disabled="loading || !article.trim()">
+        <span x-text="loading ? '生成中...' : '生成分镜'"></span>
+      </button>
+      <span x-show="error" x-text="error" class="pv-text-error"></span>
+    </div>
+  </div>
+
+  {# 加载状态 #}
+  <div class="pv-quick__progress" x-show="loading">
+    <div class="pv-progress"><div class="pv-progress__bar" style="width:60%"></div></div>
+    <span>AI 正在分析文章并生成分镜脚本...</span>
+  </div>
+
+  {# 分镜编辑区 #}
+  <div x-show="scenes.length > 0" x-cloak>
+    <div class="pv-showcase-header" style="margin-top:var(--pv-space-8)">
+      <h2 class="pv-showcase__title">分镜脚本</h2>
+      <span class="pv-showcase__subtitle" x-text="scenes.length + ' 个分镜'"></span>
+    </div>
+
+    <template x-for="(scene, idx) in scenes" :key="scene._uid || idx">
+      <div class="pv-scene-card pv-card">
+        <div class="pv-scene-card__header">
+          <span class="pv-scene-card__num" x-text="'#' + (idx + 1)"></span>
+          <div class="pv-scene-card__actions">
+            <button @click="moveUp(idx)" :disabled="idx===0" title="上移">↑</button>
+            <button @click="moveDown(idx)" :disabled="idx===scenes.length-1" title="下移">↓</button>
+            <button @click="insertAfter(idx)" title="插入">＋</button>
+            <button @click="removeScene(idx)" title="删除">✕</button>
+          </div>
+        </div>
+        <div class="pv-scene-card__body">
+          <label>
+            <span>旁白 (Narration)</span>
+            <textarea x-model="scene.narration" rows="2"
+              class="pv-input pv-input--textarea"></textarea>
+          </label>
+          <label>
+            <span>画面提示词 (Image Prompt)</span>
+            <textarea x-model="scene.image_prompt" rows="2"
+              class="pv-input pv-input--textarea"></textarea>
+          </label>
+        </div>
+      </div>
+    </template>
+
+    {# 底部操作 #}
+    <div style="display:flex;gap:12px;margin-top:var(--pv-space-6)">
+      <button class="pv-btn-save" @click="addScene()">添加分镜</button>
+      <span class="pv-showcase__subtitle" style="align-self:center"
+        x-text="'共 ' + scenes.length + ' 个分镜'"></span>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('alpine:init', () => {
+  Alpine.data('storyboardApp', () => ({
+    article: '', mediaType: 'image', nScenes: 5,
+    loading: false, error: '', scenes: [],
+
+    async generate() {
+      this.loading = true; this.error = '';
+      try {
+        const r = await fetch('/api/storyboard/generate', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({article:this.article, media_type:this.mediaType, n_scenes:this.nScenes})
+        });
+        if (!r.ok) { const d = await r.json(); throw new Error(d.detail || '生成失败'); }
+        const d = await r.json();
+        this.scenes = (d.scenes || []).map(s => ({
+          narration: s.narration || s,
+          image_prompt: s.image_prompt || '',
+          _uid: Math.random().toString(36).slice(2,10)
+        }));
+      } catch(e) { this.error = e.message; }
+      this.loading = false;
+    },
+
+    addScene() {
+      this.scenes.push({narration:'', image_prompt:'', _uid:Math.random().toString(36).slice(2,10)});
+    },
+    insertAfter(idx) {
+      this.scenes.splice(idx+1, 0, {narration:'', image_prompt:'', _uid:Math.random().toString(36).slice(2,10)});
+    },
+    removeScene(idx) {
+      if (this.scenes.length <= 1) { this.error = '至少保留一个分镜'; return; }
+      this.scenes.splice(idx, 1);
+    },
+    moveUp(idx) {
+      if (idx === 0) return;
+      [this.scenes[idx-1], this.scenes[idx]] = [this.scenes[idx], this.scenes[idx-1]];
+    },
+    moveDown(idx) {
+      if (idx === this.scenes.length - 1) return;
+      [this.scenes[idx], this.scenes[idx+1]] = [this.scenes[idx+1], this.scenes[idx]];
+    }
+  }));
+});
+</script>
+{% endblock %}
