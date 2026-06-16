@@ -455,6 +455,47 @@ async def quick_create_page(request: Request):
     return templates.TemplateResponse("quick.html", {"request": request})
 
 
+# ── 纯文本记录 ──────────────────────────────────────────────
+
+@router.get("/notes", response_class=HTMLResponse)
+async def notes_page(request: Request):
+    """纯文本记录页面"""
+    from web_ui.notes_storage import list_notes
+    return templates.TemplateResponse("notes.html", {
+        "request": request,
+        "notes": list_notes(),
+    })
+
+
+@router.post("/api/notes")
+async def api_add_note(request: Request):
+    """新增记录"""
+    from web_ui.notes_storage import add_note
+    body = await request.json()
+    note = add_note(body.get("title", ""), body.get("content", ""))
+    return JSONResponse(note)
+
+
+@router.put("/api/notes/{note_id}")
+async def api_update_note(note_id: str, request: Request):
+    """编辑记录"""
+    from web_ui.notes_storage import update_note
+    body = await request.json()
+    result = update_note(note_id, body.get("title", ""), body.get("content", ""))
+    if not result:
+        raise HTTPException(404, "记录不存在")
+    return JSONResponse(result)
+
+
+@router.delete("/api/notes/{note_id}")
+async def api_delete_note(note_id: str):
+    """删除记录"""
+    from web_ui.notes_storage import delete_note
+    if not delete_note(note_id):
+        raise HTTPException(404, "记录不存在")
+    return JSONResponse({"deleted": True})
+
+
 @router.get("/upload", response_class=HTMLResponse)
 async def upload_page(request: Request):
     """独立上传作品页面"""

@@ -1,0 +1,72 @@
+{# 纯文本记录页 #}
+{% extends "base.html" %}
+{% block content %}
+<div class="pv-browser" x-data="notesApp()">
+  <div class="pv-showcase-header">
+    <h2 class="pv-showcase__title">文本记录</h2>
+    <button class="pv-btn-save" @click="openAdd()">新增记录</button>
+  </div>
+
+  {# 新增/编辑表单 #}
+  <div class="pv-notes-form pv-card" x-show="showForm" x-cloak>
+    <input type="text" x-model="formTitle" placeholder="记录标题" class="pv-input" maxlength="200">
+    <textarea x-model="formContent" rows="5" placeholder="记录内容..." class="pv-input pv-input--textarea"></textarea>
+    <div class="pv-notes-form__actions">
+      <button class="pv-btn-save" @click="submit()" x-text="editingId ? '保存修改' : '添加记录'"></button>
+      <button class="pv-btn-save" @click="showForm=false" style="opacity:0.6">取消</button>
+    </div>
+  </div>
+
+  {# 记录列表 #}
+  {% for note in notes %}
+  <div class="pv-note-item pv-card" id="note-{{ note.id }}">
+    <div class="pv-note-item__header">
+      <h3 class="pv-note-item__title">{{ note.title }}</h3>
+      <span class="pv-note-item__time">{{ note.created_at[:16] }}</span>
+    </div>
+    <div class="pv-note-item__content">{{ note.content }}</div>
+    <div class="pv-note-item__actions">
+      <button @click="openEdit('{{ note.id }}', '{{ note.title|e }}', '{{ note.content|e }}')">编辑</button>
+      <button @click="deleteNote('{{ note.id }}')">删除</button>
+    </div>
+  </div>
+  {% endfor %}
+
+  {% if not notes %}
+  <div class="pv-empty">
+    <div class="pv-empty__icon">📝</div>
+    <h2 class="pv-empty__title">暂无记录</h2>
+    <p class="pv-empty__text">点击"新增记录"开始记录</p>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+document.addEventListener('alpine:init', () => {
+  Alpine.data('notesApp', () => ({
+    showForm: false, formTitle: '', formContent: '', editingId: null,
+
+    openAdd() {
+      this.editingId = null; this.formTitle = ''; this.formContent = ''; this.showForm = true;
+    },
+    openEdit(id, title, content) {
+      this.editingId = id; this.formTitle = title; this.formContent = content; this.showForm = true;
+      this.$el.querySelector('.pv-notes-form').scrollIntoView({behavior:'smooth'});
+    },
+    async submit() {
+      if (!this.formTitle.trim() || !this.formContent.trim()) { alert('标题和内容不能为空'); return; }
+      const method = this.editingId ? 'PUT' : 'POST';
+      const url = this.editingId ? `/api/notes/${this.editingId}` : '/api/notes';
+      await fetch(url, {method, headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({title:this.formTitle, content:this.formContent})});
+      window.location.reload();
+    },
+    async deleteNote(id) {
+      if (!confirm('确定删除此记录？')) return;
+      await fetch(`/api/notes/${id}`, {method:'DELETE'});
+      document.getElementById('note-'+id)?.remove();
+    }
+  }));
+});
+</script>
+{% endblock %}
