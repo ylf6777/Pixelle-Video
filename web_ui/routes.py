@@ -336,7 +336,28 @@ async def api_progress_poll(workflow_id: str = "", task_id: str = ""):
 
 @router.get("/settings", response_class=HTMLResponse)
 async def settings_page(request: Request):
-    """系统配置管理页面"""
+    """
+    系统配置管理页面
+
+    权限控制: 如果环境变量 SETTINGS_PASSWORD 已设置，则需要
+    URL 参数 ?key=xxx 或 Cookie settings_key 匹配才能访问。
+    未设置密码时直接开放（开发模式）。
+    """
+    import os
+    req_password = os.getenv("SETTINGS_PASSWORD", "")
+    if req_password:
+        provided = request.query_params.get("key") or request.cookies.get("settings_key", "")
+        if provided != req_password:
+            return HTMLResponse(
+                "<h2 style='color:#fff;text-align:center;margin-top:100px'>需要授权</h2>"
+                "<form style='text-align:center;margin-top:20px'>"
+                "<input name='key' type='password' placeholder='输入访问密码' "
+                "style='padding:8px 16px;border-radius:8px;border:1px solid #555;background:#222;color:#fff'>"
+                "<button type='submit' style='padding:8px 20px;margin-left:8px;border-radius:8px;"
+                "background:#00d4ff;color:#000;border:none;cursor:pointer'>提交</button></form>",
+                status_code=403
+            )
+
     from pixelle_video.config import config_manager
     config = config_manager.config.to_dict()
     return templates.TemplateResponse("settings.html", {
