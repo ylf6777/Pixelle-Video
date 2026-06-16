@@ -745,6 +745,43 @@
   background: rgba(0,212,255,0.1);
 }
 
+/* ---- 导航栏下拉子菜单 ---- */
+.pv-navbar__dropdown { position: relative; }
+.pv-navbar__sub {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 120px;
+  margin-top: 4px;
+  padding: var(--pv-space-2);
+  background: var(--pv-surface-raised);
+  border: 1px solid var(--pv-glass-border);
+  border-radius: var(--pv-radius-sm);
+  box-shadow: var(--pv-shadow-modal);
+  z-index: 100;
+}
+.pv-navbar__sub li { list-style: none; }
+.pv-navbar__sub a {
+  display: block;
+  padding: 6px 14px;
+  font-size: var(--pv-text-sm);
+  color: var(--pv-text-muted);
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.pv-navbar__sub a:hover {
+  color: var(--pv-text);
+  background: var(--pv-glass-hover-bg);
+}
+
+/* ---- 分类导航（底部快速切换） ---- */
+.pv-category-nav {
+  display: flex;
+  gap: 8px;
+  margin-top: var(--pv-space-8);
+  justify-content: center;
+}
+
 /* ---- 导航栏右侧操作区 ---- */
 .pv-navbar__actions {
   display: flex;

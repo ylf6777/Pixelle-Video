@@ -1,0 +1,54 @@
+{# 分类作品页面 #}
+{% extends "base.html" %}
+{% block content %}
+<div class="pv-browser">
+  <nav class="pv-breadcrumb" aria-label="面包屑">
+    <a href="/" class="pv-breadcrumb__link">作品展示</a>
+    <span class="pv-breadcrumb__sep">/</span>
+    <span class="pv-breadcrumb__current">{{ display_name }}</span>
+  </nav>
+
+  <div class="pv-showcase-header">
+    <h2 class="pv-showcase__title">{{ display_name }}</h2>
+    <p class="pv-showcase__subtitle">{{ total }} 件作品 · 共 {{ total_all }} 件</p>
+  </div>
+
+  <section class="pv-masonry" id="category-grid">
+    {% for w in works %}
+    <div class="pv-card pv-card--work">
+      <div class="pv-card__thumb">
+        {% set fname = w.file_path.replace('\\','/').split('/')[-1] %}
+        {% if w.media_type == 'image' %}
+        <img src="/works/{{ w.work_id }}/{{ fname }}" alt="" loading="lazy" class="pv-card__thumb-img">
+        {% elif w.media_type == 'video' %}
+        <video src="/works/{{ w.work_id }}/{{ fname }}" muted loop playsinline class="pv-card__thumb-img"></video>
+        {% else %}
+        <div class="pv-card__thumb-grad"></div>
+        {% endif %}
+      </div>
+      <div class="pv-card__body">
+        <h3 class="pv-card__title">{{ w.title }}</h3>
+        <p class="pv-card__author">{{ w.author }}</p>
+        <p class="pv-card__date">{{ w.created_at[:10] if w.created_at else '' }}</p>
+        <span class="pv-card__type-tag">{{ w.category }}</span>
+      </div>
+    </div>
+    {% endfor %}
+
+    {% if not works %}
+    <div class="pv-empty">
+      <div class="pv-empty__icon">📂</div>
+      <h2 class="pv-empty__title">暂无此类作品</h2>
+      <p class="pv-empty__text">该分类下还没有作品，<a href="/upload">上传第一个</a></p>
+    </div>
+    {% endif %}
+  </section>
+
+  <div class="pv-category-nav">
+    <a href="/category/数字人" class="pv-showcase__cat {% if category_name == '数字人' %}pv-showcase__cat--active{% endif %}">数字人</a>
+    <a href="/category/图片生成" class="pv-showcase__cat {% if category_name == '图片生成' %}pv-showcase__cat--active{% endif %}">图片生成</a>
+    <a href="/category/视频生成" class="pv-showcase__cat {% if category_name == '视频生成' %}pv-showcase__cat--active{% endif %}">视频生成</a>
+    <a href="/category/动作模仿" class="pv-showcase__cat {% if category_name == '动作模仿' %}pv-showcase__cat--active{% endif %}">动作模仿</a>
+  </div>
+</div>
+{% endblock %}

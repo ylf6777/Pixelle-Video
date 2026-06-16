@@ -131,6 +131,29 @@ def get_pending() -> list[dict]:
     return [w for w in _load_index() if w["status"] == "pending"]
 
 
+def get_by_category(category: str, page: int = 1, page_size: int = 12) -> dict:
+    """
+    按分类获取上传成功的作品
+
+    Args:
+        category: 分类名称
+        page: 页码
+        page_size: 每页数量
+
+    Returns:
+        {"works": list, "total": int, "page": int, "total_pages": int}
+    """
+    works = _load_index()
+    filtered = [w for w in works if w.get("status") == "uploaded" and w.get("category") == category]
+    total = len(filtered)
+    total_pages = max(1, (total + page_size - 1) // page_size)
+    start = (page - 1) * page_size
+    return {
+        "works": filtered[start:start + page_size],
+        "total": total, "page": page, "total_pages": total_pages,
+    }
+
+
 def get_work(work_id: str) -> Optional[dict]:
     """获取单个作品"""
     for w in _load_index():

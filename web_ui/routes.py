@@ -434,6 +434,24 @@ async def upload_page(request: Request):
     return templates.TemplateResponse("upload.html", {"request": request})
 
 
+@router.get("/category/{category_name}", response_class=HTMLResponse)
+async def category_page(request: Request, category_name: str):
+    """分类作品页面 — 仅展示该分类的作品"""
+    from web_ui.works_storage import get_by_category, get_uploaded
+    works_data = get_by_category(category_name)
+    total_all = get_uploaded().get("total", 0)
+    cat_labels = {"数字人": "digital_human", "图片生成": "image", "视频生成": "video", "动作模仿": "action"}
+    display_name = {v: k for k, v in cat_labels.items()}.get(category_name, category_name)
+    return templates.TemplateResponse("category.html", {
+        "request": request,
+        "category_name": category_name,
+        "display_name": display_name,
+        "total": works_data["total"],
+        "works": works_data["works"],
+        "total_all": total_all,
+    })
+
+
 # ── 作品 API ────────────────────────────────────────────────
 
 @router.post("/api/works/upload")

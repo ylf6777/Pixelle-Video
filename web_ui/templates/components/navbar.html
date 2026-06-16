@@ -18,6 +18,17 @@
 
     {# 核心导航 #}
     <ul class="pv-navbar__links" role="menubar">
+      <li role="none" class="pv-navbar__dropdown" x-data="{ open: false }"
+          @mouseenter="open=true" @mouseleave="open=false">
+        <a href="/" class="pv-navbar__link" role="menuitem"
+          :class="{ 'pv-navbar__link--active': window.location.pathname === '/' }">作品展示 ▾</a>
+        <ul class="pv-navbar__sub" x-show="open" x-cloak @click="open=false">
+          <li><a href="/category/数字人">数字人</a></li>
+          <li><a href="/category/图片生成">图片生成</a></li>
+          <li><a href="/category/视频生成">视频生成</a></li>
+          <li><a href="/category/动作模仿">动作模仿</a></li>
+        </ul>
+      </li>
       <li role="none"><a href="/?tab=quick" class="pv-navbar__link" role="menuitem">快捷创作</a></li>
       <li role="none"><a href="/?tab=ai" class="pv-navbar__link" role="menuitem">AI应用</a></li>
       <li role="none"><a href="/workflows" class="pv-navbar__link" role="menuitem">ComfyUI 工作流</a></li>
