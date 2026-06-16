@@ -1290,10 +1290,32 @@
 .pv-style-card:hover { border-color: var(--pv-glass-border); }
 .pv-style-card--selected { border-color: var(--pv-accent) !important; box-shadow: 0 0 16px rgba(0,212,255,0.15); }
 .pv-style-card__check { color: var(--pv-accent); font-size: 14px; font-weight: 600; margin-top: 8px; }
-/* 风格模板网格：5列（与原代码 TEMPLATE_GRID_COLS=5 一致） */
-#styleGrid { grid-template-columns: repeat(5, 1fr); gap: 15px; }
-@media (max-width: 1199px) { #styleGrid { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 767px) { #styleGrid { grid-template-columns: repeat(2, 1fr); } }
+
+/* 模板分类导航条 */
+.pv-template-nav {
+  display: flex; gap: 0; margin-bottom: var(--pv-space-6);
+  border-bottom: 2px solid var(--pv-glass-border);
+}
+.pv-template-nav__tab {
+  padding: 12px 24px; border: none; background: transparent;
+  color: var(--pv-text-muted); font-size: var(--pv-text-base); font-weight: 500;
+  cursor: pointer; position: relative; transition: color 0.2s;
+  font-family: var(--pv-font-body);
+}
+.pv-template-nav__tab:hover { color: var(--pv-text); }
+.pv-template-nav__tab--active {
+  color: var(--pv-accent); font-weight: 600;
+}
+.pv-template-nav__tab--active::after {
+  content: ''; position: absolute; bottom: -2px; left: 0; right: 0;
+  height: 2px; background: var(--pv-accent);
+}
+
+@media (max-width: 767px) {
+  .pv-template-nav { overflow-x: auto; scrollbar-width: none; }
+  .pv-template-nav::-webkit-scrollbar { display: none; }
+  .pv-template-nav__tab { padding: 10px 16px; font-size: var(--pv-text-sm); white-space: nowrap; }
+}
 
 .pv-text-success { color: var(--pv-success); }
 .pv-text-error { color: var(--pv-error); }

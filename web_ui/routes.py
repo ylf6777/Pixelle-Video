@@ -470,21 +470,59 @@ async def styles_page(request: Request):
         "asset_default": ("素材默认", "自定义素材模板", "其他"),
     }
     import os as _os
-    style_list = []
-    for key, (name, desc, cat) in TEMPLATE_INFO.items():
-        # 找预览图片（原网站已预生成 48 张截图）
-        preview = ""
+    def _find_preview(key):
         for ext in [".jpg", ".png"]:
             for suffix in ["", "_en"]:
                 p = f"docs/images/1080x1920/{key}{suffix}{ext}"
-                if _os.path.exists(p):
-                    preview = "/" + p
-                    break
-            if preview: break
-        style_list.append({
-            "key": key, "name": name, "desc": desc, "category": cat, "preview": preview,
+                if _os.path.exists(p): return "/" + p
+        return ""
+
+    def _get_params(key):
+        tpl_path = Path(f"templates/1080x1920/{key}.html")
+        if not tpl_path.exists(): return {}
+        import re as _re
+        html = tpl_path.read_text(encoding="utf-8")
+        params = {}
+        for m in _re.finditer(r"\{\{([a-zA-Z_][a-zA-Z0-9_]*)(?::[a-z]+)?(?:=([^}]+))?\}\}", html):
+            name = m.group(1)
+            if name in ("title","text","image","index"): continue
+            params[name] = m.group(2) or ""
+        return params
+
+    # === 插图模板 ===
+    image_keys = [k for k in TEMPLATE_INFO if k.startswith("image_")]
+    image_list = []
+    for key in image_keys:
+        name, desc, cat = TEMPLATE_INFO[key]
+        preview = _find_preview(key)
+        image_list.append({"key":key,"name":name,"desc":desc,"preview":preview,"params":_get_params(key)})
+
+    # === 视频模板 ===
+    video_keys = [k for k in TEMPLATE_INFO if k.startswith("video_")]
+    video_list = []
+    for key in video_keys:
+        name, desc, cat = TEMPLATE_INFO[key]
+        preview = _find_preview(key)
+        video_list.append({"key":key,"name":name,"desc":desc,"preview":preview,"params":_get_params(key)})
+
+    # === 提示词模板（风格绑定） ===
+    from web.prompt_templates import BUILTIN_TEMPLATES
+    prompt_list = []
+    for key, tpl in BUILTIN_TEMPLATES.items():
+        name = {"template_xiaojun":"晓君老师","template_elderly":"中老年"}.get(key, key)
+        prompt_list.append({
+            "key": key, "name": name, "desc": tpl.prompt[:80]+"…",
+            "preview": "", "locked": tpl.locked,
+            "params": tpl.fixed_params or {},
+            "tts_voice": tpl.tts_voice or "",
+            "tts_speed": tpl.tts_speed or 0,
+            "frame_template": tpl.frame_template or "",
         })
-    return templates.TemplateResponse("styles.html", {"request": request, "styles": style_list})
+
+    return templates.TemplateResponse("styles.html", {
+        "request": request,
+        "images": image_list, "videos": video_list, "prompts": prompt_list,
+    })
 
 
 @router.get("/templates/{size}/{name}")

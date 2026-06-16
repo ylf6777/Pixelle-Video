@@ -1,48 +1,94 @@
-{# 风格模板展示页 #}
+{# 模板展示页 — 三分类导航 #}
 {% extends "base.html" %}
 {% block content %}
-<div class="pv-browser">
+<div class="pv-browser" x-data="templatePage()">
   <div class="pv-showcase-header">
-    <h2 class="pv-showcase__title">画面模板</h2>
-    <p class="pv-showcase__subtitle">{{ styles|length }} 种模板 · 点击卡片选中</p>
+    <h2 class="pv-showcase__title">模板中心</h2>
+    <p class="pv-showcase__subtitle">{{ images|length + videos|length + prompts|length }} 个模板</p>
   </div>
 
-  <div class="pv-showcase__cats" style="margin-bottom:20px">
-    <button class="pv-showcase__cat pv-showcase__cat--active" @click="filterCat=''">全部</button>
-    <button class="pv-showcase__cat" :class="{'pv-showcase__cat--active':filterCat==='图片'}" @click="filterCat='图片'">图片</button>
-    <button class="pv-showcase__cat" :class="{'pv-showcase__cat--active':filterCat==='视频'}" @click="filterCat='视频'">视频</button>
-    <button class="pv-showcase__cat" :class="{'pv-showcase__cat--active':filterCat==='静态'}" @click="filterCat='静态'">静态</button>
-    <button class="pv-showcase__cat" :class="{'pv-showcase__cat--active':filterCat==='其他'}" @click="filterCat='其他'">其他</button>
-  </div>
+  {# 主导航条 #}
+  <nav class="pv-template-nav" role="tablist">
+    <button class="pv-template-nav__tab" :class="{ 'pv-template-nav__tab--active': tab === 'image' }"
+      @click="tab='image'">插图模板 ({{ images|length }})</button>
+    <button class="pv-template-nav__tab" :class="{ 'pv-template-nav__tab--active': tab === 'video' }"
+      @click="tab='video'">视频模板 ({{ videos|length }})</button>
+    <button class="pv-template-nav__tab" :class="{ 'pv-template-nav__tab--active': tab === 'prompt' }"
+      @click="tab='prompt'">提示词模板 ({{ prompts|length }})</button>
+  </nav>
 
-  <div class="pv-masonry" id="styleGrid">
-    {% for s in styles %}
-    <div class="pv-card pv-style-card" data-key="{{ s.key }}"
-         :class="{ 'pv-style-card--selected': selected === '{{ s.key }}' }"
-         @click="select('{{ s.key }}')"
-         x-show="!filterCat || filterCat==='{{ s.category }}'">
-      <div class="pv-card__thumb">
-        {% if s.preview %}
-        <img src="{{ s.preview }}" alt="{{ s.name }}" loading="lazy" style="width:100%;display:block">
-        {% else %}
-        <div class="pv-card__thumb-grad" style="background:linear-gradient(135deg,#667eea,#764ba2);min-height:150px;display:flex;align-items:center;justify-content:center;border-radius:8px;color:#fff;font-size:14px;padding:10px">{{ s.name }}</div>
-        {% endif %}
-        <span class="pv-badge pv-badge--{{ s.category }}" style="position:absolute;top:8px;right:8px;z-index:1">{{ s.category }}</span>
+  {# 插图模板 #}
+  <div x-show="tab === 'image'">
+    <div class="pv-masonry">
+      {% for s in images %}
+      <div class="pv-card pv-style-card" data-key="{{ s.key }}"
+        :class="{ 'pv-style-card--selected': selected === '{{ s.key }}' }" @click="select('{{ s.key }}')">
+        <div class="pv-card__thumb">
+          {% if s.preview %}<img src="{{ s.preview }}" alt="{{ s.name }}" loading="lazy">{% else %}<div class="pv-card__thumb-grad" style="min-height:200px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3)">{{ s.name }}</div>{% endif %}
+        </div>
+        <div class="pv-card__body">
+          <h3 class="pv-card__title">{{ s.name }}</h3>
+          <p class="pv-card__desc">{{ s.desc }}</p>
+          {% if s.params %}
+          <div style="margin-top:6px;font-size:11px;color:var(--pv-text-faint)">
+            {% for k,v in s.params.items() %}<span style="margin-right:8px">{{ k }}: {{ v[:20] }}</span>{% endfor %}
+          </div>
+          {% endif %}
+          <span class="pv-style-card__check" x-show="selected === '{{ s.key }}'">✓</span>
+        </div>
       </div>
-      <div class="pv-card__body">
-        <h3 class="pv-card__title">{{ s.name }}</h3>
-        <p class="pv-card__desc">{{ s.desc }}</p>
-        <span class="pv-style-card__check" x-show="selected === '{{ s.key }}'">✓ 已选中</span>
-      </div>
+      {% endfor %}
     </div>
-    {% endfor %}
+  </div>
+
+  {# 视频模板 #}
+  <div x-show="tab === 'video'">
+    <div class="pv-masonry">
+      {% for s in videos %}
+      <div class="pv-card pv-style-card" data-key="{{ s.key }}"
+        :class="{ 'pv-style-card--selected': selected === '{{ s.key }}' }" @click="select('{{ s.key }}')">
+        <div class="pv-card__thumb">
+          {% if s.preview %}<img src="{{ s.preview }}" alt="{{ s.name }}" loading="lazy">{% else %}<div class="pv-card__thumb-grad" style="min-height:200px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3)">{{ s.name }}</div>{% endif %}
+        </div>
+        <div class="pv-card__body">
+          <h3 class="pv-card__title">{{ s.name }}</h3>
+          <p class="pv-card__desc">{{ s.desc }}</p>
+          <span class="pv-style-card__check" x-show="selected === '{{ s.key }}'">✓</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  {# 提示词模板 #}
+  <div x-show="tab === 'prompt'">
+    <div class="pv-masonry">
+      {% for s in prompts %}
+      <div class="pv-card pv-style-card" data-key="{{ s.key }}"
+        :class="{ 'pv-style-card--selected': selected === '{{ s.key }}' }" @click="select('{{ s.key }}')">
+        <div class="pv-card__thumb">
+          <div class="pv-card__thumb-grad" style="background:linear-gradient(135deg,{{ loop.cycle('#667eea,#764ba2','#4facfe,#00f2fe') }});min-height:200px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:700">{{ s.name }}</div>
+        </div>
+        <div class="pv-card__body">
+          <h3 class="pv-card__title">{{ s.name }}</h3>
+          <p class="pv-card__desc">{{ s.desc }}</p>
+          {% if s.params %}
+          <div style="margin-top:6px;font-size:11px;color:var(--pv-text-faint)">
+            {% for k,v in s.params.items() %}<span style="margin-right:8px">{{ k }}: {{ v }}</span>{% endfor %}
+          </div>
+          {% endif %}
+          <span class="pv-style-card__check" x-show="selected === '{{ s.key }}'">✓</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
   </div>
 </div>
 
 <script>
 document.addEventListener('alpine:init', () => {
-  Alpine.data('stylePicker', () => ({
-    selected: '', filterCat: '',
+  Alpine.data('templatePage', () => ({
+    tab: 'image', selected: '',
     select(key) { this.selected = this.selected === key ? '' : key; }
   }));
 });
