@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>风格模板参数面板 — 原代码复刻</title>
+<style>
+* { box-sizing:border-box;margin:0;padding:0; }
+body { background:#0d0d1f;color:#fff;font-family:'PingFang SC','Microsoft YaHei',sans-serif;padding:20px; }
+.container { max-width:800px;margin:0 auto; }
+h1 { text-align:center;margin:20px 0 24px;font-size:22px; }
+h2 { font-size:16px;margin:16px 0 8px;color:#00d4ff; }
+.card { background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:16px;margin-bottom:16px; }
+label { display:block;font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:4px; }
+select, textarea, input { width:100%;padding:10px 12px;border-radius:6px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#fff;font-size:14px;margin-bottom:12px; }
+textarea:disabled, input:disabled { opacity:0.5;cursor:not-allowed; }
+.btn { padding:10px 24px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer; }
+.btn-primary { background:#00d4ff;color:#000; }
+.btn-secondary { background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.15); }
+.btn:disabled { opacity:0.4;cursor:not-allowed; }
+.row { display:flex;gap:12px;align-items:center;margin-bottom:12px; }
+.row .btn { flex-shrink:0; }
+.caption { font-size:13px;color:rgba(255,255,255,0.5); }
+.info-table { width:100%;font-size:13px; }
+.info-table td { padding:4px 8px; }
+.info-table td:first-child { color:rgba(255,255,255,0.4);white-space:nowrap; }
+.info-table td:last-child { color:#fff;font-family:monospace; }
+.status-badge { display:inline-block;padding:2px 10px;border-radius:4px;font-size:12px;margin-left:8px; }
+.status-active { background:rgba(0,200,83,0.15);color:#00c853; }
+.status-preview { background:rgba(0,212,255,0.15);color:#00d4ff; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>风格模板参数面板 — 原代码交互复刻</h1>
+
+  <!-- Step 1: 模板选择 -->
+  <div class="card">
+    <label>🎨 风格模板选择（原代码: st.selectbox）</label>
+    <select id="templateSelect">
+      <option value="template_xiaojun">晓君老师模板</option>
+      <option value="template_elderly">中老年模板</option>
+      <option value="template_custom">自定义模板</option>
+    </select>
+
+    <!-- Step 2: 应用按钮 -->
+    <div class="row">
+      <button class="btn btn-primary" id="btnApply" onclick="applyTemplate()">🚀 应用模板设置</button>
+      <span class="caption" id="applyHint">已选择「晓君老师模板」，点击左侧按钮应用</span>
+    </div>
+  </div>
+
+  <!-- Step 3: 绑定参数信息面板（原代码: st.container(border=True)） -->
+  <div class="card" id="bindingPanel">
+    <h2>📋 绑定参数 <span class="status-badge status-preview" id="bindStatus">👁 预览中</span></h2>
+    <table class="info-table" id="bindTable"></table>
+  </div>
+
+  <!-- Step 4: Prompt 前缀（原代码: 锁定=readonly, 自定义=editable） -->
+  <div class="card">
+    <h2>📝 生图风格 Prompt 前缀</h2>
+    <textarea id="promptArea" rows="4" disabled
+      placeholder="选择风格模板后显示对应的 prompt 前缀..."></textarea>
+    <span class="caption" id="promptHint">🔒 内置模板已锁定（不可编辑）</span>
+  </div>
+
+  <!-- Step 5: 固定参数（原代码: fixed_params） -->
+  <div class="card">
+    <h2>⚙️ 固定参数</h2>
+    <div id="fixedParams"></div>
+  </div>
+</div>
+
+<script>
+// === 原代码 BUILTIN_TEMPLATES 数据 ===
+const TEMPLATES = {
+  "template_xiaojun": {
+    name: "晓君老师模板",
+    prompt: "Rough shaky outlines, uneven crayon coloring with visible grain texture, paper background texture like a sketchbook page, chibi-style big round eyes, lots of hand-drawn doodle symbols and stars and hearts, cute messy scrapbook aesthetic like a 10-year-old's sketchbook, photo-to-doodle effect, no text no letters no speech bubbles in the image, just the characters and scene, main characters: young mom with messy bun hair and tired eyes, little boy with round cheeks, everyday family moments",
+    locked: true,
+    frame_template: "1080x1920/image_default.html",
+    fixed_params: { author: "晓君老师", brand: "育儿小窍门", describe: "喜欢我，关注我！！" },
+    tts_voice: "zh-CN-XiaoxiaoNeural",
+    tts_speed: 1.0,
+  },
+  "template_elderly": {
+    name: "中老年模板",
+    prompt: "warm watercolor illustration, soft natural light coming through the window, warm muted tones of cream, light brown and pale green, cozy home atmosphere, healthy food theme, suitable for middle-aged and elderly aesthetic",
+    locked: true,
+    frame_template: "1080x1920/image_fashion_vintage.html",
+    fixed_params: {},
+    tts_voice: "zh-CN-XiaoxiaoNeural",
+    tts_speed: 0.8,
+  },
+  "template_custom": {
+    name: "自定义模板",
+    prompt: "",
+    locked: false,
+    frame_template: null,
+    fixed_params: {},
+    tts_voice: null,
+    tts_speed: null,
+  }
+};
+
+let activeKey = "template_custom";         // 已激活的模板（原代码: _active_state_key）
+let selectedKey = "template_xiaojun";     // 下拉选中的模板
+
+const selectEl = document.getElementById('templateSelect');
+const btnApply = document.getElementById('btnApply');
+const applyHint = document.getElementById('applyHint');
+const promptArea = document.getElementById('promptArea');
+const promptHint = document.getElementById('promptHint');
+const bindTable = document.getElementById('bindTable');
+const bindStatus = document.getElementById('bindStatus');
+const fixedParams = document.getElementById('fixedParams');
+
+function updateUI() {
+  const tpl = TEMPLATES[selectedKey];
+  const isActive = (activeKey === selectedKey);
+
+  // 应用按钮状态
+  if (isActive) {
+    btnApply.textContent = '✅ 已应用';
+    btnApply.className = 'btn btn-secondary';
+    btnApply.disabled = true;
+  } else {
+    btnApply.textContent = '🚀 应用模板设置';
+    btnApply.className = 'btn btn-primary';
+    btnApply.disabled = false;
+  }
+
+  // 提示文字
+  applyHint.textContent = isActive
+    ? `当前激活：**${tpl.name}**`
+    : `已选择「${tpl.name}」，点击左侧按钮应用`;
+
+  // 绑定信息面板
+  if (selectedKey !== 'template_custom') {
+    let rows = '';
+    if (tpl.tts_voice) rows += `<tr><td>语音</td><td>${tpl.tts_voice}</td></tr>`;
+    if (tpl.tts_speed) rows += `<tr><td>语速</td><td>${tpl.tts_speed.toFixed(1)}x</td></tr>`;
+    if (tpl.frame_template) rows += `<tr><td>画面模板</td><td>${tpl.frame_template}</td></tr>`;
+    for (const [k, v] of Object.entries(tpl.fixed_params)) {
+      rows += `<tr><td>${k}</td><td>${v}</td></tr>`;
+    }
+    rows += `<tr><td>生图风格</td><td>${tpl.prompt.substring(0, 80)}…</td></tr>`;
+    bindTable.innerHTML = rows;
+    bindStatus.textContent = isActive ? '✅ 已应用' : '👁 预览中（点击左侧按钮应用）';
+    bindStatus.className = isActive ? 'status-badge status-active' : 'status-badge status-preview';
+  } else {
+    bindTable.innerHTML = '<tr><td colspan="2" style="color:rgba(255,255,255,0.4)">自定义模板无绑定参数</td></tr>';
+    bindStatus.textContent = '';
+  }
+
+  // Prompt 区域 — 显示已激活模板的 prompt（原代码逻辑）
+  const effective = TEMPLATES[activeKey];
+  promptArea.value = effective.prompt;
+  if (activeKey === 'template_custom') {
+    promptArea.disabled = false;
+    promptHint.textContent = '✏️ 自定义模板，可自由编辑';
+  } else {
+    promptArea.disabled = true;
+    promptHint.textContent = '🔒 内置模板已锁定（不可编辑）';
+  }
+
+  // 固定参数输入区（原代码: fixed_params 各字段）
+  if (activeKey !== 'template_custom' && Object.keys(effective.fixed_params).length > 0) {
+    let html = '';
+    for (const [key, val] of Object.entries(effective.fixed_params)) {
+      html += `<label>${key}</label><input type="text" value="${val}" class="param-input"><br>`;
+    }
+    fixedParams.innerHTML = html;
+  } else if (activeKey === 'template_custom') {
+    fixedParams.innerHTML = '<label>品牌</label><input type="text" placeholder="填写品牌名"><br><label>作者</label><input type="text" placeholder="填写作者名"><br><label>描述</label><input type="text" placeholder="填写描述">';
+  } else {
+    fixedParams.innerHTML = '<span class="caption">该模板无固定参数</span>';
+  }
+}
+
+function applyTemplate() {
+  activeKey = selectedKey;
+  updateUI();
+}
+
+selectEl.onchange = function() {
+  selectedKey = this.value;
+  updateUI();
+};
+
+// 初始化
+updateUI();
+</script>
+</body>
+</html>
