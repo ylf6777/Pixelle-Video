@@ -1285,11 +1285,15 @@
 }
 
 .pv-style-card { cursor: pointer; border: 2px solid transparent; transition: border-color 0.2s; }
-.pv-style-card .pv-card__thumb { aspect-ratio: auto; max-height: 320px; background: #000; }
-.pv-style-card .pv-card__thumb img { object-fit: contain; background: #000; }
+.pv-style-card .pv-card__thumb { aspect-ratio: auto; max-height: none; background: #000; min-height: 150px; }
+.pv-style-card .pv-card__thumb img { object-fit: contain; background: #000; width: 100%; display: block; }
 .pv-style-card:hover { border-color: var(--pv-glass-border); }
 .pv-style-card--selected { border-color: var(--pv-accent) !important; box-shadow: 0 0 16px rgba(0,212,255,0.15); }
 .pv-style-card__check { color: var(--pv-accent); font-size: 14px; font-weight: 600; margin-top: 8px; }
+/* 风格模板网格：5列（与原代码 TEMPLATE_GRID_COLS=5 一致） */
+#styleGrid { grid-template-columns: repeat(5, 1fr); gap: 15px; }
+@media (max-width: 1199px) { #styleGrid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 767px) { #styleGrid { grid-template-columns: repeat(2, 1fr); } }
 
 .pv-text-success { color: var(--pv-success); }
 .pv-text-error { color: var(--pv-error); }

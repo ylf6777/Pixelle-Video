@@ -23,9 +23,9 @@
          x-show="!filterCat || filterCat==='{{ s.category }}'">
       <div class="pv-card__thumb">
         {% if s.preview %}
-        <img src="{{ s.preview }}" alt="{{ s.name }}" loading="lazy">
+        <img src="{{ s.preview }}" alt="{{ s.name }}" loading="lazy" style="width:100%;display:block">
         {% else %}
-        <div class="pv-card__thumb-grad"></div>
+        <div class="pv-card__thumb-grad" style="background:linear-gradient(135deg,#667eea,#764ba2);min-height:150px;display:flex;align-items:center;justify-content:center;border-radius:8px;color:#fff;font-size:14px;padding:10px">{{ s.name }}</div>
         {% endif %}
         <span class="pv-badge pv-badge--{{ s.category }}" style="position:absolute;top:8px;right:8px;z-index:1">{{ s.category }}</span>
       </div>
