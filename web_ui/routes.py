@@ -384,6 +384,46 @@ async def api_test_llm(request: Request):
     except Exception as e:
         return JSONResponse({"status": "error", "message": str(e)}, status_code=400)
 
+
+@router.post("/api/config/test-comfyui")
+async def api_test_comfyui(request: Request):
+    """测试 ComfyUI 连接"""
+    import httpx
+    body = await request.json()
+    url = (body.get("comfyui_url") or "").strip()
+    if not url:
+        return JSONResponse({"status": "error", "message": "ComfyUI URL 未配置"}, status_code=400)
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            r = await client.get(f"{url}/system_stats")
+            if r.status_code == 200:
+                data = r.json()
+                return {"status": "ok", "device": data.get("system", {}).get("device", "unknown")}
+            return JSONResponse({"status": "error", "message": f"HTTP {r.status_code}"}, status_code=400)
+    except Exception as e:
+        return JSONResponse({"status": "error", "message": str(e)}, status_code=400)
+
+
+@router.post("/api/preview/tts")
+async def api_preview_tts(request: Request):
+    """TTS 预览 — 生成语音并返回音频"""
+    from pixelle_video.service import pixelle_video
+    body = await request.json()
+    text = (body.get("text") or "").strip()
+    if not text:
+        raise HTTPException(400, "text 不能为空")
+    try:
+        await pixelle_video.initialize()
+        voice = body.get("voice", "zh-CN-YunjianNeural")
+        speed = body.get("speed", 1.2)
+        result = await pixelle_video.tts(text=text, voice_id=voice, speed=speed)
+        if result and result.audio_path:
+            from fastapi.responses import FileResponse
+            return FileResponse(result.audio_path, media_type="audio/mpeg")
+        return JSONResponse({"status": "error", "message": "TTS 生成失败"}, status_code=500)
+    except Exception as e:
+        return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
+
 @router.get("/api/history")
 async def api_history(page: int = 1, page_size: int = 20, status: str = ""):
     """

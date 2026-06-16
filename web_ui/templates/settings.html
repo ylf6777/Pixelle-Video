@@ -30,6 +30,10 @@
       <label>RunningHub API Key <input type="password" x-model="comfyui.runninghub_api_key" class="pv-input" placeholder="rhu_..."></label>
       <label>并发限制 <input type="number" x-model="comfyui.runninghub_concurrent_limit" class="pv-input" min="1" max="10"></label>
     </div>
+    <div class="pv-settings__actions">
+      <button class="pv-btn pv-btn--sm" @click="testComfy()" :disabled="testingComfy">测试 ComfyUI</button>
+      <span x-show="comfyStatus" x-text="comfyStatus" :class="comfyOk ? 'pv-text-success' : 'pv-text-error'"></span>
+    </div>
   </section>
 
   {# API 供应商 #}
@@ -69,6 +73,7 @@ document.addEventListener('alpine:init', () => {
   Alpine.data('settingsForm', () => ({
     llm: {}, comfyui: {}, providers: {},
     testing: false, llmStatus: '', llmOk: false,
+    testingComfy: false, comfyStatus: '', comfyOk: false,
     saving: false, saveMsg: '',
 
     async init() {
@@ -79,6 +84,20 @@ document.addEventListener('alpine:init', () => {
         this.comfyui = cfg.comfyui || {};
         this.providers = cfg.api_providers || {};
       } catch(e) { console.error(e); }
+    },
+
+    async testComfy() {
+      this.testingComfy = true; this.comfyStatus = '测试中...';
+      try {
+        const r = await fetch('/api/config/test-comfyui', {
+          method: 'POST', headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(this.comfyui)
+        });
+        const d = await r.json();
+        this.comfyOk = d.status === 'ok';
+        this.comfyStatus = this.comfyOk ? `✅ 连接成功 — 设备: ${d.device}` : `❌ ${d.message}`;
+      } catch(e) { this.comfyStatus = '❌ ' + e.message; this.comfyOk = false; }
+      this.testingComfy = false;
     },
 
     async testLLM() {
