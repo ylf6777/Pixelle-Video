@@ -7,42 +7,36 @@
     <p>管理 LLM、ComfyUI 和 API 供应商的连接配置</p>
   </header>
 
-  {# LLM 配置 #}
   <section class="pv-card pv-settings__section">
     <h2>LLM 大语言模型</h2>
     <div class="pv-settings__grid">
       <label>API Key <input type="password" x-model="llm.api_key" class="pv-input" placeholder="sk-..."></label>
-      <label>Base URL <input type="url" x-model="llm.base_url" class="pv-input" placeholder="https://api.openai.com/v1"></label>
+      <label>Base URL <input type="url" x-model="llm.base_url" class="pv-input"></label>
       <label>Model <input type="text" x-model="llm.model" class="pv-input" placeholder="gpt-4o"></label>
     </div>
     <div class="pv-settings__actions">
-      <button class="pv-btn pv-btn--sm" @click="testLLM()" :disabled="testing">测试连接</button>
+      <button class="pv-btn pv-btn--gradient" @click="testLLM()" :disabled="testing">测试连接</button>
       <span x-show="llmStatus" x-text="llmStatus" :class="llmOk ? 'pv-text-success' : 'pv-text-error'"></span>
     </div>
   </section>
 
-  {# ComfyUI 配置 #}
   <section class="pv-card pv-settings__section">
     <h2>ComfyUI / 云端</h2>
     <div class="pv-settings__grid">
       <label>ComfyUI URL <input type="url" x-model="comfyui.comfyui_url" class="pv-input" placeholder="http://127.0.0.1:8188"></label>
-      <label>ComfyUI API Key <input type="password" x-model="comfyui.comfyui_api_key" class="pv-input" placeholder="可选"></label>
-      <label>云端 API Key <input type="password" x-model="comfyui.cloud_api_key" class="pv-input" placeholder="rhu_..."></label>
-      <label>并发限制 <input type="number" x-model="comfyui.cloud_concurrent_limit" class="pv-input" min="1" max="10"></label>
+      <label>ComfyUI API Key <input type="password" x-model="comfyui.comfyui_api_key" class="pv-input"></label>
+      <label>云端 API Key <input type="password" x-model="comfyui.runninghub_api_key" class="pv-input"></label>
+      <label>并发限制 <input type="number" x-model="comfyui.runninghub_concurrent_limit" class="pv-input" min="1" max="10"></label>
     </div>
     <div class="pv-settings__actions">
-      <button class="pv-btn pv-btn--sm" @click="testComfy()" :disabled="testingComfy">测试 ComfyUI</button>
+      <button class="pv-btn pv-btn--gradient" @click="testComfy()" :disabled="testingComfy">测试连接</button>
       <span x-show="comfyStatus" x-text="comfyStatus" :class="comfyOk ? 'pv-text-success' : 'pv-text-error'"></span>
     </div>
   </section>
 
-  {# API 供应商 #}
   <section class="pv-card pv-settings__section">
     <h2>API 供应商</h2>
-    {% set providers = [
-      ('openai', 'OpenAI'), ('dashscope', 'DashScope (阿里)'),
-      ('ark', '火山 ARK'), ('kling', 'Kling 可灵')
-    ] %}
+    {% set providers = [('openai','OpenAI'),('dashscope','DashScope'),('ark','火山 ARK'),('kling','Kling')] %}
     <div class="pv-settings__providers">
       {% for key, name in providers %}
       <details class="pv-settings__provider">
@@ -50,21 +44,16 @@
         <div class="pv-settings__grid">
           <label>API Key <input type="password" x-model="providers.{{ key }}.api_key" class="pv-input"></label>
           <label>Base URL <input type="url" x-model="providers.{{ key }}.base_url" class="pv-input"></label>
-          <label class="pv-settings__checkbox">
-            <input type="checkbox" x-model="providers.{{ key }}.use_proxy"> 使用代理
-          </label>
+          <label class="pv-settings__checkbox"><input type="checkbox" x-model="providers.{{ key }}.use_proxy"> 使用代理</label>
         </div>
       </details>
       {% endfor %}
     </div>
   </section>
 
-  {# 保存 + 重置 #}
   <div class="pv-settings__save">
     <button class="pv-btn pv-btn--gradient" @click="save($el)">保存配置</button>
-    <button class="pv-btn pv-btn--secondary" @click="reset()">
-      重置配置
-    </button>
+    <button class="pv-btn pv-btn--gradient" @click="reset()">重置配置</button>
     <span x-show="saveMsg" x-text="saveMsg" :class="saveOk ? 'pv-text-success' : 'pv-text-error'"></span>
   </div>
 </div>
@@ -75,7 +64,7 @@ document.addEventListener('alpine:init', () => {
     llm: {}, comfyui: {}, providers: {},
     testing: false, llmStatus: '', llmOk: false,
     testingComfy: false, comfyStatus: '', comfyOk: false,
-    saving: false, saveMsg: '', saveOk: false,
+    saveMsg: '', saveOk: false,
 
     async init() { await this.loadConfig(); },
     async loadConfig() {
@@ -88,61 +77,38 @@ document.addEventListener('alpine:init', () => {
       } catch(e) { console.error(e); }
     },
 
-    async reset() {
-      if (!confirm('确定要重置所有配置为默认值吗？此操作不可撤销。')) return;
+    reset() {
+      if (!confirm('确定要重置所有配置为默认值吗？')) return;
       this.llm = {api_key:'',base_url:'',model:''};
       this.comfyui = {comfyui_url:'',comfyui_api_key:'',runninghub_api_key:'',runninghub_concurrent_limit:1};
       this.providers = {};
-      this.saveMsg = '已重置为默认值，请点击保存';
-      this.saveOk = true;
+      this.saveMsg = '已重置为默认值，请点击保存'; this.saveOk = true;
       setTimeout(() => this.saveMsg = '', 3000);
     },
 
-    async testComfy() {
-      this.testingComfy = true; this.comfyStatus = '测试中...';
-      try {
-        const r = await fetch('/api/config/test-comfyui', {
-          method: 'POST', headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify(this.comfyui)
-        });
-        const d = await r.json();
-        this.comfyOk = d.status === 'ok';
-        this.comfyStatus = this.comfyOk ? `连接成功: ${d.device}` : d.message;
-      } catch(e) { this.comfyStatus = e.message; this.comfyOk = false; }
-      this.testingComfy = false;
+    testComfy() {
+      this.testingComfy = true; this.comfyStatus = '';
+      fetch('/api/config/test-comfyui',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(this.comfyui)})
+        .then(r=>r.json()).then(d=>{this.comfyOk=d.status==='ok';this.comfyStatus=this.comfyOk?d.device:d.message})
+        .catch(e=>{this.comfyStatus=e.message}).finally(()=>this.testingComfy=false);
     },
 
-    async testLLM() {
-      this.testing = true; this.llmStatus = '测试中...';
-      try {
-        const r = await fetch('/api/config/test-llm', {
-          method: 'POST', headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify(this.llm)
-        });
-        const d = await r.json();
-        this.llmOk = d.status === 'ok';
-        this.llmStatus = this.llmOk ? `连接成功: ${d.response}` : d.message;
-      } catch(e) { this.llmStatus = e.message; this.llmOk = false; }
-      this.testing = false;
+    testLLM() {
+      this.testing = true; this.llmStatus = '';
+      fetch('/api/config/test-llm',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(this.llm)})
+        .then(r=>r.json()).then(d=>{this.llmOk=d.status==='ok';this.llmStatus=this.llmOk?d.response:d.message})
+        .catch(e=>{this.llmStatus=e.message}).finally(()=>this.testing=false);
     },
 
     save(btn) {
-      btn.disabled = true
-      btn.textContent = '保存中...'
-      this.saveMsg = ''
-      fetch('/api/config', {
-        method: 'PUT', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({llm:this.llm,comfyui:this.comfyui,api_providers:this.providers})
-      }).then(r => r.json()).then(d => {
-        this.saveOk = d.status === 'saved'
-        this.saveMsg = this.saveOk ? '配置已保存' : '保存失败'
-        setTimeout(() => { this.saveMsg = '' }, 3000)
-      }).catch(e => {
-        this.saveMsg = e.message
-      }).finally(() => {
-        btn.disabled = false
-        btn.textContent = '保存配置'
-      })
+      btn.disabled = true; btn.textContent = '保存中...'; this.saveMsg = '';
+      fetch('/api/config',{method:'PUT',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({llm:this.llm,comfyui:this.comfyui,api_providers:this.providers})})
+        .then(r=>r.json()).then(d=>{
+          this.saveOk=d.status==='saved'; this.saveMsg=this.saveOk?'配置已保存':'保存失败';
+          setTimeout(()=>this.saveMsg='',3000);
+        }).catch(e=>{this.saveMsg=e.message})
+        .finally(()=>{btn.disabled=false;btn.textContent='保存配置'});
     }
   }));
 });
