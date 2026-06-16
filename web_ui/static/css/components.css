@@ -661,7 +661,7 @@
 /* ---- 导航栏品牌 ---- */
 .pv-navbar__brand {
   font-family: var(--pv-font-display);
-  font-size: var(--pv-text-lg);
+  font-size: var(--pv-text-2xl);
   font-weight: 700;
   color: var(--pv-text);
   display: flex;
@@ -682,7 +682,7 @@
 
 .pv-navbar__link {
   padding: 6px 14px;
-  font-size: var(--pv-text-sm);
+  font-size: var(--pv-text-lg);
   font-weight: 500;
   color: var(--pv-text-muted);
   border-radius: var(--pv-radius-sm);
@@ -767,7 +767,7 @@
 .pv-catbar__link {
   padding: 6px 18px;
   border-radius: 20px;
-  font-size: var(--pv-text-sm);
+  font-size: var(--pv-text-base);
   font-family: var(--pv-font-body);
   font-weight: 500;
   color: var(--pv-text-muted);
@@ -828,7 +828,7 @@
 
   .pv-navbar__link {
     padding: 6px 10px;
-    font-size: var(--pv-text-xs);
+    font-size: var(--pv-text-sm);
   }
 }
 
