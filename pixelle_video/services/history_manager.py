@@ -26,22 +26,23 @@ from pixelle_video.services.persistence import PersistenceService
 
 class HistoryManager:
     """
-    History management service
-    
-    Provides business logic for:
-    - Task listing and filtering
-    - Task detail retrieval
-    - Task duplication (for re-generation)
-    - Task deletion
-    - Future: Frame regeneration, export, etc.
+    历史记录管理服务，提供 UI 无关的业务逻辑
+
+    封装对 PersistenceService 的高层操作，包括任务列表/详情/删除/复制/统计。
+
+    Requires:
+        PersistenceService 实例
     """
     
     def __init__(self, persistence: PersistenceService):
         """
-        Initialize history manager
-        
+        初始化历史记录管理器
+
         Args:
-            persistence: PersistenceService instance
+            persistence: PersistenceService 实例
+
+        Side Effects:
+            保存 persistence 引用到 self.persistence
         """
         self.persistence = persistence
     
@@ -54,23 +55,17 @@ class HistoryManager:
         sort_order: str = "desc"
     ) -> Dict[str, Any]:
         """
-        Get paginated task list
-        
+        获取分页任务列表
+
         Args:
-            page: Page number (1-indexed)
-            page_size: Items per page
-            status: Filter by status (optional)
-            sort_by: Sort field (created_at, completed_at, title, duration)
-            sort_order: Sort order (asc, desc)
-        
+            page: 页码（从 1 开始）
+            page_size: 每页条目数
+            status: 按状态筛选（可选）
+            sort_by: 排序字段（created_at, completed_at, title, duration）
+            sort_order: 排序方向（asc, desc）
+
         Returns:
-            {
-                "tasks": [...],
-                "total": 100,
-                "page": 1,
-                "page_size": 20,
-                "total_pages": 5
-            }
+            分页结果字典：{"tasks": [...], "total": N, "page": N, "page_size": N, "total_pages": N}
         """
         return await self.persistence.list_tasks_paginated(
             page=page,
@@ -82,17 +77,13 @@ class HistoryManager:
     
     async def get_task_detail(self, task_id: str) -> Optional[Dict[str, Any]]:
         """
-        Get full task detail including storyboard
-        
+        获取任务完整详情（含故事板数据）
+
         Args:
-            task_id: Task ID
-        
+            task_id: 任务 ID
+
         Returns:
-            {
-                "metadata": {...},      # Task metadata
-                "storyboard": {...}     # Storyboard data (if available)
-            }
-            or None if task not found
+            {"metadata": {...}, "storyboard": {...}} 字典，任务不存在时返回 None
         """
         metadata = await self.persistence.load_task_metadata(task_id)
         if not metadata:
@@ -107,54 +98,36 @@ class HistoryManager:
     
     async def get_statistics(self) -> Dict[str, Any]:
         """
-        Get statistics about all tasks
-        
+        获取所有任务的统计信息
+
         Returns:
-            {
-                "total_tasks": 100,
-                "completed": 95,
-                "failed": 5,
-                "total_duration": 3600.5,  # seconds
-                "total_size": 1024000000,  # bytes
-            }
+            统计字典：{"total_tasks", "completed", "failed", "total_duration"（秒）, "total_size"（字节）}
         """
         return await self.persistence.get_statistics()
     
     async def delete_task(self, task_id: str) -> bool:
         """
-        Delete a task and all its files
-        
+        删除任务及其所有关联文件
+
         Args:
-            task_id: Task ID to delete
-        
+            task_id: 要删除的任务 ID
+
         Returns:
-            True if successful, False otherwise
+            成功返回 True，否则返回 False
         """
         return await self.persistence.delete_task(task_id)
     
     async def duplicate_task(self, task_id: str) -> Optional[Dict[str, Any]]:
         """
-        Duplicate a task (get input parameters for new generation)
-        
-        This allows users to:
-        1. Copy all generation parameters from a previous task
-        2. Pre-fill the generation form
-        3. Regenerate with same/modified parameters
-        
+        复制任务的输入参数以供重新生成使用
+
+        可用于：1) 复制之前任务的所有生成参数，2) 预填生成表单，3) 用相同/修改后的参数重新生成
+
         Args:
-            task_id: Task ID to duplicate
-        
+            task_id: 要复制的任务 ID
+
         Returns:
-            Input parameters dict or None if task not found
-            {
-                "text": "...",
-                "mode": "generate",
-                "title": "...",
-                "n_scenes": 5,
-                "tts_inference_mode": "local",
-                "tts_voice": "...",
-                ...
-            }
+            输入参数字典（含 text, mode, title, n_scenes, tts_inference_mode 等），任务不存在时返回 None
         """
         metadata = await self.persistence.load_task_metadata(task_id)
         if not metadata:
@@ -168,7 +141,12 @@ class HistoryManager:
         return input_params
     
     async def rebuild_index(self):
-        """Rebuild task index (useful for maintenance or after manual changes)"""
+        """
+        重建任务索引（用于维护或手动修改后同步）
+
+        Side Effects:
+            调用 persistence.rebuild_index() 重新扫描任务目录
+        """
         await self.persistence.rebuild_index()
     
     # ========================================================================
@@ -182,42 +160,29 @@ class HistoryManager:
         **override_params
     ) -> Optional[str]:
         """
-        Regenerate a specific frame (FUTURE FEATURE)
-        
+        重新生成指定帧（未来功能，阶段3实现）
+
         Args:
-            task_id: Original task ID
-            frame_index: Frame index to regenerate (0-based)
-            **override_params: Parameters to override (image_prompt, style, etc.)
-        
+            task_id: 原始任务 ID
+            frame_index: 要重新生成的帧索引（从 0 开始）
+            **override_params: 要覆写的参数（image_prompt, style 等）
+
         Returns:
-            New frame image path or None if failed
-        
-        TODO: Implement in Phase 3
-        - Load original storyboard
-        - Get frame parameters
-        - Override with new parameters
-        - Call image generation service
-        - Update storyboard
-        - Re-composite video
+            新帧图片路径，失败时返回 None（当前始终返回 None，功能未实现）
         """
         logger.warning("regenerate_frame is not implemented yet (Phase 3 feature)")
         return None
     
     async def export_task(self, task_id: str, export_path: str) -> Optional[str]:
         """
-        Export task as a package (metadata + video + frames) (FUTURE FEATURE)
-        
+        将任务导出为打包文件（元数据 + 视频 + 帧）（未来功能，阶段3实现）
+
         Args:
-            task_id: Task ID to export
-            export_path: Export file path (e.g., "exports/task.zip")
-        
+            task_id: 要导出的任务 ID
+            export_path: 导出文件路径（如 "exports/task.zip"）
+
         Returns:
-            Export file path or None if failed
-        
-        TODO: Implement in Phase 3
-        - Collect all task files
-        - Create ZIP archive
-        - Include metadata.json, storyboard.json, video, frames
+            导出文件路径，失败时返回 None（当前始终返回 None，功能未实现）
         """
         logger.warning("export_task is not implemented yet (Phase 3 feature)")
         return None

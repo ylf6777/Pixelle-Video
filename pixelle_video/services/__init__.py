@@ -11,19 +11,22 @@
 # limitations under the License.
 
 """
-Pixelle-Video Services
+Pixelle-Video 核心服务包
 
-Core services providing atomic capabilities.
+提供所有原子能力服务的统一入口。
 
-Services:
-- LLMService: LLM text generation
-- TTSService: Text-to-speech
-- MediaService: Media generation (image & video)
-- VideoService: Video processing
-- FrameProcessor: Frame processing orchestrator
-- PersistenceService: Task metadata and storyboard persistence
-- HistoryManager: History management business logic
-- ComfyBaseService: Base class for ComfyUI-based services
+可用服务:
+    - LLMService: 大语言模型文本生成
+    - TTSService: 文字转语音（本地 Edge-TTS + ComfyUI 工作流）
+    - MediaService: 媒体生成（图片 & 视频，基于 ComfyKit）
+    - VideoService: 视频合成处理（ffmpeg-python）
+    - FrameProcessor: 单帧处理器（TTS → 媒体 → 合成 → 视频片段）
+    - PersistenceService: 任务元数据和分镜数据持久化
+    - HistoryManager: 历史记录业务逻辑
+    - ComfyBaseService: ComfyUI 工作流服务基类
+
+向后兼容:
+    - ImageService = MediaService (别名)
 """
 
 from pixelle_video.services.comfy_base_service import ComfyBaseService
@@ -35,18 +38,16 @@ from pixelle_video.services.frame_processor import FrameProcessor
 from pixelle_video.services.persistence import PersistenceService
 from pixelle_video.services.history_manager import HistoryManager
 
-# Backward compatibility alias
-ImageService = MediaService
+ImageService = MediaService  # 向后兼容别名
 
 __all__ = [
     "ComfyBaseService",
     "LLMService",
     "TTSService",
     "MediaService",
-    "ImageService",  # Backward compatibility
+    "ImageService",
     "VideoService",
     "FrameProcessor",
     "PersistenceService",
     "HistoryManager",
 ]
-

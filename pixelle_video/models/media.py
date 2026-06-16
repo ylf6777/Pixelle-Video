@@ -11,7 +11,9 @@
 # limitations under the License.
 
 """
-Media generation result models
+媒体生成结果模型
+
+定义 ComfyUI 工作流执行后返回的媒体结果结构，同时支持图片和视频输出。
 """
 
 from typing import Literal, Optional
@@ -20,42 +22,64 @@ from pydantic import BaseModel, Field
 
 class MediaResult(BaseModel):
     """
-    Media generation result from workflow execution
-    
-    Supports both image and video outputs from ComfyUI workflows.
-    The media_type indicates what kind of media was generated.
-    
+    ComfyUI 工作流执行的媒体生成结果
+
+    同时支持图片和视频输出。通过 media_type 字段区分类型，
+    提供 is_image / is_video 属性方便判断。
+
     Attributes:
-        media_type: Type of media generated ("image" or "video")
-        url: URL or path to the generated media
-        duration: Duration in seconds (only for video, None for image)
-    
+        media_type (Literal["image","video"]): 生成的媒体类型。
+        url (str): 生成媒体的 URL 或本地文件路径。
+        duration (Optional[float]): 视频时长（秒）。图片时为 None。
+
+    Requires:
+        - 无外部依赖。纯 Pydantic 数据模型。
+
+    Raises:
+        - 无自定义校验。Pydantic 自动校验字段类型。
+
     Examples:
-        # Image result
-        MediaResult(media_type="image", url="http://example.com/image.png")
-        
-        # Video result
-        MediaResult(media_type="video", url="http://example.com/video.mp4", duration=5.2)
+        >>> r = MediaResult(media_type="image", url="http://example.com/img.png")
+        >>> r.is_image
+        True
+        >>> r = MediaResult(media_type="video", url="/tmp/v.mp4", duration=5.2)
+        >>> r.is_video
+        True
     """
-    
+
     media_type: Literal["image", "video"] = Field(
-        description="Type of generated media"
+        description="生成的媒体类型：'image'(图片) 或 'video'(视频)"
     )
     url: str = Field(
-        description="URL or path to the generated media file"
+        description="生成媒体文件的 URL 或本地路径"
     )
     duration: Optional[float] = Field(
         None,
-        description="Duration in seconds (only applicable for video)"
+        description="视频时长（秒）。仅 media_type='video' 时有值"
     )
-    
+
     @property
     def is_image(self) -> bool:
-        """Check if this is an image result"""
+        """
+        判断是否为图片结果
+
+        Returns:
+            bool: media_type 为 "image" 时返回 True。
+
+        Requires:
+            - 无外部依赖。
+        """
         return self.media_type == "image"
-    
+
     @property
     def is_video(self) -> bool:
-        """Check if this is a video result"""
-        return self.media_type == "video"
+        """
+        判断是否为视频结果
 
+        Returns:
+            bool: media_type 为 "video" 时返回 True。
+
+        Requires:
+            - 无外部依赖。
+        """
+        return self.media_type == "video"

@@ -27,27 +27,15 @@ from pixelle_video.services.comfy_base_service import ComfyBaseService
 
 class VideoAnalysisService(ComfyBaseService):
     """
-    Video analysis service - Workflow-based
-    
-    Uses ComfyKit to execute video understanding workflows.
-    Returns detailed textual descriptions of video content.
-    
-    Convention: workflows follow {source}/analyse_video.json pattern
-    - runninghub/analyse_video.json (default, cloud-based)
-    - selfhost/analyse_video.json (local ComfyUI, future)
-    
-    Usage:
-        # Use default (runninghub cloud)
-        description = await pixelle_video.video_analysis("path/to/video.mp4")
-        
-        # Use local ComfyUI (future)
-        description = await pixelle_video.video_analysis(
-            "path/to/video.mp4",
-            source="selfhost"
-        )
-        
-        # List available workflows
-        workflows = pixelle_video.video_analysis.list_workflows()
+    视频分析服务 —— 基于 ComfyUI 工作流的视频理解模型分析
+
+    工作流命名约定：{source}/analyse_video.json
+    - runninghub/analyse_video.json（云端默认）
+    - selfhost/analyse_video.json（本地 ComfyUI）
+
+    Requires:
+        - 父类 ComfyBaseService 已初始化
+        - config 中配置了 video_analysis 服务的 default_workflow
     """
     
     WORKFLOW_PREFIX = "analyse_video"
@@ -55,11 +43,14 @@ class VideoAnalysisService(ComfyBaseService):
     
     def __init__(self, config: dict, core=None):
         """
-        Initialize video analysis service
-        
+        初始化视频分析服务，以 "video_analysis" 作为配置键继承 ComfyBaseService
+
         Args:
-            config: Full application config dict
-            core: PixelleVideoCore instance (for accessing shared ComfyKit)
+            config: 完整应用配置字典
+            core: PixelleVideoCore 实例（用于访问共享的 ComfyKit）
+
+        Side Effects:
+            调用父类 __init__ 设置 self.config, self.global_config 等属性
         """
         super().__init__(config, service_name="video_analysis", core=core)
     
@@ -76,34 +67,24 @@ class VideoAnalysisService(ComfyBaseService):
         **params
     ) -> str:
         """
-        Analyze a video using workflow
-        
+        使用视频理解模型工作流分析视频内容，返回文本描述
+
+        支持两种后端来源：RunningHub（云端）和自部署 ComfyUI。
+
         Args:
-            video_path: Path to the video file (local or URL)
-            source: Workflow source - 'runninghub' (cloud, default) or 'selfhost' (local ComfyUI)
-            workflow: Workflow filename (optional, overrides source-based resolution)
-            comfyui_url: ComfyUI URL (optional, overrides config)
-            runninghub_api_key: RunningHub API key (optional, overrides config)
-            **params: Additional workflow parameters
-        
+            video_path: 视频文件路径（本地路径）
+            source: 工作流来源 —— "runninghub"（云端默认）或 "selfhost"（本地 ComfyUI）
+            workflow: 工作流 key（可选，覆盖 source 自动解析）
+            comfyui_url: ComfyUI URL（可选，覆盖配置）
+            runninghub_api_key: RunningHub API 密钥（可选，覆盖配置）
+            **params: 额外的工作流参数
+
         Returns:
-            str: Text description of the video content
-        
-        Examples:
-            # Simplest: use default (runninghub cloud)
-            description = await pixelle_video.video_analysis("temp/01_segment.mp4")
-            
-            # Use local ComfyUI (future)
-            description = await pixelle_video.video_analysis(
-                "temp/01_segment.mp4",
-                source="selfhost"
-            )
-            
-            # Use specific workflow (bypass source-based resolution)
-            description = await pixelle_video.video_analysis(
-                "temp/01_segment.mp4",
-                workflow="runninghub/custom_video_analysis.json"
-            )
+            视频内容的文本描述字符串
+
+        Raises:
+            FileNotFoundError: 视频文件不存在时抛出
+            Exception: 分析失败或未生成描述文本时抛出
         """
         from pixelle_video.utils.workflow_util import resolve_workflow_path
         

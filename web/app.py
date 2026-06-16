@@ -52,9 +52,15 @@ def main():
         title="History",
         icon="📚"
     )
-    
+
+    zealman_page = st.Page(
+        "pages/3_Zealman_Test.py",
+        title="Zealman Test",
+        icon="🧪",
+    )
+
     # Set up navigation and run
-    pg = st.navigation([home_page, history_page])
+    pg = st.navigation([home_page, history_page, zealman_page])
     pg.run()
 
 

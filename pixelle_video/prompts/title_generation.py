@@ -11,9 +11,11 @@
 # limitations under the License.
 
 """
-Title generation prompt
+标题生成提示词（Title Generation Prompt）
 
-For generating video title from content.
+用于从内容生成简洁、有吸引力的视频标题。
+提示词强制语言一致性、字符限制和自然措辞，
+尾部不含标点符号。
 """
 
 
@@ -46,7 +48,7 @@ Requirements:
    - Do not cut off in the middle of a word or number
    - Do not create incomplete phrases like "Rise Early for" or "How to Make"
    - Use abbreviations or shorter words if needed to fit the limit
-   
+
 6. **Abbreviation Examples** (use when needed to fit character limit):
    - For English:
      * "10,000" → "10K"
@@ -66,20 +68,32 @@ Title:"""
 
 def build_title_generation_prompt(content: str, max_length: int = 15) -> str:
     """
-    Build title generation prompt
-    
+    构建标题生成提示词。
+
+    截取内容前 500 字符作为预览，嵌入 TITLE_GENERATION_PROMPT 模板中，
+    要求 LLM 生成一个简洁、有吸引力的视频标题。
+
     Args:
-        content: Content to generate title from
-        max_length: Maximum title length in characters (default: 15)
-    
+        content: 源内容文本（文章或话题描述）
+        max_length: 标题最大字符数，默认 15
+
     Returns:
-        Formatted prompt with character limit
+        格式化后的完整提示词字符串，包含字符限制约束
+
+    Raises:
+        KeyError: 如果模板变量名与 .format() 参数不匹配
+
+    Requires:
+        - content 为非空字符串
+        - max_length 为正整数
+
+    Side Effects:
+        无（纯函数，仅做字符串格式化）
     """
-    # Take first 500 chars to avoid overly long prompts
+    # 取前 500 字符避免提示词过长
     content_preview = content[:500]
-    
+
     return TITLE_GENERATION_PROMPT.format(
         content=content_preview,
         max_length=max_length
     )
-

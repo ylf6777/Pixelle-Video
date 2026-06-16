@@ -11,9 +11,12 @@
 # limitations under the License.
 
 """
-Image prompt generation template
+图像提示词生成模板（Image Prompt Generation Template）
 
-For generating image prompts from narrations.
+从旁白生成英文图像提示词，供 AI 图像生成模型使用。
+每段旁白生成一个对应的图像提示词。
+提示词指示 LLM 创建富有表现力和象征意义的视觉描述，
+结构为：场景 + 角色动作 + 情感 + 象征元素。
 """
 
 import json
@@ -96,31 +99,44 @@ def build_image_prompt_prompt(
     max_words: int
 ) -> str:
     """
-    Build image prompt generation prompt
-    
-    Note: Style/prefix will be applied later via prompt_prefix in config.
-    
+    构建图像提示词生成提示词（Image Prompt Generation Prompt Builder）。
+
+    将旁白列表格式化为 JSON 输入，嵌入到 IMAGE_PROMPT_GENERATION_PROMPT
+    模板中，要求 LLM 为每段旁白生成对应的英文图像提示词。
+
+    注意：Style/prefix 将在后续通过 config 中的 prompt_prefix 应用。
+
     Args:
-        narrations: List of narrations
-        min_words: Minimum word count
-        max_words: Maximum word count
-    
+        narrations: 旁白文本列表
+        min_words: 图像提示词最少字数（用于模板占位）
+        max_words: 图像提示词最多字数（用于模板占位）
+
     Returns:
-        Formatted prompt for LLM
-    
+        格式化后的完整 LLM 提示词字符串
+
+    Raises:
+        KeyError: 如果模板变量名与 .format() 参数不匹配
+        TypeError: narrations 不能作为 JSON 序列化
+
+    Requires:
+        - narrations 为包含非空字符串的列表
+        - min_words, max_words 为正整数
+
+    Side Effects:
+        无（纯函数，仅做字符串格式化）
+
     Example:
-        >>> build_image_prompt_prompt(narrations, 50, 100)
+        >>> build_image_prompt_prompt(["一只猫在睡觉", "阳光洒进窗户"], 50, 100)
     """
     narrations_json = json.dumps(
         {"narrations": narrations},
         ensure_ascii=False,
         indent=2
     )
-    
+
     return IMAGE_PROMPT_GENERATION_PROMPT.format(
         narrations_json=narrations_json,
         narrations_count=len(narrations),
         min_words=min_words,
         max_words=max_words
     )
-

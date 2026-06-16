@@ -14,37 +14,51 @@
 Prompt helper utilities
 
 Simple utilities for building prompts with optional prefixes.
+Used to compose image/video prompts by prepending style prefixes.
 """
 
 
 def build_image_prompt(prompt: str, prefix: str = "") -> str:
     """
-    Build final image prompt with optional prefix
-    
+    构建带可选前缀的最终图像/视频提示词。
+
+    将 style prefix 与用户原始 prompt 用逗号拼接。两者都会先做 strip 处理。
+
     Args:
-        prompt: User's raw prompt
-        prefix: Optional prefix to add before the prompt
-    
+        prompt: 用户的原始提示词
+        prefix: 可选的风格前缀（如 "anime style"），为空时直接返回 prompt
+
     Returns:
-        Final prompt with prefix applied (if provided)
-    
+        拼接后的最终提示词：
+        - 有 prefix 且有 prompt → "{prefix}, {prompt}"
+        - 仅有 prefix → "{prefix}"
+        - 仅有 prompt → "{prompt}"
+
+    Raises:
+        无（纯拼接函数，不抛异常）
+
+    Requires:
+        无（纯函数）
+
+    Side Effects:
+        无
+
     Examples:
         >>> build_image_prompt("a cat", "")
         'a cat'
-        
+
         >>> build_image_prompt("a cat", "anime style")
         'anime style, a cat'
-        
+
         >>> build_image_prompt("a cat", "  anime style  ")
         'anime style, a cat'
     """
     prefix = prefix.strip() if prefix else ""
     prompt = prompt.strip() if prompt else ""
-    
+
     if prefix and prompt:
         return f"{prefix}, {prompt}"
     elif prefix:
         return prefix
     else:
         return prompt
-

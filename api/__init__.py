@@ -11,7 +11,40 @@
 # limitations under the License.
 
 """
-Pixelle-Video API Layer
+Pixelle-Video API 层
 
-FastAPI-based REST API for video generation services.
+基于 FastAPI 的 REST API，提供视频生成、LLM 对话、TTS 合成等服务的 HTTP 接口。
+
+子包结构::
+
+    api/
+      ├── __init__.py          — 本文件，包入口
+      ├── app.py               — FastAPI 应用入口（路由注册、lifespan、中间件）
+      ├── config.py            — API 配置（APIConfig）
+      ├── dependencies.py      — 依赖注入（PixelleVideoDep）
+      ├── error_handler.py     — 异常→HTTP 状态码映射
+      ├── routers/             — 路由模块
+      │   ├── health.py        — 健康检查 /health, /version
+      │   ├── llm.py           — LLM 对话 /api/llm/chat
+      │   ├── tts.py           — TTS 合成 /api/tts/synthesize
+      │   ├── image.py         — 图片生成 /api/image/generate
+      │   ├── content.py       — 内容生成 /api/content/*
+      │   ├── video.py         — 视频生成 /api/video/generate/*
+      │   ├── tasks.py         — 任务管理 /api/tasks/*
+      │   ├── files.py         — 文件服务 /api/files/*
+      │   ├── resources.py     — 资源发现 /api/resources/*
+      │   └── frame.py         — 帧渲染 /api/frame/*
+      ├── schemas/             — Pydantic 数据模型
+      │   ├── base.py          — 基础响应模型
+      │   ├── llm.py           — LLM 请求/响应
+      │   ├── tts.py           — TTS 请求/响应
+      │   ├── image.py         — 图片生成请求/响应
+      │   ├── content.py       — 内容生成请求/响应
+      │   ├── video.py         — 视频生成请求/响应
+      │   ├── frame.py         — 帧渲染请求/响应
+      │   └── resources.py     — 资源发现请求/响应
+      └── tasks/               — 异步任务管理
+          ├── __init__.py      — 公共接口导出
+          ├── manager.py       — TaskManager 核心逻辑
+          └── models.py        — Task/TaskStatus/TaskType 数据模型
 """

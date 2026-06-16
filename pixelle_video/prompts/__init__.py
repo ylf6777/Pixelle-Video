@@ -11,40 +11,58 @@
 # limitations under the License.
 
 """
-Prompts package
+提示词包（Prompts Package）
 
-Centralized prompt management for all LLM interactions.
+集中管理所有 LLM 交互的提示词模板。
+每个子模块提供一个 `build_xxx_prompt()` 函数，
+用于将参数格式化到提示词模板中。
+
+子模块:
+    - topic_narration: 从话题/主题生成旁白
+    - content_narration: 从用户提供的内容生成旁白
+    - title_generation: 从内容生成短视频标题
+    - image_generation: 从旁白生成英文图像提示词
+    - style_conversion: 将自定义风格描述转换为图像提示词
+    - video_generation: 从旁白生成英文视频提示词
+    - scene_breakdown: 将文章拆为分镜（含每镜提示词）
+    - asset_script_generation: 从用户素材生成视频脚本
+
+Requires:
+    - Python 3.10+
+
+Side Effects:
+    - 无（纯模块导入，无副作用）
 """
 
-# Narration prompts
+# 旁白提示词
 from pixelle_video.prompts.topic_narration import build_topic_narration_prompt
 from pixelle_video.prompts.content_narration import build_content_narration_prompt
 from pixelle_video.prompts.title_generation import build_title_generation_prompt
 
-# Image prompts
+# 图像提示词
 from pixelle_video.prompts.image_generation import build_image_prompt_prompt
 from pixelle_video.prompts.style_conversion import build_style_conversion_prompt
 
-# Video prompts
+# 视频提示词
 from pixelle_video.prompts.video_generation import build_video_prompt_prompt
 
-# Scene breakdown
+# 分镜拆解
 from pixelle_video.prompts.scene_breakdown import build_scene_breakdown_prompt
 
 
 __all__ = [
-    # Narration builders
+    # 旁白构建器
     "build_topic_narration_prompt",
     "build_content_narration_prompt",
     "build_title_generation_prompt",
 
-    # Image builders
+    # 图像构建器
     "build_image_prompt_prompt",
     "build_style_conversion_prompt",
 
-    # Video builders
+    # 视频构建器
     "build_video_prompt_prompt",
 
-    # Scene breakdown
+    # 分镜拆解
     "build_scene_breakdown_prompt",
 ]

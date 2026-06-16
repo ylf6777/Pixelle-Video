@@ -11,22 +11,21 @@
 # limitations under the License.
 
 """
-Pixelle-Video FastAPI Application
+Pixelle-Video FastAPI 应用入口
 
-Main FastAPI app with all routers and middleware.
+包含 FastAPI 应用实例、CORS 中间件、路由注册和应用生命周期管理。
 
-Run this script to start the FastAPI server:
+启动命令::
+
     uv run python api/app.py
-    
-Or with custom settings:
     uv run python api/app.py --host 0.0.0.0 --port 8080 --reload
+
 """
 
 import sys
 from pathlib import Path
 
-# Add project root to sys.path for module imports
-# This ensures imports work correctly in both development and packaged environments
+# 将项目根目录添加到 sys.path，确保在开发和打包环境中都能正确导入模块
 _script_dir = Path(__file__).resolve().parent
 _project_root = _script_dir.parent
 if str(_project_root) not in sys.path:
@@ -42,7 +41,7 @@ from api.config import api_config
 from api.tasks import task_manager
 from api.dependencies import shutdown_pixelle_video
 
-# Import routers
+# 导入所有路由
 from api.routers import (
     health_router,
     llm_router,
@@ -60,46 +59,59 @@ from api.routers import (
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
-    Application lifespan manager
-    
-    Handles startup and shutdown events.
+    FastAPI 应用生命周期管理器
+
+    管理启动和关闭事件：
+    - 启动时：启动任务管理器
+    - 关闭时：停止任务管理器并关闭 PixelleVideoCore
+
+    Raises:
+        Exception: 如果 task_manager.start() 失败（如内部状态异常）。
+
+    Requires:
+        - task_manager          — 全局任务管理器单例（api.tasks.task_manager）
+        - shutdown_pixelle_video — 核心服务关闭函数（api.dependencies.shutdown_pixelle_video）
+
+    Side Effects:
+        - 启动：task_manager 开始运行，创建清理定时任务
+        - 关闭：取消所有正在运行的任务，关闭 ComfyKit 和 Playwright 浏览器
     """
-    # Startup
-    logger.info("🚀 Starting Pixelle-Video API...")
+    # 启动阶段
+    logger.info("🚀 正在启动 Pixelle-Video API...")
     await task_manager.start()
-    logger.info("✅ Pixelle-Video API started successfully\n")
-    
+    logger.info("✅ Pixelle-Video API 启动成功\n")
+
     yield
-    
-    # Shutdown
-    logger.info("🛑 Shutting down Pixelle-Video API...")
+
+    # 关闭阶段
+    logger.info("🛑 正在关闭 Pixelle-Video API...")
     await task_manager.stop()
     await shutdown_pixelle_video()
-    logger.info("✅ Pixelle-Video API shutdown complete")
+    logger.info("✅ Pixelle-Video API 关闭完成")
 
 
-# Create FastAPI app
+# 创建 FastAPI 应用实例
 app = FastAPI(
     title="Pixelle-Video API",
     description="""
-    ## Pixelle-Video - AI Video Generation Platform API
-    
-    ### Features
-    - 🤖 **LLM**: Large language model integration
-    - 🔊 **TTS**: Text-to-speech synthesis
-    - 🎨 **Image**: AI image generation
-    - 📝 **Content**: Automated content generation
-    - 🎬 **Video**: End-to-end video generation
-    
-    ### Video Generation Modes
-    - **Sync**: `/api/video/generate/sync` - For small videos (< 30s)
-    - **Async**: `/api/video/generate/async` - For large videos with task tracking
-    
-    ### Getting Started
-    1. Check health: `GET /health`
-    2. Generate narrations: `POST /api/content/narration`
-    3. Generate video: `POST /api/video/generate/sync` or `/async`
-    4. Track task progress: `GET /api/tasks/{task_id}`
+    ## Pixelle-Video - AI 视频生成平台 API
+
+    ### 功能
+    - 🤖 **LLM**: 大语言模型集成
+    - 🔊 **TTS**: 文字转语音合成
+    - 🎨 **Image**: AI 图片生成
+    - 📝 **Content**: 自动化内容生成
+    - 🎬 **Video**: 端到端视频生成
+
+    ### 视频生成模式
+    - **Sync**: `/api/video/generate/sync` — 适用于小视频（< 30s）
+    - **Async**: `/api/video/generate/async` — 适用于大视频，带任务追踪
+
+    ### 快速入门
+    1. 健康检查: `GET /health`
+    2. 生成旁白: `POST /api/content/narration`
+    3. 生成视频: `POST /api/video/generate/sync` 或 `/async`
+    4. 追踪任务: `GET /api/tasks/{task_id}`
     """,
     version="0.1.0",
     docs_url=api_config.docs_url,
@@ -108,7 +120,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Add CORS middleware
+# 添加 CORS 中间件
 if api_config.cors_enabled:
     app.add_middleware(
         CORSMiddleware,
@@ -117,13 +129,14 @@ if api_config.cors_enabled:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    logger.info(f"CORS enabled for origins: {api_config.cors_origins}")
+    logger.info(f"CORS 已启用，允许来源: {api_config.cors_origins}")
 
-# Include routers
-# Health check (no prefix)
+# === 注册路由 ===
+
+# 健康检查（无前缀）
 app.include_router(health_router)
 
-# API routers (with /api prefix)
+# API 路由（统一加上 /api 前缀）
 app.include_router(llm_router, prefix=api_config.api_prefix)
 app.include_router(tts_router, prefix=api_config.api_prefix)
 app.include_router(image_router, prefix=api_config.api_prefix)
@@ -137,7 +150,24 @@ app.include_router(frame_router, prefix=api_config.api_prefix)
 
 @app.get("/")
 async def root():
-    """Root endpoint with API information"""
+    """
+    根路由 — 返回 API 概览信息
+
+    Returns:
+        dict: 包含服务名、版本号、文档和子路由 URL 的概览字典。
+            格式::
+
+                {
+                    "service": "Pixelle-Video API",
+                    "version": "0.1.0",
+                    "docs": "/docs",
+                    "health": "/health",
+                    "api": { ... }
+                }
+
+    Side Effects:
+        - 无（纯查询端点）
+    """
     return {
         "service": "Pixelle-Video API",
         "version": "0.1.0",
@@ -159,33 +189,32 @@ async def root():
 
 if __name__ == "__main__":
     import uvicorn
-    
-    # Parse command line arguments
-    parser = argparse.ArgumentParser(description="Start Pixelle-Video API Server")
-    parser.add_argument("--host", default="0.0.0.0", help="Host to bind to")
-    parser.add_argument("--port", type=int, default=8000, help="Port to bind to")
-    parser.add_argument("--reload", action="store_true", help="Enable auto-reload")
-    
+
+    # 解析命令行参数
+    parser = argparse.ArgumentParser(description="启动 Pixelle-Video API 服务器")
+    parser.add_argument("--host", default="0.0.0.0", help="绑定的主机地址")
+    parser.add_argument("--port", type=int, default=8000, help="绑定的端口号")
+    parser.add_argument("--reload", action="store_true", help="启用自动重载（开发模式）")
+
     args = parser.parse_args()
-    
-    # Print startup banner
+
+    # 打印启动信息
     print(f"""
 ╔══════════════════════════════════════════════════════════════╗
 ║                    Pixelle-Video API Server                      ║
 ╚══════════════════════════════════════════════════════════════╝
 
-Starting server at http://{args.host}:{args.port}
-API Docs: http://{args.host}:{args.port}/docs
+正在启动服务器: http://{args.host}:{args.port}
+API 文档: http://{args.host}:{args.port}/docs
 ReDoc: http://{args.host}:{args.port}/redoc
 
-Press Ctrl+C to stop the server
+按 Ctrl+C 停止服务器
 """)
-    
-    # Start server
+
+    # 启动服务器
     uvicorn.run(
         "api.app:app",
         host=args.host,
         port=args.port,
         reload=args.reload,
     )
-

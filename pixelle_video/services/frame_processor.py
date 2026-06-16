@@ -30,14 +30,25 @@ from pixelle_video.models.storyboard import Storyboard, StoryboardFrame, Storybo
 
 
 class FrameProcessor:
-    """Frame processor"""
+    """
+    将单个分镜帧走完完整管线的处理器
+
+    流程：TTS 语音生成 → 媒体（图片/视频）生成 → 帧合成（添加字幕）→ 视频片段创建
+    关键特性：TTS 输出的音频时长会传递给视频生成工作流，确保音画严格同步。
+
+    Requires:
+        PixelleVideoCore 实例（提供 tts, media 等服务）
+    """
     
     def __init__(self, pixelle_video_core):
         """
-        Initialize
-        
+        初始化帧处理器
+
         Args:
-            pixelle_video_core: PixelleVideoCore instance
+            pixelle_video_core: PixelleVideoCore 实例
+
+        Side Effects:
+            保存 core 引用到 self.core
         """
         self.core = pixelle_video_core
     
@@ -50,23 +61,22 @@ class FrameProcessor:
         progress_callback: Optional[Callable[[ProgressEvent], None]] = None
     ) -> StoryboardFrame:
         """
-        Process single frame through complete pipeline
-        
-        Steps:
-        1. Generate audio (TTS)
-        2. Generate image (ComfyKit)
-        3. Compose frame (add subtitle)
-        4. Create video segment (image + audio)
-        
+        将单个分镜帧走完完整四步管线
+
+        步骤：1) TTS 生成音频 → 2) ComfyKit/API 生成媒体 → 3) HTML 模板合成帧 → 4) 创建视频片段
+
         Args:
-            frame: Storyboard frame to process
-            storyboard: Storyboard instance
-            config: Storyboard configuration
-            total_frames: Total number of frames in storyboard
-            progress_callback: Optional callback for progress updates (receives ProgressEvent)
-            
+            frame: 要处理的 StoryboardFrame 实例
+            storyboard: 所属 Storyboard 实例
+            config: StoryboardConfig 配置
+            total_frames: 故事板总帧数
+            progress_callback: 可选进度回调，接收 ProgressEvent 对象
+
         Returns:
-            Processed frame with all paths filled
+            处理完成后的 StoryboardFrame，包含所有路径（audio_path, image_path/video_path, composed_image_path, video_segment_path）
+
+        Raises:
+            Exception: 任一步骤失败时抛出
         """
         logger.info(f"Processing frame {frame.index}...")
         
@@ -153,7 +163,16 @@ class FrameProcessor:
         frame: StoryboardFrame,
         config: StoryboardConfig
     ):
-        """Step 1: Generate audio using TTS"""
+        """
+        步骤1：使用 TTS 生成旁白音频，并将音频时长写入 frame.duration
+
+        Args:
+            frame: 当前帧对象
+            config: 故事板配置
+
+        Side Effects:
+            设置 frame.audio_path 和 frame.duration
+        """
         logger.debug(f"  1/4: Generating audio for frame {frame.index}...")
         
         # Generate output path using task_id
@@ -199,7 +218,19 @@ class FrameProcessor:
         frame: StoryboardFrame,
         config: StoryboardConfig
     ):
-        """Step 2: Generate media (image or video) using ComfyKit"""
+        """
+        步骤2：使用 ComfyKit 或 API 生成媒体（图片或视频），自动判断媒体类型
+
+        根据工作流名称中的 video_ 前缀或模板类型决定生成图片还是视频，
+        视频工作流会将 TTS 音频时长传递给生成接口以确保时长同步。
+
+        Args:
+            frame: 当前帧对象
+            config: 故事板配置
+
+        Side Effects:
+            设置 frame.media_type, frame.image_path 或 frame.video_path, frame.duration
+        """
         logger.debug(f"  2/4: Generating media for frame {frame.index}...")
         
         # Determine media type based on workflow/template.
@@ -287,7 +318,17 @@ class FrameProcessor:
         config: StoryboardConfig,
         api_video_params: dict,
     ) -> None:
-        """Prepare provider-specific inputs for API video models."""
+        """
+        为 API 视频模型准备提供商特定的输入参数（首帧图、驱动音频等）
+
+        Args:
+            frame: 当前帧对象
+            config: 故事板配置
+            api_video_params: API 视频参数字典，会被原地修改
+
+        Side Effects:
+            可能设置 frame.image_path（若需要生成首帧图），修改 api_video_params 字典
+        """
         from pixelle_video.utils.os_util import get_task_frame_path
 
         if api_video_params.pop("use_narration_audio_as_driving_audio", False):
@@ -324,7 +365,17 @@ class FrameProcessor:
         storyboard: 'Storyboard',
         config: StoryboardConfig
     ):
-        """Step 3: Compose frame with subtitle using HTML template"""
+        """
+        步骤3：使用 HTML 模板合成帧（叠加旁白字幕等）
+
+        Args:
+            frame: 当前帧对象
+            storyboard: 故事板实例
+            config: 故事板配置
+
+        Side Effects:
+            设置 frame.composed_image_path
+        """
         logger.debug(f"  3/4: Composing frame {frame.index}...")
         
         # Generate output path using task_id
@@ -347,7 +398,18 @@ class FrameProcessor:
         config: StoryboardConfig,
         output_path: str
     ) -> str:
-        """Compose frame using HTML template"""
+        """
+        使用 HTML 模板渲染帧，将标题、旁白文本、媒体路径注入模板生成合成图
+
+        Args:
+            frame: 当前帧对象
+            storyboard: 故事板实例（提供 title 和 content_metadata）
+            config: 故事板配置（提供 frame_template 和 template_params）
+            output_path: 输出图片路径
+
+        Returns:
+            合成后的图片文件路径
+        """
         from pixelle_video.services.frame_html import HTMLFrameGenerator
         from pixelle_video.utils.template_util import resolve_template_path
         
@@ -388,7 +450,19 @@ class FrameProcessor:
         frame: StoryboardFrame,
         config: StoryboardConfig
     ):
-        """Step 4: Create video segment from media + audio"""
+        """
+        步骤4：将媒体与音频合成为视频片段
+
+        视频类型：先将 HTML 叠加层合成到视频上，再合并旁白音频
+        图片类型：直接将合成图与音频合成为视频
+
+        Args:
+            frame: 当前帧对象
+            config: 故事板配置
+
+        Side Effects:
+            设置 frame.video_segment_path
+        """
         logger.debug(f"  4/4: Creating video segment for frame {frame.index}...")
         
         # Generate output path using task_id
@@ -449,7 +523,15 @@ class FrameProcessor:
         logger.debug(f"  ✓ Video segment created: {segment_path}")
     
     async def _get_audio_duration(self, audio_path: str) -> float:
-        """Get audio duration in seconds"""
+        """
+        获取音频时长，失败时基于文件大小估算
+
+        Args:
+            audio_path: 音频文件路径
+
+        Returns:
+            音频时长（秒），获取失败时基于文件大小粗略估算（至少 1.0 秒）
+        """
         try:
             # Try using ffmpeg-python
             import ffmpeg
@@ -472,7 +554,22 @@ class FrameProcessor:
         task_id: str,
         media_type: str
     ) -> str:
-        """Download media (image or video) from URL to local file"""
+        """
+        从 URL 下载媒体文件（图片或视频）到本地，支持 file:// 协议和本地路径直通
+
+        Args:
+            url: 媒体文件 URL（支持 http(s):// 和 file:// 协议及本地路径）
+            frame_index: 帧索引
+            task_id: 任务 ID
+            media_type: 媒体类型（"image" 或 "video"）
+
+        Returns:
+            本地文件路径
+
+        Raises:
+            FileNotFoundError: file:// 协议指向的文件不存在
+            httpx.HTTPStatusError: HTTP 下载失败
+        """
         import os
         from pixelle_video.utils.os_util import get_task_frame_path
         output_path = get_task_frame_path(task_id, frame_index, media_type)
@@ -497,7 +594,15 @@ class FrameProcessor:
         return output_path
     
     async def _get_video_duration(self, video_path: str) -> float:
-        """Get video duration in seconds"""
+        """
+        获取视频时长
+
+        Args:
+            video_path: 视频文件路径
+
+        Returns:
+            视频时长（秒），获取失败时返回默认值 1.0
+        """
         try:
             import ffmpeg
             probe = ffmpeg.probe(video_path)

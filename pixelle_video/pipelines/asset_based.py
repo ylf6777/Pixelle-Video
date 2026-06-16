@@ -11,23 +11,38 @@
 # limitations under the License.
 
 """
-Asset-Based Video Pipeline
+基于用户素材的视频生成流水线
 
-Generates marketing videos from user-provided assets (images/videos) rather than
-AI-generated media. Ideal for small businesses with existing media libraries.
+使用用户上传的图片/视频素材（而非 AI 生成媒体）制作营销视频。
+适合已有媒体素材库的小型企业/创作者。
 
-Workflow:
-1. Analyze uploaded assets (images/videos)
-2. Generate script based on user intent and available assets
-3. Match assets to script scenes
-4. Compose final video with narrations
+工作流:
+    1. 分析上传的素材（图片/视频 → VLM/API 描述）
+    2. 根据用户意图和可用素材生成脚本
+    3. 将素材匹配到脚本场景
+    4. 合成带有旁白的最终视频
+
+Requires:
+    - pixelle_video.pipelines.linear.LinearVideoPipeline: 模板方法基类。
+    - pixelle_video.services.image_analysis: 图片内容分析。
+    - pixelle_video.services.video_analysis: 视频内容分析。
+    - pixelle_video.services.api_asset_analysis: API VLM 素材分析。
+    - pixelle_video.utils.content_generators: LLM 脚本生成。
+    - pixelle_video.services.video.VideoService: ffmpeg 视频合成。
+
+Side Effects:
+    - 创建 output/{task_id}/ 目录及所有中间文件。
+    - 调用 LLM API（脚本生成）。
+    - 调用 VLM/API（素材分析）。
+    - 调用 TTS（旁白音频）。
+    - 调用 ComfyUI/API（可选视频动画）。
 
 Example:
     pipeline = AssetBasedPipeline(pixelle_video)
     result = await pipeline(
         assets=["/path/img1.jpg", "/path/img2.jpg"],
-        video_title="Pet Store Year-End Sale",
-        intent="Promote our pet store's year-end sale with a warm and friendly tone",
+        video_title="年末大促销",
+        intent="用温暖友好的语气宣传宠物店年末促销",
         duration=30
     )
 """
@@ -69,20 +84,42 @@ class VideoScript(BaseModel):
 
 class AssetBasedPipeline(LinearVideoPipeline):
     """
-    Asset-Based Video Pipeline
-    
-    Generates videos from user-provided assets instead of AI-generated media.
+    基于用户素材的视频生成流水线
+
+    使用用户上传的图片/视频素材而非 AI 生成媒体来制作视频。
+    素材通过 VLM/API 分析后由 LLM 生成脚本并匹配到场景。
+
+    Requires:
+        - LinearVideoPipeline: 8 步模板方法基类。
+        - self.core.image_analysis / self.core.video_analysis: 素材分析。
+        - self.core.api_asset_analysis: API VLM 分析（备选）。
+        - self.core.llm: LLM 脚本生成。
+        - self.core.frame_processor: 帧处理编排。
+        - pixelle_video.utils.content_generators: 脚本生成工具。
+
+    Side Effects:
+        - 创建 output/{task_id}/ 及中间文件。
+        - 调用多个外部 API（LLM/VLM/TTS/ComfyUI）。
+        - 将素材文件复制到任务帧目录。
+        - 持久化元数据和分镜数据。
     """
-    
+
     def __init__(self, core):
         """
-        Initialize pipeline
-        
+        初始化流水线
+
         Args:
-            core: PixelleVideoCore instance
+            core: PixelleVideoCore 实例。
+
+        Side Effects:
+            - 调用父类 __init__ 设置 self.llm/tts/media/video 快捷引用。
+            - 初始化 asset_index 空字典。
+
+        Requires:
+            - pixelle_video.pipelines.linear.LinearVideoPipeline: 父类。
         """
         super().__init__(core)
-        self.asset_index: Dict[str, Any] = {}  # In-memory asset metadata
+        self.asset_index: Dict[str, Any] = {}  # 内存中素材元数据缓存
     
     async def __call__(
         self,

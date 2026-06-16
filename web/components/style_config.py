@@ -803,7 +803,7 @@ def render_style_config(pixelle_video):
                 else:
                     st.markdown(tr("style.workflow_how"))
 
-            source_options = ["runninghub", "selfhost", "api"]
+            source_options = ["runninghub", "selfhost", "api", "zealman"]
             default_source_index = 0
             for index, source in enumerate(source_options):
                 if saved_workflow.startswith(f"{source}/"):
@@ -830,6 +830,33 @@ def render_style_config(pixelle_video):
                     )
                 else:
                     workflows = list_api_media_workflows(pixelle_video, "image")
+            elif workflow_source == "zealman":
+                # zealman 镜像：输入地址，自动获取工作流列表
+                zealman_url = st.text_input(
+                    "Zealman 地址" if get_language() == "zh_CN" else "Zealman URL",
+                    value=st.session_state.get("zealman_url", "https://"),
+                    placeholder="https://xxx.bjb2.seetacloud.com:8443",
+                    key="zealman_url_input",
+                )
+                st.session_state["zealman_url"] = zealman_url
+                workflows = []
+                if zealman_url and "seetacloud" in zealman_url:
+                    try:
+                        import ssl, json, urllib.request as _ur
+                        _ctx = ssl.create_default_context()
+                        _ctx.check_hostname = False; _ctx.verify_mode = ssl.CERT_NONE
+                        _r = _ur.Request(f"{zealman_url}/api/workflow/list")
+                        _data = json.loads(_ur.urlopen(_r, timeout=5, context=_ctx).read())
+                        for _w in _data.get("workflows", []):
+                            workflows.append({
+                                "key": _w["id"],
+                                "display_name": f'{_w["id"]} ({_w.get("kind","?")})',
+                            })
+                        st.success(f'已连接，{len(workflows)} 个工作流' if get_language() == "zh_CN" else f"Connected, {len(workflows)} workflows")
+                    except Exception as _e:
+                        st.warning(f'连接失败: {_e}' if get_language() == "zh_CN" else f"Connection failed: {_e}")
+                else:
+                    st.caption("输入 Zealman 镜像的 8443 地址" if get_language() == "zh_CN" else "Enter Zealman image 8443 URL")
             elif template_media_type == "video":
                 workflows = list_local_media_workflows(
                     pixelle_video,
@@ -886,7 +913,58 @@ def render_style_config(pixelle_video):
             # Check and warn for selfhost media workflow (auto popup if not confirmed)
             if workflow_key and not is_api_workflow(workflow_key):
                 check_and_warn_selfhost_workflow(workflow_key)
-            
+
+            # ═══ 动态输入区：根据工作流类型渲染不同输入组件 ═══
+            if template_media_type == "video" and workflow_key:
+                # 识别工作流类型
+                wk_lower = workflow_key.lower()
+                if any(k in wk_lower for k in ("animate", "动作", "迁移", "p0", "p1")):
+                    wf_input_type = "action"  # 动作模拟
+                elif any(k in wk_lower for k in ("i2v", "图生", "img2video", "image2video", "smoothmix", "g0", "g1")):
+                    wf_input_type = "i2v"     # 图生视频
+                else:
+                    wf_input_type = "t2v"     # 文生视频（默认）
+
+                st.markdown("---")
+                st.caption("🎬 工作流输入参数")
+
+                # 提示词（所有类型都需要）
+                preview_prompt = st.text_area(
+                    "提示词" if get_language() == "zh_CN" else "Prompt",
+                    value=st.session_state.get(f"preview_{source_key}_prompt", ""),
+                    height=80,
+                    placeholder="输入视频生成的提示词描述...",
+                    key=f"{source_key}_preview_prompt"
+                )
+
+                # 图生视频 / 动作模拟：图片上传
+                if wf_input_type in ("i2v", "action"):
+                    st.caption("📷 参考图片")
+                    ref_image_file = st.file_uploader(
+                        "上传参考图" if get_language() == "zh_CN" else "Upload reference image",
+                        type=["jpg", "jpeg", "png", "webp"],
+                        key=f"{source_key}_ref_image"
+                    )
+                    if ref_image_file:
+                        import io, base64
+                        img_bytes = ref_image_file.read()
+                        st.image(img_bytes, width=200, caption="预览")
+                        st.session_state[f"{source_key}_ref_image_data"] = base64.b64encode(img_bytes).decode()
+
+                # 动作模拟：视频上传
+                if wf_input_type == "action":
+                    st.caption("🎥 参考视频")
+                    ref_video_file = st.file_uploader(
+                        "上传动作参考视频" if get_language() == "zh_CN" else "Upload reference video",
+                        type=["mp4", "mov", "avi", "webm"],
+                        key=f"{source_key}_ref_video"
+                    )
+                    if ref_video_file:
+                        st.video(ref_video_file)
+
+                # 保存工作流类型供预览使用
+                st.session_state[f"{source_key}_wf_type"] = wf_input_type
+
             # Display media size info (read-only)
             if template_media_type == "video":
                 size_info_text = tr('style.video_size_info', width=media_width, height=media_height)
@@ -905,7 +983,7 @@ def render_style_config(pixelle_video):
                     key_prefix="standard_video",
                     default_duration=5,
                     allow_audio_driven=False,
-                    show_duration=False,
+                    show_duration=True,  # 视频模式下显示时长滑块，用户可自主调节
                     default_ratio=default_video_ratio,
                 )
         
@@ -1065,11 +1143,22 @@ def render_style_config(pixelle_video):
                     with st.spinner(previewing_text):
                         try:
                             from pixelle_video.utils.prompt_helper import build_image_prompt
-                        
-                            # Build final prompt with prefix
-                            final_prompt = build_image_prompt(test_prompt, prompt_prefix)
+
+                            # 使用动态输入区的提示词（如果有的话）
+                            dyn_prompt = st.session_state.get(f"{source_key}_preview_prompt", "")
+                            final_prompt = build_image_prompt(dyn_prompt or test_prompt, prompt_prefix)
 
                             preview_params = dict(api_video_params) if template_media_type == "video" else {}
+                            preview_params.pop("duration", None)
+
+                            # 获取动态输入区的参考图
+                            dyn_image_b64 = st.session_state.get(f"{source_key}_ref_image_data", "")
+                            dyn_image_path = None
+                            if dyn_image_b64:
+                                import tempfile, base64
+                                tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
+                                tmp.write(base64.b64decode(dyn_image_b64))
+                                dyn_image_path = tmp.name
 
                             # Generate preview media with the selected source only.
                             media_result = run_async(pixelle_video.media(
@@ -1079,6 +1168,7 @@ def render_style_config(pixelle_video):
                                 width=int(media_width),
                                 height=int(media_height),
                                 duration=5 if template_media_type == "video" else None,
+                                image_path=dyn_image_path,
                                 **preview_params,
                             ))
                             preview_media_path = media_result.url

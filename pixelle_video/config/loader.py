@@ -11,10 +11,12 @@
 # limitations under the License.
 
 """
-Configuration loader - Pure YAML
+配置加载器 — 纯 YAML 读写
 
-Handles loading and saving configuration from/to YAML files.
+负责从 YAML 文件加载配置字典以及将配置字典保存到 YAML 文件。
+所有函数为纯 I/O 操作，不涉及配置校验或类型转换。
 """
+
 from pathlib import Path
 import yaml
 from loguru import logger
@@ -22,21 +24,40 @@ from loguru import logger
 
 def load_config_dict(config_path: str = "config.yaml") -> dict:
     """
-    Load configuration from YAML file
-    
+    从 YAML 文件加载配置字典
+
+    文件不存在或解析失败时返回空字典（不抛出异常），上游
+    使用 Pydantic 默认值填空。
+
     Args:
-        config_path: Path to config file
-        
+        config_path (str): YAML 配置文件路径。默认: "config.yaml"
+
     Returns:
-        Configuration dictionary
+        dict: 配置键值对字典。文件不存在或解析失败时返回 {}。
+
+    Raises:
+        - 不抛出。所有异常内部捕获并返回空字典。
+
+    Requires:
+        - yaml (PyYAML): YAML 解析库。
+        - 文件系统读取权限。
+
+    Side Effects:
+        - 读取磁盘文件。
+        - 写入日志（info/warning/error）。
+
+    Examples:
+        >>> data = load_config_dict("config.yaml")
+        >>> print(data.get("project_name"))
+        "Pixelle-Video"
     """
     config_file = Path(config_path)
-    
+
     if not config_file.exists():
         logger.warning(f"Config file not found: {config_path}")
         logger.info("Using default configuration")
         return {}
-    
+
     try:
         with open(config_file, 'r', encoding='utf-8') as f:
             data = yaml.safe_load(f) or {}
@@ -47,19 +68,43 @@ def load_config_dict(config_path: str = "config.yaml") -> dict:
         return {}
 
 
-def save_config_dict(config: dict, config_path: str = "config.yaml"):
+def save_config_dict(config: dict, config_path: str = "config.yaml") -> None:
     """
-    Save configuration to YAML file
-    
+    将配置字典保存到 YAML 文件
+
+    使用 UTF-8 编码，保留 Unicode 字符，不排序 key（保持
+    用户自定义顺序）。
+
     Args:
-        config: Configuration dictionary
-        config_path: Path to config file
+        config (dict): 待保存的配置字典。
+        config_path (str): 目标 YAML 文件路径。默认: "config.yaml"
+
+    Returns:
+        None
+
+    Raises:
+        Exception: 文件写入失败时向上抛出（让调用方决定如何处理）。
+
+    Requires:
+        - yaml (PyYAML): YAML 序列化库。
+        - 文件系统写入权限。
+
+    Side Effects:
+        - 覆盖写入磁盘文件。
+        - 写入日志（info/error）。
+
+    Examples:
+        >>> save_config_dict({"llm": {"model": "qwen-max"}}, "config.yaml")
     """
     try:
         with open(config_path, 'w', encoding='utf-8') as f:
-            yaml.dump(config, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+            yaml.dump(
+                config, f,
+                allow_unicode=True,
+                default_flow_style=False,
+                sort_keys=False
+            )
         logger.info(f"Configuration saved to {config_path}")
     except Exception as e:
         logger.error(f"Failed to save config: {e}")
         raise
-

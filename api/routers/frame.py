@@ -11,7 +11,10 @@
 # limitations under the License.
 
 """
-Frame/Template rendering endpoints
+帧/模板渲染端点
+
+提供单帧渲染和模板参数查询接口。
+使用 HTML 模板 + Playwright 浏览器引擎进行帧渲染。
 """
 
 from fastapi import APIRouter, HTTPException
@@ -32,53 +35,64 @@ async def render_frame(
     pixelle_video: PixelleVideoDep
 ):
     """
-    Render a single frame using HTML template
-    
-    Generates a frame image by combining template, title, text, and image.
-    This is useful for previewing templates or generating custom frames.
-    
-    - **template**: Template key (e.g., '1080x1920/default.html')
-    - **title**: Optional title text
-    - **text**: Frame text content
-    - **image**: Image path (can be local path or URL)
-    
-    Returns path to generated frame image.
-    
-    Example:
-    ```json
-    {
-        "template": "1080x1920/modern.html",
-        "title": "Welcome",
-        "text": "This is a beautiful frame with custom styling",
-        "image": "resources/example.png"
-    }
-    ```
+    使用 HTML 模板渲染单帧
+
+    将模板、标题、文本和图片组合生成一张帧图片。
+    适用于预览模板效果或生成自定义帧。
+
+    入参（FrameRenderRequest）:
+        - **template** (str): 模板 key。如 '1080x1920/default.html'。必填
+        - **title** (str, optional): 帧标题
+        - **text** (str): 帧文本内容，必填
+        - **image** (str, optional): 图片路径（可以是本地路径或 URL）
+
+    Returns:
+        FrameRenderResponse: 包含以下字段：
+            - frame_path (str): 生成的帧图片路径
+            - width (int): 帧宽度（像素）
+            - height (int): 帧高度（像素）
+
+    Raises:
+        HTTPException 400: ValueError — 参数无效（template 路径不存在等）
+        HTTPException 500: 内部服务错误 — Playwright 渲染失败
+
+    Requires:
+        - HTMLFrameGenerator        — pixelle_video.services.frame_html 中的渲染引擎
+        - resolve_template_path      — pixelle_video.utils.template_util 中的路径解析工具
+        - parse_template_size        — 同上，从模板中解析尺寸
+        - Playwright 浏览器          — HTMLFrameGenerator 依赖的无头浏览器
+
+    Side Effects:
+        - 启动或复用 Playwright 浏览器实例
+        - 渲染 HTML 页面为 PNG 图片
+        - 图片写入磁盘（output 目录）
+        - 记录 info 级别请求日志
     """
     try:
-        logger.info(f"Frame render request: template={request.template}")
-        
-        # Resolve template path (returns absolute path with "templates/" or "data/templates/" prefix)
+        logger.info(f"帧渲染请求: template={request.template}")
+
+        # 解析模板路径（返回带 "templates/" 或 "data/templates/" 前缀的绝对路径）
         template_path = resolve_template_path(request.template)
-        
-        # Parse template size
+
+        # 从模板中解析尺寸
         width, height = parse_template_size(template_path)
-        
-        # Create HTML frame generator
+
+        # 创建 HTML 帧生成器
         generator = HTMLFrameGenerator(template_path)
-        
-        # Generate frame
+
+        # 生成帧图片
         frame_path = await generator.generate_frame(
             title=request.title,
             text=request.text,
             image=request.image
         )
-        
+
         return FrameRenderResponse(
             frame_path=frame_path,
             width=width,
             height=height
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -90,75 +104,67 @@ async def get_template_params(
     template: str
 ):
     """
-    Get custom parameters for a template
-    
-    Returns the custom parameters defined in the template HTML file.
-    These parameters can be passed via `template_params` in video generation requests.
-    
-    Template parameters are defined using syntax: `{{param_name:type=default}}`
-    
-    Supported types:
-    - `text`: String input
-    - `number`: Numeric input
-    - `color`: Color picker (hex format)
-    - `bool`: Boolean checkbox
-    
-    Example template syntax:
-    ```html
-    <div style="color: {{accent_color:color=#ff0000}}">
-        {{custom_text:text=Hello World}}
-    </div>
-    ```
-    
+    获取模板的自定义参数
+
+    返回模板 HTML 文件中定义的所有可配置参数及其类型和默认值。
+    这些参数可通过视频生成请求中的 ``template_params`` 字段传入。
+
+    模板参数语法（在 HTML 中使用）::
+
+        {{param_name:type=default}}
+
+    支持的参数类型:
+        - ``text``   — 字符串输入
+        - ``number`` — 数值输入
+        - ``color``  — 颜色选择器（hex 格式，如 #ff0000）
+        - ``bool``   — 布尔复选框
+
     Args:
-        template: Template path (e.g., '1080x1920/image_default.html')
-    
+        template (str): 模板路径。
+            如 '1080x1920/image_default.html'。必填的查询参数。
+
     Returns:
-        Template parameters with their types, defaults, and labels
-    
-    Example response:
-    ```json
-    {
-        "template": "1080x1920/image_default.html",
-        "media_width": 1080,
-        "media_height": 1440,
-        "params": {
-            "accent_color": {
-                "type": "color",
-                "default": "#ff0000",
-                "label": "accent_color"
-            },
-            "background": {
-                "type": "text", 
-                "default": "https://example.com/bg.jpg",
-                "label": "background"
-            }
-        }
-    }
-    ```
+        TemplateParamsResponse: 包含以下字段：
+            - template (str): 模板路径
+            - media_width (int): 模板 meta 标签中定义的媒体宽度
+            - media_height (int): 模板 meta 标签中定义的媒体高度
+            - params (Dict[str, TemplateParamConfig]): 参数名到配置的映射。
+              每个配置包含 type、default、label 字段。
+
+    Raises:
+        HTTPException 404: 模板文件不存在 — 模板路径解析失败
+        HTTPException 500: 内部服务错误 — 模板解析失败
+
+    Requires:
+        - HTMLFrameGenerator        — 用于解析模板中的 {{param:type=default}} 语法
+        - resolve_template_path      — 解析模板路径
+        - templates/ 目录            — 模板文件必须存在
+
+    Side Effects:
+        - 读取 HTML 模板文件（文件 I/O）
+        - 记录 info 级别请求日志
     """
     try:
-        logger.info(f"Get template params: {template}")
-        
-        # Resolve template path
+        logger.info(f"获取模板参数: {template}")
+
+        # 解析模板路径
         template_path = resolve_template_path(template)
-        
-        # Create generator and parse parameters
+
+        # 创建生成器并解析参数
         generator = HTMLFrameGenerator(template_path)
         params = generator.parse_template_parameters()
         media_width, media_height = generator.get_media_size()
-        
+
         return TemplateParamsResponse(
             template=template,
             media_width=media_width,
             media_height=media_height,
             params=params
         )
-        
+
     except FileNotFoundError:
-        raise HTTPException(status_code=404, detail=f"Template not found: {template}")
+        raise HTTPException(status_code=404, detail=f"模板未找到: {template}")
     except HTTPException:
         raise
     except Exception as e:
         raise map_exception(e, "frame")
-

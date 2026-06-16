@@ -54,29 +54,54 @@ from pixelle_video.services.video import VideoService
 
 class StandardPipeline(LinearVideoPipeline):
     """
-    Standard video generation pipeline
-    
-    Workflow:
-    1. Generate/determine title
-    2. Generate narrations (from topic or split fixed script)
-    3. Generate image prompts for each narration
-    4. For each frame:
-       - Generate audio (TTS)
-       - Generate image
-       - Compose frame with template
-       - Create video segment
-    5. Concatenate all segments
-    6. Add BGM (optional)
-    
-    Supports two modes:
-    - "generate": LLM generates narrations from topic
-    - "fixed": Use provided script as-is (each line = one narration)
+    标准视频生成流水线
+
+    从主题或固定脚本生成完整短视频。支持 generate（AI 生成文案）
+    和 fixed（使用已有文案）两种模式。
+
+    工作流:
+        1. 创建任务目录和运行环境
+        2. 生成/分割旁白文案
+        3. 确定/生成视频标题
+        4. 为每段旁白生成媒体提示词
+        5. 创建 Storyboard 和帧
+        6. 逐帧处理（TTS → 媒体生成 → 帧合成 → 视频片段）
+        7. 拼接视频 + 添加 BGM
+        8. 持久化结果
+
+    Requires:
+        - pixelle_video.utils.content_generators: generate_title, generate_narrations_from_topic,
+          split_narration_script, generate_image_prompts。
+        - pixelle_video.utils.os_util: create_task_output_dir, get_task_final_video_path。
+        - pixelle_video.utils.template_util: get_template_type。
+        - pixelle_video.utils.prompt_helper: build_image_prompt。
+        - pixelle_video.services.video.VideoService: 视频拼接和 BGM。
+
+    Side Effects:
+        - 创建 output/{task_id}/ 目录及所有中间文件。
+        - 调用 LLM API（生成文案/标题/提示词）。
+        - 调用 ComfyUI/API 生成媒体。
+        - 调用 TTS 生成音频。
+        - 写入日志。
     """
-    
-    # ==================== Lifecycle Methods ====================
+
+    # ==================== 生命周期方法 ====================
 
     async def setup_environment(self, ctx: PipelineContext):
-        """Step 1: Setup task directory and environment."""
+        """
+        步骤 1: 创建任务输出目录和环境
+
+        Args:
+            ctx (PipelineContext): 流水线上下文。写入 task_id, task_dir, final_video_path。
+
+        Requires:
+            - create_task_output_dir: 创建隔离的任务目录。
+            - get_task_final_video_path: 确定最终视频路径。
+
+        Side Effects:
+            - 在 output/ 下创建任务目录。
+            - 写入日志（info）。
+        """
         text = ctx.input_text
         mode = ctx.params.get("mode", "generate")
         
@@ -104,7 +129,24 @@ class StandardPipeline(LinearVideoPipeline):
             logger.info(f"   Will copy final video to: {output_path}")
 
     async def generate_content(self, ctx: PipelineContext):
-        """Step 2: Generate or process script/narrations."""
+        """
+        步骤 2: 生成或分割旁白文案
+
+        generate 模式: LLM 根据主题自动生成旁白。
+        fixed 模式: 按指定方式（段落/行/句子）分割已有脚本。
+
+        Args:
+            ctx (PipelineContext): 写入 narrations 列表。
+
+        Requires:
+            - generate_narrations_from_topic: LLM 生成旁白（generate 模式）。
+            - split_narration_script: 脚本分割（fixed 模式）。
+            - self.llm: LLMService 实例（generate 模式使用）。
+
+        Side Effects:
+            - 调用 LLM API（generate 模式）。
+            - 写入日志（info）。
+        """
         mode = ctx.params.get("mode", "generate")
         text = ctx.input_text
         n_scenes = ctx.params.get("n_scenes", 5)
@@ -129,11 +171,22 @@ class StandardPipeline(LinearVideoPipeline):
             logger.info(f"   Note: n_scenes={n_scenes} is ignored in fixed mode")
 
     async def determine_title(self, ctx: PipelineContext):
-        """Step 3: Determine or generate video title."""
-        # Note: Swapped order with generate_content in base class call, 
-        # but in StandardPipeline original code, title was determined BEFORE narrations.
-        # However, LinearVideoPipeline defines generate_content BEFORE determine_title.
-        # This is fine as they are independent in StandardPipeline logic.
+        """
+        步骤 3: 确定或生成视频标题
+
+        优先使用用户指定的标题，否则调用 LLM 自动生成。
+
+        Args:
+            ctx (PipelineContext): 写入 title。
+
+        Requires:
+            - generate_title: 标题生成函数（策略: auto 或 llm）。
+            - self.llm: LLMService 实例。
+
+        Side Effects:
+            - 可能调用 LLM API。
+            - 写入日志（info）。
+        """
         
         title = ctx.params.get("title")
         mode = ctx.params.get("mode", "generate")
@@ -152,7 +205,26 @@ class StandardPipeline(LinearVideoPipeline):
                 logger.info(f"   Title: '{ctx.title}' (LLM-generated)")
 
     async def plan_visuals(self, ctx: PipelineContext):
-        """Step 4: Generate image prompts or visual descriptions."""
+        """
+        步骤 4: 生成媒体提示词
+
+        检测模板类型决定是否需要媒体生成。静态模板跳过此步骤（节省 LLM 调用和成本）。
+        支持「画面|旁白」格式的直接拆分，无需调用 LLM。
+
+        Args:
+            ctx (PipelineContext): 写入 image_prompts 列表（静态模板时为全 None）。
+
+        Requires:
+            - get_template_type: 解析模板类型（image/video/static）。
+            - build_image_prompt: 拼合前缀和基础提示词。
+            - generate_image_prompts: LLM 批量为旁白生成图片提示词。
+            - self.core.config: 读取 comfyui.image.prompt_prefix。
+
+        Side Effects:
+            - 可能调用 LLM API（非静态模板）。
+            - 临时覆盖和恢复 prompt_prefix 配置。
+            - 写入日志（info）。
+        """
         # Detect template type to determine if media generation is needed
         frame_template = ctx.params.get("frame_template") or "1080x1920/default.html"
         
@@ -236,8 +308,23 @@ class StandardPipeline(LinearVideoPipeline):
             logger.info(f"   💡 Savings: {len(ctx.narrations)} LLM calls + {len(ctx.narrations)} media generations")
 
     async def initialize_storyboard(self, ctx: PipelineContext):
-        """Step 5: Create Storyboard object and frames."""
-        # === Handle TTS parameter compatibility ===
+        """
+        步骤 5: 创建 Storyboard 和帧
+
+        处理 TTS 参数的 old/new API 兼容，创建 StoryboardConfig 和 Storyboard，
+        为每个旁白建立对应的 StoryboardFrame。
+
+        Args:
+            ctx (PipelineContext): 写入 config 和 storyboard。
+
+        Requires:
+            - StoryboardConfig, Storyboard, StoryboardFrame: Pydantic 模型。
+
+        Side Effects:
+            - 创建 Python 对象（无 I/O）。
+            - 写入日志（debug）。
+        """
+        # === 处理 TTS 参数的 old/new API 兼容 ===
         tts_inference_mode = ctx.params.get("tts_inference_mode")
         tts_voice = ctx.params.get("tts_voice")
         voice_id = ctx.params.get("voice_id")
@@ -302,7 +389,24 @@ class StandardPipeline(LinearVideoPipeline):
             ctx.storyboard.frames.append(frame)
 
     async def produce_assets(self, ctx: PipelineContext):
-        """Step 6: Generate audio, images, and render frames (Core processing)."""
+        """
+        步骤 6: 逐帧生成媒体资产（核心处理步骤）
+
+        RunningHub 工作流支持并行处理（使用 asyncio.Semaphore 控制并发）。
+        非 RunningHub 工作流串行处理。
+
+        Args:
+            ctx (PipelineContext): 读取 storyboard.frames，修改每个帧。
+
+        Requires:
+            - self.core.frame_processor: FrameProcessor 实例（调用 TTS→媒体→合成）。
+            - pixelle_video.config.config_manager: 读取 RunningHub 并发限制。
+
+        Side Effects:
+            - 逐帧调用 TTS、媒体生成、帧合成（重大 I/O 和网络开销）。
+            - 修改 storyboard.frames 和 total_duration。
+            - 写入进度日志和进度回调。
+        """
         storyboard = ctx.storyboard
         config = ctx.config
         
@@ -417,7 +521,24 @@ class StandardPipeline(LinearVideoPipeline):
                 logger.info(f"✅ Frame {i+1} completed ({processed_frame.duration:.2f}s)")
 
     async def post_production(self, ctx: PipelineContext):
-        """Step 7: Concatenate videos and add BGM."""
+        """
+        步骤 7: 拼接视频并添加背景音乐
+
+        使用 ffmpeg concat demuxer 拼接所有帧视频片段，可选添加 BGM。
+
+        Args:
+            ctx (PipelineContext): 读取 storyboard.frames 的 video_segment_path，
+                写入 final_video_path。
+
+        Requires:
+            - VideoService.concat_videos: ffmpeg 拼接 + BGM 混音。
+            - shutil.copy2: 复制到用户指定路径。
+
+        Side Effects:
+            - 调用 ffmpeg（外部进程）。
+            - 写入最终视频文件。
+            - 可能复制文件到用户指定路径。
+        """
         self._report_progress(ctx.progress_callback, "concatenating", 0.85)
         
         storyboard = ctx.storyboard
@@ -448,7 +569,24 @@ class StandardPipeline(LinearVideoPipeline):
         logger.success(f"🎬 Video generation completed: {ctx.final_video_path}")
 
     async def finalize(self, ctx: PipelineContext) -> VideoGenerationResult:
-        """Step 8: Create result object and persist metadata."""
+        """
+        步骤 8: 创建结果对象并持久化元数据
+
+        Args:
+            ctx (PipelineContext): 包含完整的流水线状态。
+
+        Returns:
+            VideoGenerationResult: 视频路径、分镜表、时长、文件大小。
+
+        Requires:
+            - VideoGenerationResult: 结果模型。
+            - self._persist_task_data: 保存元数据和分镜到磁盘。
+
+        Side Effects:
+            - 读取视频文件获取文件大小。
+            - 调用 _persist_task_data 写入 output/ 目录。
+            - 写入日志（info）。
+        """
         self._report_progress(ctx.progress_callback, "completed", 1.0)
         
         video_path_obj = Path(ctx.final_video_path)
@@ -475,7 +613,24 @@ class StandardPipeline(LinearVideoPipeline):
 
     async def _persist_task_data(self, ctx: PipelineContext):
         """
-        Persist task metadata and storyboard to filesystem
+        持久化任务元数据和分镜数据到文件系统
+
+        构建 metadata.json 和保存 Storyboard，失败不影响视频生成结果。
+
+        Args:
+            ctx (PipelineContext): 包含完整流水线状态。
+
+        Requires:
+            - self.core.persistence.save_task_metadata: 写入 metadata.json。
+            - self.core.persistence.save_storyboard: 写入 storyboard.json。
+            - self.core.config: 读取 LLM/ComfyUI 配置信息。
+
+        Raises:
+            - 不抛出。持久化失败仅记录错误日志，不阻断流程。
+
+        Side Effects:
+            - 写入 output/{task_id}/metadata.json 和 storyboard.json。
+            - 写入日志（info/warning/error）。
         """
         try:
             storyboard = ctx.storyboard

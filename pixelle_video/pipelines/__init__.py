@@ -11,10 +11,17 @@
 # limitations under the License.
 
 """
-Pixelle-Video Pipelines
+视频生成流水线包
 
-Video generation pipelines with different strategies and workflows.
-Each pipeline implements a specific video generation approach.
+层次结构:
+    BasePipeline (abstract)
+      └── LinearVideoPipeline (模板方法, 8 步生命周期)
+            ├── StandardPipeline   — 标准视频生成（主题→文案→图片→视频）
+            ├── CustomPipeline     — 自定义模板（固定脚本+参数）
+            └── AssetBasedPipeline — 基于用户素材（图片/视频→分析→脚本→合成）
+
+使用方式:
+    result = await pipeline_instance(text="...", progress_callback=fn, **params)
 """
 
 from pixelle_video.pipelines.base import BasePipeline
@@ -31,4 +38,3 @@ __all__ = [
     "CustomPipeline",
     "AssetBasedPipeline",
 ]
-

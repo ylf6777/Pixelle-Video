@@ -11,7 +11,21 @@
 # limitations under the License.
 
 """
-API Routers
+API 路由索引模块
+
+集中导入并导出所有路由对象，供 api/app.py 统一注册。
+
+路由清单:
+    - health_router      — 健康检查 (/health, /version)
+    - llm_router         — LLM 对话 (/api/llm/*)
+    - tts_router         — TTS 合成 (/api/tts/*)
+    - image_router       — 图片生成 (/api/image/*)
+    - content_router     — 内容生成 (/api/content/*)
+    - video_router       — 视频生成 (/api/video/*)
+    - tasks_router       — 任务管理 (/api/tasks/*)
+    - files_router       — 文件服务 (/api/files/*)
+    - resources_router   — 资源发现 (/api/resources/*)
+    - frame_router       — 帧渲染 (/api/frame/*)
 """
 
 from api.routers.health import router as health_router
@@ -37,4 +51,3 @@ __all__ = [
     "resources_router",
     "frame_router",
 ]
-

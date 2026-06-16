@@ -27,6 +27,7 @@ def workflow_source_label(source: str) -> str:
         "selfhost": "本地 ComfyUI" if zh else "Local ComfyUI",
         "runninghub": "RunningHub",
         "api": "API 模型" if zh else "API models",
+        "zealman": "Zealman 镜像" if zh else "Zealman Image",
     }
     return labels.get(source, source)
 

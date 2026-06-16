@@ -40,19 +40,13 @@ from pixelle_video.utils.template_util import parse_template_size
 
 class HTMLFrameGenerator:
     """
-    HTML-based frame generator
-    
-    Renders HTML templates to frame images with variable substitution.
-    Uses Playwright for reliable headless browser rendering.
-    
-    Usage:
-        >>> generator = HTMLFrameGenerator("templates/modern.html")
-        >>> frame_path = await generator.generate_frame(
-        ...     topic="Why reading matters",
-        ...     text="Reading builds new neural pathways...",
-        ...     image="/path/to/image.png",
-        ...     ext={"content_title": "Sample Title", "content_author": "Author Name"}
-        ... )
+    基于 HTML 模板的帧图片生成器
+
+    使用 Playwright 无头浏览器将 HTML 模板渲染为 PNG 帧图片，支持变量替换和自定义参数。
+
+    Requires:
+        - Playwright Chromium 浏览器已安装（playwright install --with-deps chromium）
+        - Linux 环境需安装 fontconfig 及中文字体
     """
     
     _browser = None
@@ -61,10 +55,13 @@ class HTMLFrameGenerator:
 
     def __init__(self, template_path: str):
         """
-        Initialize HTML frame generator
-        
+        初始化 HTML 帧生成器，加载模板并解析尺寸
+
         Args:
-            template_path: Path to HTML template file (e.g., "templates/1080x1920/default.html")
+            template_path: HTML 模板文件路径（如 "templates/1080x1920/default.html"）
+
+        Side Effects:
+            加载模板内容到 self.template，解析尺寸设置 self.width/self.height，检查 Linux 字体依赖
         """
         self.template_path = template_path
         self.template = self._load_template(template_path)
@@ -77,7 +74,12 @@ class HTMLFrameGenerator:
     
     
     def _check_linux_dependencies(self):
-        """Check Linux system dependencies and warn if missing"""
+        """
+        检查 Linux 系统字体依赖（fontconfig），缺失时发出警告
+
+        Side Effects:
+            依赖缺失时通过 logger.warning 输出安装提示
+        """
         if os.name != 'posix':
             return
         
@@ -112,7 +114,18 @@ class HTMLFrameGenerator:
             logger.debug(f"Could not check fontconfig status: {e}")
     
     def _load_template(self, template_path: str) -> str:
-        """Load HTML template from file"""
+        """
+        从文件加载 HTML 模板内容
+
+        Args:
+            template_path: 模板文件路径
+
+        Returns:
+            HTML 模板字符串内容
+
+        Raises:
+            FileNotFoundError: 模板文件不存在时抛出
+        """
         path = Path(template_path)
         if not path.exists():
             raise FileNotFoundError(f"Template not found: {template_path}")
@@ -125,14 +138,14 @@ class HTMLFrameGenerator:
     
     def _parse_media_size_from_meta(self) -> tuple[Optional[int], Optional[int]]:
         """
-        Parse media size from meta tags in template
-        
-        Looks for meta tags:
+        从模板的 meta 标签中解析媒体尺寸（用于图片/视频生成）
+
+        查找 meta 标签：
         - <meta name="template:media-width" content="1024">
         - <meta name="template:media-height" content="1024">
-        
+
         Returns:
-            Tuple of (width, height) or (None, None) if not found
+            (width, height) 元组，未找到时返回 (None, None)
         """
         from bs4 import BeautifulSoup
         
@@ -158,12 +171,12 @@ class HTMLFrameGenerator:
     
     def get_media_size(self) -> tuple[int, int]:
         """
-        Get media size for image/video generation
-        
-        Returns media size specified in template meta tags.
-        
+        获取图片/视频生成的媒体尺寸
+
+        返回模板 meta 标签中指定的媒体尺寸，未指定时回退到 1024x1024。
+
         Returns:
-            Tuple of (width, height)
+            (width, height) 元组，默认为 (1024, 1024)
         """
         media_width, media_height = self._parse_media_size_from_meta()
         
@@ -175,23 +188,24 @@ class HTMLFrameGenerator:
     
     def parse_template_parameters(self) -> Dict[str, Dict[str, Any]]:
         """
-        Parse custom parameters from HTML template
-        
-        Supports syntax: {{param:type=default}}
-        - {{param}} -> text type, no default
-        - {{param=value}} -> text type, with default
-        - {{param:type}} -> specified type, no default
-        - {{param:type=value}} -> specified type, with default
-        
-        Supported types: text, number, color, bool
-        
+        从 HTML 模板中解析自定义参数定义
+
+        支持 DSL 语法：{{param:type=default}}
+        - {{param}} → text 类型，无默认值
+        - {{param=value}} → text 类型，带默认值
+        - {{param:type}} → 指定类型，无默认值
+        - {{param:type=value}} → 指定类型，带默认值
+
+        支持类型：text, number, color, bool
+        预设参数（title, text, image, index）会被跳过。
+
         Returns:
-            Dictionary of custom parameters with their configurations:
+            自定义参数配置字典：
             {
                 'param_name': {
                     'type': 'text' | 'number' | 'color' | 'bool',
                     'default': Any,
-                    'label': str  # same as param_name
+                    'label': str
                 }
             }
         """
@@ -231,14 +245,14 @@ class HTMLFrameGenerator:
     
     def _parse_default_value(self, param_type: str, value_str: Optional[str]) -> Any:
         """
-        Parse default value based on parameter type
-        
+        根据参数类型解析默认值字符串
+
         Args:
-            param_type: Type of parameter (text, number, color, bool)
-            value_str: String value to parse (can be None)
-        
+            param_type: 参数类型（text, number, color, bool）
+            value_str: 要解析的字符串值（可为 None）
+
         Returns:
-            Parsed value with appropriate type
+            对应类型的解析值，value_str 为 None 时返回类型默认值（text=""、number=0、color="#000000"、bool=False）
         """
         if value_str is None:
             return {
@@ -272,19 +286,16 @@ class HTMLFrameGenerator:
     
     def _replace_parameters(self, html: str, values: Dict[str, Any]) -> str:
         """
-        Replace parameter placeholders with actual values
-        
-        Supports DSL syntax: {{param:type=default}}
-        - If value provided in values dict, use it
-        - Otherwise, use default value from placeholder
-        - If no default, use empty string
-        
+        将模板中的参数占位符替换为实际值
+
+        替换优先级：values 字典 > 占位符默认值 > 空字符串
+
         Args:
-            html: HTML template content
-            values: Dictionary of parameter values
-        
+            html: HTML 模板内容
+            values: 参数值字典
+
         Returns:
-            HTML with placeholders replaced
+            占位符已被替换的 HTML 字符串
         """
         PARAM_PATTERN = r'\{\{([a-zA-Z_][a-zA-Z0-9_]*)(?::([a-z]+))?(?:=([^}]+))?\}\}'
         
@@ -309,7 +320,15 @@ class HTMLFrameGenerator:
 
     @classmethod
     async def _ensure_browser(cls):
-        """Lazily initialize a shared Playwright browser instance"""
+        """
+        延迟初始化共享的 Playwright Chromium 浏览器实例，自动处理跨事件循环重用
+
+        Returns:
+            Playwright Browser 实例
+
+        Side Effects:
+            设置类属性 _browser, _playwright, _browser_loop
+        """
         current_loop = asyncio.get_running_loop()
         browser_usable = (
             cls._browser is not None
@@ -342,14 +361,24 @@ class HTMLFrameGenerator:
 
     @classmethod
     def _discard_browser_references(cls):
-        """Drop stale Playwright objects that belong to another event loop."""
+        """
+        丢弃属于另一个事件循环的过期 Playwright 对象引用
+
+        Side Effects:
+            将 _browser, _playwright, _browser_loop_id 设为 None
+        """
         cls._browser = None
         cls._playwright = None
         cls._browser_loop_id = None
 
     @classmethod
     async def _reset_browser(cls):
-        """Best-effort reset for stale or broken Playwright connections."""
+        """
+        尽力重置过期或损坏的 Playwright 连接，关闭浏览器并停止 Playwright 实例
+
+        Side Effects:
+            关闭 _browser 和 _playwright，并将引用设为 None
+        """
         if cls._browser:
             try:
                 if cls._browser.is_connected():
@@ -370,7 +399,12 @@ class HTMLFrameGenerator:
 
     @classmethod
     async def close_browser(cls):
-        """Shutdown the shared browser instance (call on app teardown)"""
+        """
+        关闭共享的浏览器实例（应在应用退出时调用）
+
+        Side Effects:
+            关闭 _browser 和 _playwright，引用设为 None
+        """
         if cls._browser:
             await cls._browser.close()
             cls._browser = None
@@ -389,19 +423,20 @@ class HTMLFrameGenerator:
         output_path: Optional[str] = None
     ) -> str:
         """
-        Generate frame from HTML template
-        
-        Video size is automatically determined from template path during initialization.
-        
+        从 HTML 模板生成帧图片，使用 Playwright 无头浏览器渲染
+
         Args:
-            title: Video title
-            text: Narration text for this frame
-            image: Path to AI-generated image (supports relative path, absolute path, or HTTP URL)
-            ext: Additional data (content_title, content_author, etc.)
-            output_path: Custom output path (auto-generated if None)
-        
+            title: 视频标题
+            text: 本帧旁白文本
+            image: AI 生成图片的路径（支持相对路径、绝对路径或 HTTP URL）
+            ext: 额外数据字典（content_title, content_author 等），优先级低于命名参数
+            output_path: 自定义输出路径（None 时自动生成）
+
         Returns:
-            Path to generated frame image
+            生成的帧图片文件路径
+
+        Raises:
+            RuntimeError: HTML 渲染失败时抛出
         """
         if image and not image.startswith(('http://', 'https://', 'data:', 'file://')):
             image_path = Path(image)

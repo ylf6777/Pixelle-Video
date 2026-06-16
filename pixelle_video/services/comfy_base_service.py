@@ -47,12 +47,15 @@ class ComfyBaseService:
     
     def __init__(self, config: dict, service_name: str, core=None):
         """
-        Initialize ComfyUI base service
-        
+        初始化 ComfyUI 基础服务，设置服务配置、全局配置和服务标识
+
         Args:
-            config: Full application config dict
-            service_name: Service name in config (e.g., "tts", "image")
-            core: PixelleVideoCore instance (for accessing shared ComfyKit)
+            config: 完整应用配置字典
+            service_name: 配置中的服务名称（如 "tts", "image"）
+            core: PixelleVideoCore 实例（用于访问共享的 ComfyKit）
+
+        Side Effects:
+            设置 self.config, self.global_config, self.service_name, self._workflows_cache, self.core
         """
         # Service-specific config (e.g., config["comfyui"]["tts"])
         comfyui_config = config.get("comfyui", {})
@@ -69,13 +72,13 @@ class ComfyBaseService:
     
     def _scan_workflows(self) -> List[Dict[str, Any]]:
         """
-        Scan workflows/source/*.json files from all source directories (merged from workflows/ and data/workflows/)
+        扫描所有源目录中匹配前缀的 JSON 工作流文件（合并 workflows/ 和 data/workflows/）
 
-        Results are cached after first scan to avoid repeated filesystem I/O.
+        首次扫描后缓存结果到 self._workflows_cache，避免重复文件系统 I/O。
 
         Returns:
-            List of workflow info dicts
-            Example: [
+            工作流信息字典列表（按 key 排序），示例：
+            [
                 {
                     "name": "image_flux.json",
                     "display_name": "image_flux.json - Selfhost",
@@ -92,6 +95,9 @@ class ComfyBaseService:
                     "workflow_id": "123456"
                 }
             ]
+
+        Side Effects:
+            缓存结果到 self._workflows_cache
         """
         if self._workflows_cache is not None:
             return self._workflows_cache
@@ -132,21 +138,21 @@ class ComfyBaseService:
     
     def _parse_workflow_file(self, file_path: Path, source: str) -> Dict[str, Any]:
         """
-        Parse workflow file and extract metadata
-        
+        解析工作流 JSON 文件并提取元数据，包括名称、来源、路径和可选的工作流 ID
+
         Args:
-            file_path: Path to workflow JSON file
-            source: Source directory name (e.g., "selfhost", "runninghub")
-        
+            file_path: 工作流 JSON 文件路径
+            source: 源目录名称（如 "selfhost", "runninghub"）
+
         Returns:
-            Workflow info dict with structure:
+            工作流信息字典，结构如下：
             {
                 "name": "image_flux.json",
                 "display_name": "image_flux.json - Runninghub",
                 "source": "runninghub",
                 "path": "workflows/runninghub/image_flux.json",
                 "key": "runninghub/image_flux.json",
-                "workflow_id": "123456"  # Only for RunningHub
+                "workflow_id": "123456"  # 仅 RunningHub 包装格式
             }
         """
         with open(file_path, 'r', encoding='utf-8') as f:
@@ -171,13 +177,13 @@ class ComfyBaseService:
     
     def _get_default_workflow(self) -> str:
         """
-        Get default workflow from config (required, no fallback)
-        
+        从配置中获取默认工作流 key（必须配置，无回退值）
+
         Returns:
-            Default workflow key (e.g., "runninghub/image_flux.json")
-        
+            默认工作流 key（如 "runninghub/image_flux.json"）
+
         Raises:
-            ValueError: If default_workflow not configured
+            ValueError: 未配置 default_workflow 时抛出，提示可用工作流列表
         """
         default_workflow = self.config.get("default_workflow")
         
@@ -192,25 +198,24 @@ class ComfyBaseService:
     
     def _resolve_workflow(self, workflow: Optional[str] = None) -> Dict[str, Any]:
         """
-        Resolve workflow key to workflow info
-        
+        将工作流 key 解析为对应的工作流信息字典，未指定时使用配置中的默认值
+
         Args:
-            workflow: Workflow key (e.g., "runninghub/image_flux.json")
-                     If None, uses default from config
-        
+            workflow: 工作流 key（如 "runninghub/image_flux.json"），None 时使用配置中的默认工作流
+
         Returns:
-            Workflow info dict with structure:
+            工作流信息字典，结构如下：
             {
                 "name": "image_flux.json",
                 "display_name": "image_flux.json - Runninghub",
                 "source": "runninghub",
                 "path": "workflows/runninghub/image_flux.json",
                 "key": "runninghub/image_flux.json",
-                "workflow_id": "123456"  # Only for RunningHub
+                "workflow_id": "123456"  # 仅 RunningHub
             }
-        
+
         Raises:
-            ValueError: If workflow not found
+            ValueError: 工作流未找到时抛出，提示所有可用工作流 key 列表
         """
         # 1. If not specified, use default from config
         if workflow is None:
@@ -240,15 +245,18 @@ class ComfyBaseService:
         runninghub_instance_type: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
-        Prepare ComfyKit configuration
-        
+        准备 ComfyKit 配置字典，按优先级合并参数、全局配置和环境变量
+
         Args:
-            comfyui_url: ComfyUI URL (optional, overrides config)
-            runninghub_api_key: RunningHub API key (optional, overrides config)
-            runninghub_instance_type: RunningHub instance type (optional, overrides config)
-        
+            comfyui_url: ComfyUI URL（可选，优先级：参数 > 全局配置 > 环境变量 COMFYUI_BASE_URL > 默认值）
+            runninghub_api_key: RunningHub API 密钥（可选，优先级：参数 > 全局配置 > 环境变量 RUNNINGHUB_API_KEY）
+            runninghub_instance_type: RunningHub 实例类型（可选，优先级：参数 > 全局配置 > 环境变量 RUNNINGHUB_INSTANCE_TYPE）
+
         Returns:
-            ComfyKit configuration dict
+            ComfyKit 配置字典，包含 comfyui_url 及可选的 runninghub_api_key、runninghub_instance_type
+
+        Side Effects:
+            读取环境变量 COMFYUI_BASE_URL, RUNNINGHUB_API_KEY, RUNNINGHUB_INSTANCE_TYPE
         """
         kit_config = {}
         
@@ -285,43 +293,31 @@ class ComfyBaseService:
     
     def list_workflows(self) -> List[Dict[str, Any]]:
         """
-        List all available workflows with full metadata
-        
+        列出所有可用工作流及完整元数据（名称、来源、路径、key 等）
+
         Returns:
-            List of workflow info dicts (sorted by key)
-        
-        Example:
-            workflows = service.list_workflows()
-            # [
-            #     {
-            #         "name": "image_flux.json",
-            #         "display_name": "image_flux.json - Runninghub",
-            #         "source": "runninghub",
-            #         "path": "workflows/runninghub/image_flux.json",
-            #         "key": "runninghub/image_flux.json",
-            #         "workflow_id": "123456"
-            #     },
-            #     ...
-            # ]
+            工作流信息字典列表（按 key 排序），每个字典包含 name, display_name, source, path, key 及可选的 workflow_id
         """
         return self._scan_workflows()
     
     @property
     def available(self) -> List[str]:
         """
-        List available workflow keys
-        
+        列出所有可用工作流的 key 列表
+
         Returns:
-            List of available workflow keys (e.g., ["runninghub/image_flux.json", ...])
-        
-        Example:
-            print(f"Available workflows: {service.available}")
+            可用工作流 key 列表（如 ["runninghub/image_flux.json", "selfhost/image_flux.json", ...]）
         """
         workflows = self.list_workflows()
         return [wf["key"] for wf in workflows]
     
     def __repr__(self) -> str:
-        """String representation"""
+        """
+        返回服务的字符串表示，包含类名、默认工作流和可用工作流列表
+
+        Returns:
+            格式为 <ClassName default='key' available=[key1, key2, ...]> 的字符串
+        """
         default = self._get_default_workflow()
         available = ", ".join(self.available) if self.available else "none"
         return (

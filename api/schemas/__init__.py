@@ -11,7 +11,20 @@
 # limitations under the License.
 
 """
-API Schemas (Pydantic models)
+API Schema 包（Pydantic 数据模型）
+
+集中管理所有 API 请求和响应的 Pydantic 模型定义。
+所有模型都用于 FastAPI 的自动请求校验、文档生成和响应序列化。
+
+Schema 清单:
+    - base      — 基础响应模型（BaseResponse, ErrorResponse）
+    - llm       — LLM 对话请求/响应
+    - tts       — TTS 合成请求/响应
+    - image     — 图片生成请求/响应
+    - content   — 内容生成请求/响应（旁白、图片提示词、标题）
+    - video     — 视频生成请求/响应
+    - frame     — 帧渲染请求/响应
+    - resources — 资源发现响应模型
 """
 
 from api.schemas.base import BaseResponse, ErrorResponse
@@ -33,7 +46,7 @@ from api.schemas.video import (
 )
 
 __all__ = [
-    # Base
+    # 基础模型
     "BaseResponse",
     "ErrorResponse",
     # LLM
@@ -42,19 +55,18 @@ __all__ = [
     # TTS
     "TTSSynthesizeRequest",
     "TTSSynthesizeResponse",
-    # Image
+    # 图片
     "ImageGenerateRequest",
     "ImageGenerateResponse",
-    # Content
+    # 内容生成
     "NarrationGenerateRequest",
     "NarrationGenerateResponse",
     "ImagePromptGenerateRequest",
     "ImagePromptGenerateResponse",
     "TitleGenerateRequest",
     "TitleGenerateResponse",
-    # Video
+    # 视频生成
     "VideoGenerateRequest",
     "VideoGenerateResponse",
     "VideoGenerateAsyncResponse",
 ]
-

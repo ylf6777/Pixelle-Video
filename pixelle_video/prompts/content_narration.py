@@ -11,9 +11,11 @@
 # limitations under the License.
 
 """
-Content narration generation prompt
+内容旁白生成提示词（Content Narration Prompt）
 
-For extracting/refining narrations from user-provided content.
+用于从用户提供的内容中提取/精炼旁白。
+提示词指示 LLM 从内容中提炼核心观点，
+转化为适合 TTS 的分镜旁白。
 """
 
 
@@ -84,16 +86,31 @@ def build_content_narration_prompt(
     max_words: int
 ) -> str:
     """
-    Build content refinement narration prompt
-    
+    构建从用户内容提炼旁白的提示词。
+
+    用于从用户提供的长/短文本中提取核心观点，转化为适合
+    短视频配音的 storyboard 旁白。
+
     Args:
-        content: User-provided content
-        n_storyboard: Number of storyboard frames
-        min_words: Minimum word count
-        max_words: Maximum word count
-    
+        content: 用户提供的原始内容文本
+        n_storyboard: 需要生成的分镜数量
+        min_words: 每段旁白的最少字数
+        max_words: 每段旁白的最多字数
+
     Returns:
-        Formatted prompt
+        格式化后的完整提示词字符串
+
+    Raises:
+        KeyError: 如果模板变量名与 .format() 参数不匹配
+        AttributeError: 如果参数类型与 format() 期望不符
+
+    Requires:
+        - content 为非空字符串
+        - n_storyboard 为正整数
+        - min_words 和 max_words 为正整数且 min_words <= max_words
+
+    Side Effects:
+        无（纯函数，仅做字符串格式化）
     """
     return CONTENT_NARRATION_PROMPT.format(
         content=content,
@@ -101,4 +118,3 @@ def build_content_narration_prompt(
         min_words=min_words,
         max_words=max_words
     )
-

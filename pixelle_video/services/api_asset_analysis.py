@@ -6,11 +6,20 @@
 #     http://www.apache.org/licenses/LICENSE-2.0
 
 """
-API VLM-based asset analysis service.
+基于直连 VLM API 的素材分析服务
 
-This service mirrors the text description contract of ImageAnalysisService and
-VideoAnalysisService, but uses direct provider VLM APIs instead of ComfyUI or
-RunningHub workflows.
+与 ImageAnalysisService / VideoAnalysisService 保持相同的文本描述契约，
+但使用 DashScope 等 VLM API 直连方式，不依赖 ComfyUI 或 RunningHub 工作流。
+
+Requires:
+    - pixelle_video.services.api_services.vlm_client.VLM: VLM 客户端。
+    - pixelle_video.config.config_manager: API 提供商配置。
+    - loguru.logger: 日志记录。
+
+Side Effects:
+    - 调用外部 VLM API（网络请求）。
+    - 读取本地图片/视频文件。
+    - 写入日志（info/error）。
 """
 
 from __future__ import annotations
@@ -23,7 +32,12 @@ from loguru import logger
 
 
 class APIAssetAnalysisService:
-    """Analyze image/video assets with a direct VLM API provider."""
+    """
+    使用直接 VLM API 提供商分析图片/视频素材的服务
+
+    与 ImageAnalysisService / VideoAnalysisService 保持相同的文本描述契约，
+    但使用 DashScope 等 API 直连方式而非 ComfyUI/RunningHub 工作流。
+    """
 
     VLM_MODELS = {
         "dashscope": [
@@ -57,11 +71,29 @@ class APIAssetAnalysisService:
 输出 3-6 句话，不要编造关键帧中看不到的信息。"""
 
     def __init__(self, config: dict, core=None):
+        """
+        初始化 API 素材分析服务
+
+        Args:
+            config: 完整应用配置字典
+            core: PixelleVideoCore 实例（可选）
+
+        Side Effects:
+            保存 config 和 core 引用
+        """
         self.config = config
         self.core = core
 
     def list_models(self, configured_only: bool = True) -> list[dict]:
-        """Return VLM models available for API-backed asset analysis."""
+        """
+        列出 API 后端可用的 VLM 模型
+
+        Args:
+            configured_only: True 时仅返回已配置 API 密钥的提供商模型
+
+        Returns:
+            模型信息字典列表，每个包含 key, name, display_name, source, provider, model 等字段
+        """
         providers = self.config.get("api_providers", {}) or {}
         models = []
 
@@ -94,6 +126,21 @@ class APIAssetAnalysisService:
         prompt: Optional[str] = None,
         **_: object,
     ) -> str:
+        """
+        使用 VLM API 分析图片素材，返回中文描述
+
+        Args:
+            image_path: 图片文件路径
+            model: VLM 模型 key（None 时使用默认模型）
+            prompt: 自定义分析提示词（None 时使用默认 IMAGE_PROMPT）
+
+        Returns:
+            图片的中文描述文本
+
+        Raises:
+            FileNotFoundError: 图片文件不存在时抛出
+            RuntimeError: VLM 返回空描述时抛出
+        """
         image_file = Path(image_path)
         if not image_file.exists():
             raise FileNotFoundError(f"Image file not found: {image_path}")
@@ -111,6 +158,21 @@ class APIAssetAnalysisService:
         prompt: Optional[str] = None,
         **_: object,
     ) -> str:
+        """
+        使用 VLM API 分析视频素材，返回中文描述
+
+        Args:
+            video_path: 视频文件路径
+            model: VLM 模型 key（None 时使用默认模型）
+            prompt: 自定义分析提示词（None 时使用默认 VIDEO_PROMPT）
+
+        Returns:
+            视频的中文描述文本
+
+        Raises:
+            FileNotFoundError: 视频文件不存在时抛出
+            RuntimeError: VLM 返回空描述时抛出
+        """
         video_file = Path(video_path)
         if not video_file.exists():
             raise FileNotFoundError(f"Video file not found: {video_path}")
@@ -123,6 +185,20 @@ class APIAssetAnalysisService:
         )
 
     async def __call__(self, asset_path: str, asset_type: Optional[str] = None, **kwargs) -> str:
+        """
+        统一入口：根据 asset_type 自动路由到 analyze_image 或 analyze_video
+
+        Args:
+            asset_path: 素材文件路径
+            asset_type: 素材类型（"image" 或 "video"），None 时根据扩展名自动判断
+            **kwargs: 传递给 analyze_image/analyze_video 的额外参数
+
+        Returns:
+            素材的中文描述文本
+
+        Raises:
+            ValueError: 素材类型不支持或无法识别时抛出
+        """
         path = Path(asset_path)
         resolved_type = asset_type or self._get_asset_type(path)
         if resolved_type == "image":
@@ -138,6 +214,21 @@ class APIAssetAnalysisService:
         model: Optional[str],
         video_paths: Optional[list[str]] = None,
     ) -> str:
+        """
+        内部方法：调用 VLM 客户端执行实际的 API 查询
+
+        Args:
+            prompt: 分析提示词
+            image_paths: 图片文件路径列表
+            model: VLM 模型标识符
+            video_paths: 视频文件路径列表（可选）
+
+        Returns:
+            VLM 返回的描述文本
+
+        Raises:
+            RuntimeError: 未选择模型或 VLM 返回空描述时抛出
+        """
         from pixelle_video.services.api_services.vlm_client import VLM
 
         selected_model = (model or "").strip()
@@ -173,6 +264,15 @@ class APIAssetAnalysisService:
         return description
 
     def _get_asset_type(self, path: Path) -> str:
+        """
+        根据文件扩展名判断素材类型
+
+        Args:
+            path: 素材文件 Path 对象
+
+        Returns:
+            "image"（图片扩展名）、"video"（视频扩展名）或 "unknown"（无法识别）
+        """
         image_exts = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
         video_exts = {".mp4", ".mov", ".avi", ".mkv", ".webm"}
         ext = path.suffix.lower()

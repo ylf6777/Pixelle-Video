@@ -11,9 +11,10 @@
 # limitations under the License.
 
 """
-Style conversion prompt
+风格转换提示词（Style Conversion Prompt）
 
-For converting user's custom style description to image generation prompt.
+用于将用户自定义的风格描述（支持任意语言）转换为
+适合 Stable Diffusion / FLUX 模型的英文图像生成提示词。
 """
 
 
@@ -34,20 +35,28 @@ Image Prompt:"""
 
 def build_style_conversion_prompt(description: str) -> str:
     """
-    Build style conversion prompt
-    
-    Converts user's custom style description (in any language) to an English
-    image generation prompt suitable for Stable Diffusion/FLUX models.
-    
+    构建风格转换提示词。
+
+    将用户自定义的风格描述（任意语言）转换为适合
+    Stable Diffusion/FLUX 模型的英文图像生成提示词。
+
     Args:
-        description: User's style description in any language
-    
+        description: 用户的风格描述文本（支持任意语言）
+
     Returns:
-        Formatted prompt
-    
+        格式化后的完整提示词字符串
+
+    Raises:
+        KeyError: 如果模板变量名与 .format() 参数不匹配
+
+    Requires:
+        - description 为非空字符串
+
+    Side Effects:
+        无（纯函数，仅做字符串格式化）
+
     Example:
         >>> build_style_conversion_prompt("赛博朋克风格，霓虹灯，未来感")
-        # Returns prompt that will convert to: "cyberpunk style, neon lights, futuristic..."
+        # 返回提示词，LLM 将转换为英文图像生成提示词
     """
     return STYLE_CONVERSION_PROMPT.format(description=description)
-

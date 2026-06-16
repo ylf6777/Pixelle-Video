@@ -69,7 +69,7 @@ class APIProviderMediaService:
             "input_modalities": ["text"],
             "adapter_input_modalities": ["text"],
             "duration": {"min": 2, "max": 15, "integer": True, "verified": True},
-            "resolutions": ["720P", "1080P"],
+            "resolutions": ["480P", "720P", "1080P"],
             "ratios": ["16:9", "9:16", "1:1", "4:3", "3:4"],
             "fps": 30,
             "format": "mp4",
@@ -89,7 +89,7 @@ class APIProviderMediaService:
             "input_modalities": ["text"],
             "adapter_input_modalities": ["text"],
             "duration": {"min": 3, "max": 15, "integer": True, "verified": True},
-            "resolutions": ["720P", "1080P"],
+            "resolutions": ["480P", "720P", "1080P"],
             "fps": 24,
             "format": "mp4",
             "api_contract_verified": True,
@@ -113,7 +113,7 @@ class APIProviderMediaService:
             "input_modalities": ["text", "image", "audio", "video"],
             "adapter_input_modalities": ["text", "image"],
             "duration": {"min": 2, "max": 15, "integer": True, "verified": True},
-            "resolutions": ["720P", "1080P"],
+            "resolutions": ["480P", "720P", "1080P"],
             "ratios": ["16:9", "9:16", "1:1", "4:3", "3:4"],
             "fps": 30,
             "format": "mp4",
@@ -134,7 +134,7 @@ class APIProviderMediaService:
             "input_modalities": ["text", "image", "video"],
             "adapter_input_modalities": ["text", "image", "video"],
             "duration": {"min": 2, "max": 10, "integer": True, "verified": True},
-            "resolutions": ["720P", "1080P"],
+            "resolutions": ["480P", "720P", "1080P"],
             "ratios": ["16:9", "9:16", "1:1", "4:3", "3:4"],
             "fps": 30,
             "format": "mp4",
@@ -161,7 +161,7 @@ class APIProviderMediaService:
             "input_modalities": ["text", "image", "audio", "video"],
             "adapter_input_modalities": ["text", "image", "audio"],
             "duration": {"min": 2, "max": 10, "integer": True, "verified": True},
-            "resolutions": ["720P", "1080P"],
+            "resolutions": ["480P", "720P", "1080P"],
             "ratios": ["16:9", "9:16", "1:1", "4:3", "3:4"],
             "fps": 30,
             "format": "mp4",
@@ -180,7 +180,7 @@ class APIProviderMediaService:
             "input_modalities": ["text", "image", "audio"],
             "adapter_input_modalities": ["text", "image"],
             "duration": {"min": 2, "max": 15, "integer": True, "verified": True},
-            "resolutions": ["720P", "1080P"],
+            "resolutions": ["480P", "720P", "1080P"],
             "ratios": ["16:9", "9:16", "1:1", "4:3", "3:4"],
             "fps": 30,
             "format": "mp4",
@@ -200,7 +200,7 @@ class APIProviderMediaService:
             "input_modalities": ["text", "image"],
             "adapter_input_modalities": ["text", "image"],
             "duration": {"min": 3, "max": 15, "integer": True, "verified": True},
-            "resolutions": ["720P", "1080P"],
+            "resolutions": ["480P", "720P", "1080P"],
             "fps": 24,
             "format": "mp4",
             "api_contract_verified": True,
@@ -216,7 +216,7 @@ class APIProviderMediaService:
             "input_modalities": ["text", "image", "video"],
             "adapter_input_modalities": ["text", "image", "video"],
             "duration": {"min": 3, "max": 15, "integer": True, "verified": True},
-            "resolutions": ["720P", "1080P"],
+            "resolutions": ["480P", "720P", "1080P"],
             "fps": 24,
             "format": "mp4",
             "api_contract_verified": True,
@@ -241,7 +241,7 @@ class APIProviderMediaService:
             "input_modalities": ["text", "image"],
             "adapter_input_modalities": ["text", "image"],
             "duration": {"min": 3, "max": 15, "integer": True, "verified": True},
-            "resolutions": ["720P", "1080P"],
+            "resolutions": ["480P", "720P", "1080P"],
             "ratios": ["16:9", "9:16", "3:4", "4:3", "1:1"],
             "fps": 24,
             "format": "mp4",
@@ -267,7 +267,7 @@ class APIProviderMediaService:
             "input_modalities": ["text", "image"],
             "adapter_input_modalities": ["text", "image"],
             "duration": {"min": 3, "max": 15, "integer": True, "verified": True},
-            "resolutions": ["720P", "1080P"],
+            "resolutions": ["480P", "720P", "1080P"],
             "ratios": ["16:9", "9:16", "1:1"],
             "api_contract_verified": True,
             "source_urls": [
@@ -287,7 +287,7 @@ class APIProviderMediaService:
             "input_modalities": ["text", "image"],
             "adapter_input_modalities": ["text", "image"],
             "duration": {"allowed_values": [5, 10], "integer": True, "verified": True},
-            "resolutions": ["720P", "1080P"],
+            "resolutions": ["480P", "720P", "1080P"],
             "ratios": ["16:9", "9:16", "1:1"],
             "api_contract_verified": True,
             "source_urls": [
@@ -306,7 +306,7 @@ class APIProviderMediaService:
             "input_modalities": ["text", "image"],
             "adapter_input_modalities": ["text", "image"],
             "duration": {"allowed_values": [5, 10], "integer": True, "verified": True},
-            "resolutions": ["720P", "1080P"],
+            "resolutions": ["480P", "720P", "1080P"],
             "ratios": ["16:9", "9:16", "1:1"],
             "api_contract_verified": True,
             "source_urls": [
@@ -324,7 +324,7 @@ class APIProviderMediaService:
             "input_modalities": ["text", "image", "audio"],
             "adapter_input_modalities": ["text", "image", "audio"],
             "duration": {"min": 2, "max": 12, "integer": True, "verified": True},
-            "resolutions": ["720p", "1080p"],
+            "resolutions": ["480p", "720p", "1080p"],
             "ratios": ["16:9", "4:3", "1:1", "3:4", "9:16", "21:9", "adaptive"],
             "api_contract_verified": True,
             "source_urls": [
@@ -342,7 +342,7 @@ class APIProviderMediaService:
             "input_modalities": ["text", "image", "audio"],
             "adapter_input_modalities": ["text", "image", "audio"],
             "duration": {"min": 2, "max": 12, "integer": True, "verified": True},
-            "resolutions": ["720p", "1080p"],
+            "resolutions": ["480p", "720p", "1080p"],
             "ratios": ["16:9", "4:3", "1:1", "3:4", "9:16", "21:9", "adaptive"],
             "api_contract_verified": True,
             "source_urls": [
@@ -355,8 +355,15 @@ class APIProviderMediaService:
         },
         ("seedance", "seedance-1-0-pro"): {
             "ability_type": "image_to_video",
-            "ability_types": [],
+            "ability_types": ["first_frame_i2v"],
             "adapter_ability_types": ["first_frame_i2v"],
+            "input_modalities": ["text", "image"],
+            "adapter_input_modalities": ["text", "image"],
+            "duration": {"min": 2, "max": 10, "integer": True, "verified": False},
+            "resolutions": ["480p", "720p", "1080p"],
+            "ratios": ["16:9", "9:16", "1:1"],
+            "fps": 24,
+            "format": "mp4",
             "api_contract_verified": False,
             "source_urls": [],
             "contract_issues": [
@@ -365,8 +372,15 @@ class APIProviderMediaService:
         },
         ("seedance", "seedance-1-0-lite"): {
             "ability_type": "image_to_video",
-            "ability_types": [],
+            "ability_types": ["first_frame_i2v"],
             "adapter_ability_types": ["first_frame_i2v"],
+            "input_modalities": ["text", "image"],
+            "adapter_input_modalities": ["text", "image"],
+            "duration": {"min": 2, "max": 10, "integer": True, "verified": False},
+            "resolutions": ["480p", "720p", "1080p"],
+            "ratios": ["16:9", "9:16", "1:1"],
+            "fps": 24,
+            "format": "mp4",
             "api_contract_verified": False,
             "source_urls": [],
             "contract_issues": [
@@ -728,8 +742,12 @@ class APIProviderMediaService:
     def _video_resolution(self, provider: str, width: Optional[int], height: Optional[int]) -> str:
         resolution = self._resolution(width, height)
         if provider == "seedance":
-            return "1080p" if resolution in {"1080P", "2K", "4K"} else "720p"
-        return "1080P" if resolution in {"1080P", "2K", "4K"} else "720P"
+            if resolution in {"4K", "2K"}:
+                return "1080p"
+            return "720p" if resolution == "1080P" else "480p"
+        if resolution in {"4K", "2K"}:
+            return "1080P"
+        return "720P" if resolution == "1080P" else "480P"
 
     def _video_duration(self, provider: str, model: str, duration: int) -> int:
         """Normalize requested duration to ranges accepted by common providers."""

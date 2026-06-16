@@ -27,27 +27,15 @@ from pixelle_video.services.comfy_base_service import ComfyBaseService
 
 class ImageAnalysisService(ComfyBaseService):
     """
-    Image analysis service - Workflow-based
-    
-    Uses ComfyKit to execute image analysis workflows (e.g., Florence-2, BLIP, etc.).
-    Returns detailed textual descriptions of images.
-    
-    Convention: workflows follow {source}/analyse_image.json pattern
-    - runninghub/analyse_image.json (default, cloud-based)
-    - selfhost/analyse_image.json (local ComfyUI)
-    
-    Usage:
-        # Use default (runninghub cloud)
-        description = await pixelle_video.image_analysis("path/to/image.jpg")
-        
-        # Use local ComfyUI
-        description = await pixelle_video.image_analysis(
-            "path/to/image.jpg",
-            source="selfhost"
-        )
-        
-        # List available workflows
-        workflows = pixelle_video.image_analysis.list_workflows()
+    图片分析服务 —— 基于 ComfyUI 工作流的视觉模型（Florence-2 / BLIP 等）分析
+
+    工作流命名约定：{source}/analyse_image.json
+    - runninghub/analyse_image.json（云端默认）
+    - selfhost/analyse_image.json（本地 ComfyUI）
+
+    Requires:
+        - 父类 ComfyBaseService 已初始化
+        - config 中配置了 image_analysis 服务的 default_workflow
     """
     
     WORKFLOW_PREFIX = "analyse_"
@@ -55,11 +43,14 @@ class ImageAnalysisService(ComfyBaseService):
     
     def __init__(self, config: dict, core=None):
         """
-        Initialize image analysis service
-        
+        初始化图片分析服务，以 "image_analysis" 作为配置键继承 ComfyBaseService
+
         Args:
-            config: Full application config dict
-            core: PixelleVideoCore instance (for accessing shared ComfyKit)
+            config: 完整应用配置字典
+            core: PixelleVideoCore 实例（用于访问共享的 ComfyKit）
+
+        Side Effects:
+            调用父类 __init__ 设置 self.config, self.global_config 等属性
         """
         super().__init__(config, service_name="image_analysis", core=core)
     
@@ -76,34 +67,24 @@ class ImageAnalysisService(ComfyBaseService):
         **params
     ) -> str:
         """
-        Analyze an image using workflow
-        
+        使用视觉模型工作流分析图片，返回文本描述
+
+        支持两种后端来源：RunningHub（云端）和自部署 ComfyUI。
+
         Args:
-            image_path: Path to the image file (local or URL)
-            source: Workflow source - 'runninghub' (cloud, default) or 'selfhost' (local ComfyUI)
-            workflow: Workflow filename (optional, overrides source-based resolution)
-            comfyui_url: ComfyUI URL (optional, overrides config)
-            runninghub_api_key: RunningHub API key (optional, overrides config)
-            **params: Additional workflow parameters
-        
+            image_path: 图片文件路径（本地路径）
+            source: 工作流来源 —— "runninghub"（云端默认）或 "selfhost"（本地 ComfyUI）
+            workflow: 工作流 key（可选，覆盖 source 自动解析）
+            comfyui_url: ComfyUI URL（可选，覆盖配置）
+            runninghub_api_key: RunningHub API 密钥（可选，覆盖配置）
+            **params: 额外的工作流参数
+
         Returns:
-            str: Text description of the image
-        
-        Examples:
-            # Simplest: use default (runninghub cloud)
-            description = await pixelle_video.image_analysis("temp/06.JPG")
-            
-            # Use local ComfyUI
-            description = await pixelle_video.image_analysis(
-                "temp/06.JPG",
-                source="selfhost"
-            )
-            
-            # Use specific workflow (bypass source-based resolution)
-            description = await pixelle_video.image_analysis(
-                "temp/06.JPG",
-                workflow="selfhost/custom_analysis.json"
-            )
+            图片的文本描述字符串
+
+        Raises:
+            FileNotFoundError: 图片文件不存在时抛出
+            Exception: 分析失败或未生成描述文本时抛出
         """
         from pixelle_video.utils.workflow_util import resolve_workflow_path
         

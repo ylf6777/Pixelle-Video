@@ -11,9 +11,11 @@
 # limitations under the License.
 
 """
-Asset-based video script generation prompt
+基于素材的视频脚本生成提示词（Asset Script Generation Prompt）
 
-For generating video scripts based on user-provided assets.
+用于根据用户提供的素材（图片、视频）生成视频脚本。
+提示词指示 LLM 将素材分配到各个场景，生成旁白，
+并以 JSON 格式输出结构化场景脚本。
 """
 
 
@@ -58,20 +60,35 @@ def build_asset_script_prompt(
     title: str = ""
 ) -> str:
     """
-    Build asset-based script generation prompt
-    
+    构建基于素材的视频脚本生成提示词。
+
+    根据用户意图、目标时长、可用素材列表和可选标题，格式化
+    ASSET_SCRIPT_GENERATION_PROMPT 模板。
+
     Args:
-        intent: Video intent/purpose
-        duration: Target duration in seconds
-        assets_text: Formatted text of available assets with descriptions
-        title: Optional video title
-    
+        intent: 视频意图/目的描述
+        duration: 目标视频时长（秒）
+        assets_text: 格式化后的可用素材文本（含描述）
+        title: 可选视频标题，提供时为提示词添加标题约束
+
     Returns:
-        Formatted prompt
+        格式化后的完整提示词字符串
+
+    Raises:
+        KeyError: 如果模板变量名与 .format() 参数不匹配
+        AttributeError: 如果参数类型与 format() 期望不符
+
+    Requires:
+        - intent 为非空字符串
+        - duration 为正整数
+        - assets_text 为非空字符串
+
+    Side Effects:
+        无（纯函数，仅做字符串格式化）
     """
     title_section = f"- Video Title: {title}\n" if title else ""
     title_instruction = f"6. Narration content should be consistent with the video title: {title}\n" if title else ""
-    
+
     return ASSET_SCRIPT_GENERATION_PROMPT.format(
         duration=duration,
         title_section=title_section,

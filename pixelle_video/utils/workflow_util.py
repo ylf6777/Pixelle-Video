@@ -33,25 +33,34 @@ def resolve_workflow_path(
     source: WorkflowSource = 'runninghub'
 ) -> str:
     """
-    Resolve workflow path using standardized naming convention
-    
-    Convention: workflows/{source}/{service_name}.json
-    
+    根据服务名和数据源解析工作流 JSON 文件路径。
+
+    约定格式: workflows/{source}/{service_name}.json
+
     Args:
-        service_name: Service identifier (e.g., "analyse_image", "image", "video", "tts")
-        source: Workflow source - 'runninghub' (default) or 'selfhost'
-    
+        service_name: 服务标识符（如 "analyse_image", "image", "video", "tts"）
+        source: 工作流来源，'runninghub'（默认）或 'selfhost'
+
     Returns:
-        Workflow path in format: "{source}/{service_name}.json"
-        
+        相对路径字符串，格式为 "{source}/{service_name}.json"
+
+    Raises:
+        无（纯字符串拼接函数）
+
+    Requires:
+        无（纯函数）
+
+    Side Effects:
+        无
+
     Examples:
         >>> resolve_workflow_path("analyse_image", "runninghub")
         'runninghub/analyse_image.json'
-        
+
         >>> resolve_workflow_path("analyse_image", "selfhost")
         'selfhost/analyse_image.json'
-        
-        >>> resolve_workflow_path("image")  # defaults to runninghub
+
+        >>> resolve_workflow_path("image")  # 默认 runninghub
         'runninghub/image.json'
     """
     return f"{source}/{service_name}.json"
@@ -59,9 +68,18 @@ def resolve_workflow_path(
 
 def get_default_source() -> WorkflowSource:
     """
-    Get default workflow source
-    
+    获取默认工作流来源。
+
     Returns:
-        'runninghub' - Cloud-first approach, better for beginners
+        'runninghub' - 云优先策略，适合新手使用
+
+    Raises:
+        无
+
+    Requires:
+        无（纯函数）
+
+    Side Effects:
+        无
     """
     return 'runninghub'

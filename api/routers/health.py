@@ -11,7 +11,9 @@
 # limitations under the License.
 
 """
-Health check and system info endpoints
+健康检查端点
+
+提供服务存活检测和版本查询接口。
 """
 
 from fastapi import APIRouter
@@ -21,14 +23,27 @@ router = APIRouter(tags=["Health"])
 
 
 class HealthResponse(BaseModel):
-    """Health check response"""
+    """
+    健康检查响应模型
+
+    Attributes:
+        status (str): 服务状态。正常时为 "healthy"
+        version (str): API 版本号，格式 "major.minor.patch"
+        service (str): 服务名称标识
+    """
     status: str = "healthy"
     version: str = "0.1.0"
     service: str = "Pixelle-Video API"
 
 
 class CapabilitiesResponse(BaseModel):
-    """Capabilities response"""
+    """
+    能力查询响应模型
+
+    Attributes:
+        success (bool): 请求是否成功
+        capabilities (dict): 系统可用能力的键值对描述
+    """
     success: bool = True
     capabilities: dict
 
@@ -36,9 +51,18 @@ class CapabilitiesResponse(BaseModel):
 @router.get("/health", response_model=HealthResponse)
 async def health_check():
     """
-    Health check endpoint
-    
-    Returns service status and version information.
+    健康检查端点
+
+    用于负载均衡器、容器编排系统和监控工具检测服务是否存活。
+
+    Returns:
+        HealthResponse: 包含服务状态和版本信息的响应。
+
+    Raises:
+        无 — 此端点不产生异常，始终返回健康状态。
+
+    Side Effects:
+        - 无（纯查询端点）
     """
     return HealthResponse()
 
@@ -46,9 +70,12 @@ async def health_check():
 @router.get("/version", response_model=HealthResponse)
 async def get_version():
     """
-    Get API version
-    
-    Returns version information.
+    获取 API 版本号
+
+    Returns:
+        HealthResponse: 包含版本信息的响应。当前版本固定为 0.1.0。
+
+    Side Effects:
+        - 无（纯查询端点）
     """
     return HealthResponse()
-

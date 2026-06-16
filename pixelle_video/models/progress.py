@@ -11,9 +11,9 @@
 # limitations under the License.
 
 """
-Progress event models for video generation
+进度事件模型
 
-Provides structured progress events for UI layer to consume and translate.
+定义视频生成流水线中上报的结构化进度事件，供 UI 层消费和翻译。
 """
 
 from dataclasses import dataclass
@@ -23,42 +23,59 @@ from typing import Optional
 @dataclass
 class ProgressEvent:
     """
-    Structured progress event for video generation
-    
+    视频生成的结构化进度事件
+
+    由流水线通过 progress_callback 回调函数上报，UI 层接收后
+    翻译为 i18n 文本并更新进度条。
+
     Attributes:
-        event_type: Type of event (e.g., "generating_narrations", "frame_step", "concatenating")
-        progress: Progress value from 0.0 to 1.0
-        frame_current: Current frame number (1-based, optional)
-        frame_total: Total number of frames (optional)
-        step: Current step within frame (1-4, optional)
-        action: Action being performed (e.g., "audio", "image", "compose", "video", optional)
-    
+        event_type (str): 事件类型标识。如 "generating_narrations", "frame_step",
+            "concatenating", "completed"。
+        progress (float): 总体进度值。必须介于 0.0 和 1.0 之间。
+        frame_current (Optional[int]): 当前帧号（从 1 开始）。仅帧处理事件有值。
+        frame_total (Optional[int]): 帧总数。仅帧处理事件有值。
+        step (Optional[int]): 帧内步骤号（1=音频, 2=图片, 3=合成, 4=视频）。
+            仅帧处理事件有值。
+        action (Optional[str]): 帧内动作标识。"audio", "image", "compose", "video"。
+        extra_info (Optional[str]): 额外信息文本。如批量进度描述。
+
+    Requires:
+        - 无外部依赖。
+
+    Raises:
+        ValueError: progress 值不在 [0.0, 1.0] 范围内时，在 __post_init__ 中抛出。
+
     Examples:
-        # Simple progress event
-        ProgressEvent(event_type="generating_narrations", progress=0.05)
-        
-        # Frame step event
-        ProgressEvent(
-            event_type="frame_step",
-            progress=0.23,
-            frame_current=1,
-            frame_total=5,
-            step=1,
-            action="audio"
-        )
+        >>> e = ProgressEvent(event_type="generating_narrations", progress=0.05)
+        >>> e = ProgressEvent(
+        ...     event_type="frame_step", progress=0.23,
+        ...     frame_current=1, frame_total=5, step=1, action="audio"
+        ... )
     """
+
     event_type: str
     progress: float
-    
-    # Optional frame-related fields
+
     frame_current: Optional[int] = None
     frame_total: Optional[int] = None
-    step: Optional[int] = None  # 1-4 for frame processing steps
-    action: Optional[str] = None  # "audio", "image", "compose", "video"
-    extra_info: Optional[str] = None  # Additional information (e.g., batch progress)
-    
-    def __post_init__(self):
-        """Validate progress value"""
-        if not 0.0 <= self.progress <= 1.0:
-            raise ValueError(f"Progress must be between 0.0 and 1.0, got {self.progress}")
+    step: Optional[int] = None
+    action: Optional[str] = None
+    extra_info: Optional[str] = None
 
+    def __post_init__(self):
+        """
+        初始化后校验：确保 progress 值在合法范围内
+
+        Raises:
+            ValueError: progress 不在 [0.0, 1.0] 范围内
+
+        Requires:
+            - 无外部依赖。
+
+        Side Effects:
+            - 无。仅做校验，不修改数据。
+        """
+        if not 0.0 <= self.progress <= 1.0:
+            raise ValueError(
+                f"Progress must be between 0.0 and 1.0, got {self.progress}"
+            )

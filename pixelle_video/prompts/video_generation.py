@@ -11,9 +11,12 @@
 # limitations under the License.
 
 """
-Video prompt generation template
+视频提示词生成模板（Video Prompt Generation Template）
 
-For generating video prompts from narrations.
+从旁白生成英文视频提示词，供 AI 视频生成模型使用。
+每段旁白生成一个对应的视频提示词。
+提示词指示 LLM 创建动态描述，结构为：
+场景 + 角色动作 + 镜头运动 + 情感 + 氛围。
 """
 
 import json
@@ -105,29 +108,42 @@ def build_video_prompt_prompt(
     max_words: int
 ) -> str:
     """
-    Build video prompt generation prompt
-    
+    构建视频提示词生成提示词（Video Prompt Generation Prompt Builder）。
+
+    将旁白列表格式化为 JSON 输入，嵌入到 VIDEO_PROMPT_GENERATION_PROMPT
+    模板中，要求 LLM 为每段旁白生成对应的英文视频提示词（含镜头运动和动态描述）。
+
     Args:
-        narrations: List of narrations
-        min_words: Minimum word count
-        max_words: Maximum word count
-    
+        narrations: 旁白文本列表
+        min_words: 视频提示词最少字数（用于模板占位）
+        max_words: 视频提示词最多字数（用于模板占位）
+
     Returns:
-        Formatted prompt for LLM
-    
+        格式化后的完整 LLM 提示词字符串
+
+    Raises:
+        KeyError: 如果模板变量名与 .format() 参数不匹配
+        TypeError: narrations 不能作为 JSON 序列化
+
+    Requires:
+        - narrations 为包含非空字符串的列表
+        - min_words, max_words 为正整数
+
+    Side Effects:
+        无（纯函数，仅做字符串格式化）
+
     Example:
-        >>> build_video_prompt_prompt(narrations, 50, 100)
+        >>> build_video_prompt_prompt(["一只狗在奔跑", "海浪拍打礁石"], 50, 100)
     """
     narrations_json = json.dumps(
         {"narrations": narrations},
         ensure_ascii=False,
         indent=2
     )
-    
+
     return VIDEO_PROMPT_GENERATION_PROMPT.format(
         narrations_json=narrations_json,
         narrations_count=len(narrations),
         min_words=min_words,
         max_words=max_words
     )
-

@@ -43,10 +43,10 @@ from pixelle_video.utils.os_util import (
 
 def check_ffmpeg() -> None:
     """
-    Check if FFmpeg is installed on the system
-    
+    检查系统是否安装了 FFmpeg，未找到时给出各平台的安装提示
+
     Raises:
-        RuntimeError: If FFmpeg is not found
+        RuntimeError: 系统中未找到 ffmpeg 可执行文件时抛出
     """
     if not shutil.which("ffmpeg"):
         raise RuntimeError(
@@ -59,48 +59,31 @@ def check_ffmpeg() -> None:
 
 class VideoService:
     """
-    Video compositor for common video processing tasks
+    视频合成器，封装常用视频处理任务
 
-    Uses ffmpeg-python for high-performance video processing.
-    All operations preserve video quality when possible (stream copy).
+    基于 ffmpeg-python，支持视频拼接、音视频合并、背景音乐添加、图片转视频、
+    图片叠加等操作。在可能的情况下使用 stream copy 以保留原始质量。
 
-    Examples:
-        >>> compositor = VideoCompositor()
-        >>>
-        >>> # Concatenate videos
-        >>> compositor.concat_videos(
-        ...     ["intro.mp4", "main.mp4", "outro.mp4"],
-        ...     "final.mp4"
-        ... )
-        >>>
-        >>> # Add voiceover
-        >>> compositor.merge_audio_video(
-        ...     "visual.mp4",
-        ...     "voiceover.mp3",
-        ...     "final.mp4"
-        ... )
-        >>>
-        >>> # Add background music
-        >>> compositor.add_bgm(
-        ...     "video.mp4",
-        ...     "music.mp3",
-        ...     "final.mp4",
-        ...     bgm_volume=0.3
-        ... )
-        >>>
-        >>> # Create video from image + audio
-        >>> compositor.create_video_from_image(
-        ...     "frame.png",
-        ...     "narration.mp3",
-        ...     "segment.mp4"
-        ... )
+    Requires:
+        系统需安装 FFmpeg（首次使用时延迟检查）
     """
 
     def __init__(self):
+        """
+        初始化视频服务，FFmpeg 可用性检查延迟到首次使用时执行
+
+        Side Effects:
+            设置 self._ffmpeg_checked = False
+        """
         self._ffmpeg_checked = False
 
     def _ensure_ffmpeg(self):
-        """Lazily check FFmpeg availability on first use, not at import time"""
+        """
+        延迟检查 FFmpeg 可用性，只在首次使用时执行一次
+
+        Side Effects:
+            调用 check_ffmpeg() 并将 self._ffmpeg_checked 设为 True
+        """
         if not self._ffmpeg_checked:
             check_ffmpeg()
             self._ffmpeg_checked = True
@@ -115,16 +98,22 @@ class VideoService:
         bgm_mode: Literal["once", "loop"] = "loop"
     ) -> str:
         """
-        Concatenate multiple videos into one
+        将多个视频拼接为一个，可选添加背景音乐
 
         Args:
-            videos: List of video file paths to concatenate
-            output: Output video file path
-            method: Concatenation method
-                - "demuxer": Fast, no re-encoding (requires identical formats)
-                - "filter": Slower but handles different formats
-            bgm_path: Background music file path (optional)
-                - None: No BGM
+            videos: 要拼接的视频文件路径列表
+            output: 输出视频文件路径
+            method: 拼接方式 —— "demuxer"（快速无重编码，要求格式一致）或 "filter"（较慢但兼容不同格式）
+            bgm_path: 背景音乐文件路径（可选，None 时不添加 BGM）
+            bgm_volume: BGM 音量（0.0 到 1.0+，默认 0.2）
+            bgm_mode: BGM 播放模式 —— "once"（单次）或 "loop"（循环，默认）
+
+        Returns:
+            输出视频文件路径
+
+        Raises:
+            ValueError: videos 列表为空时抛出
+            RuntimeError: FFmpeg 执行失败时抛出
         """
         self._ensure_ffmpeg()
 
@@ -168,10 +157,22 @@ class VideoService:
     
     def _concat_demuxer(self, videos: List[str], output: str) -> str:
         """
-        Concatenate using concat demuxer (fast, no re-encoding)
-        
-        FFmpeg equivalent:
-            ffmpeg -f concat -safe 0 -i filelist.txt -c copy output.mp4
+        使用 concat demuxer 方式拼接视频（快速，无重编码，要求格式一致）
+
+        等价 FFmpeg 命令：ffmpeg -f concat -safe 0 -i filelist.txt -c copy output.mp4
+
+        Args:
+            videos: 视频文件路径列表
+            output: 输出文件路径
+
+        Returns:
+            输出视频文件路径
+
+        Raises:
+            RuntimeError: FFmpeg 执行失败时抛出
+
+        Side Effects:
+            创建并随后删除临时文件列表
         """
         # Create temporary file list
         with tempfile.NamedTemporaryFile(
@@ -207,11 +208,19 @@ class VideoService:
     
     def _concat_filter(self, videos: List[str], output: str) -> str:
         """
-        Concatenate using concat filter (slower but handles different formats)
-        
-        FFmpeg equivalent:
-            ffmpeg -i v1.mp4 -i v2.mp4 -filter_complex "[0:v][0:a][1:v][1:a]concat=n=2:v=1:a=1[v][a]"
-                   -map "[v]" -map "[a]" output.mp4
+        使用 concat filter 方式拼接视频（较慢但兼容不同格式和编码）
+
+        等价 FFmpeg 命令：使用 filter_complex concat 滤镜拼接音视频流
+
+        Args:
+            videos: 视频文件路径列表
+            output: 输出文件路径
+
+        Returns:
+            输出视频文件路径
+
+        Raises:
+            RuntimeError: FFmpeg 执行失败时抛出
         """
         try:
             # Build filter_complex string manually
@@ -253,7 +262,15 @@ class VideoService:
             raise RuntimeError(f"Failed to concatenate videos: {e}")
     
     def _get_video_duration(self, video: str) -> float:
-        """Get video duration in seconds"""
+        """
+        获取视频时长
+
+        Args:
+            video: 视频文件路径
+
+        Returns:
+            视频时长（秒），获取失败时返回 0.0
+        """
         try:
             probe = ffmpeg.probe(video)
             duration = float(probe['format']['duration'])
@@ -263,7 +280,15 @@ class VideoService:
             return 0.0
     
     def _get_audio_duration(self, audio: str) -> float:
-        """Get audio duration in seconds"""
+        """
+        获取音频时长，获取失败时基于文件大小估算
+
+        Args:
+            audio: 音频文件路径
+
+        Returns:
+            音频时长（秒），获取失败时基于文件大小粗略估算（至少 1.0 秒）
+        """
         try:
             probe = ffmpeg.probe(audio)
             duration = float(probe['format']['duration'])
@@ -279,13 +304,13 @@ class VideoService:
     
     def has_audio_stream(self, video: str) -> bool:
         """
-        Check if video has audio stream
-        
+        检测视频文件是否包含音频流
+
         Args:
-            video: Video file path
-        
+            video: 视频文件路径
+
         Returns:
-            True if video has audio stream, False otherwise
+            True 表示存在音频流，False 表示无音频流或检测失败
         """
         try:
             probe = ffmpeg.probe(video)
@@ -310,47 +335,34 @@ class VideoService:
         duration_tolerance: float = 0.3,  # Tolerance for video being longer than audio (seconds)
     ) -> str:
         """
-        Merge audio with video with intelligent duration adjustment
-        
-        Automatically handles duration mismatches between video and audio:
-        - If video < audio: Pad video to match audio (avoid black screen)
-        - If video > audio (within tolerance): Keep as-is (acceptable)
-        - If video > audio (exceeds tolerance): Trim video to match audio
-        
-        Automatically handles videos with or without audio streams.
-        - If video has no audio: adds the audio track
-        - If video has audio and replace_audio=True: replaces with new audio
-        - If video has audio and replace_audio=False: mixes both audio tracks
-        
+        将音频合并到视频中，智能处理时长不匹配问题
+
+        自动处理三种时长场景：
+        - 视频短于音频：按 pad_strategy 补足视频时长
+        - 视频略长于音频（在 tolerance 内）：保留原样
+        - 视频明显长于音频（超出 tolerance）：裁剪视频以匹配音频
+
+        自动检测视频是否有音频流：
+        - 无音频流：直接添加音频轨
+        - 有音频流且 replace_audio=True：替换原有音频
+        - 有音频流且 replace_audio=False：混合两路音频
+
         Args:
-            video: Video file path
-            audio: Audio file path
-            output: Output video file path
-            replace_audio: If True, replace video's audio; if False, mix with original
-            audio_volume: Volume of the new audio (0.0 to 1.0+)
-            video_volume: Volume of original video audio (0.0 to 1.0+)
-                         Only used when replace_audio=False
-            pad_strategy: Strategy to pad video if audio is longer
-                         - "freeze": Freeze last frame (default)
-                         - "black": Fill with black screen
-            auto_adjust_duration: Enable intelligent duration adjustment (default: True)
-            duration_tolerance: Tolerance for video being longer than audio in seconds (default: 0.3)
-                              Videos within this tolerance won't be trimmed
-        
+            video: 视频文件路径
+            audio: 音频文件路径
+            output: 输出视频文件路径
+            replace_audio: True 替换原有音频，False 混合原音频和新音频
+            audio_volume: 新音频音量（0.0 到 1.0+，默认 1.0）
+            video_volume: 原视频音频音量（0.0 到 1.0+，默认 0.0，仅 replace_audio=False 时使用）
+            pad_strategy: 视频补足策略 —— "freeze"（冻结最后一帧，默认）或 "black"（黑屏填充）
+            auto_adjust_duration: 是否启用智能时长调整（默认 True）
+            duration_tolerance: 视频长于音频的容忍度（秒，默认 0.3）
+
         Returns:
-            Path to the output video file
-        
+            输出视频文件路径
+
         Raises:
-            RuntimeError: If FFmpeg execution fails
-        
-        Note:
-            - Uses the longer duration between video and audio
-            - When audio is longer, video is padded using pad_strategy
-            - When video is longer, audio is looped or extended
-            - Automatically detects if video has audio
-            - When video is silent, audio is added regardless of replace_audio
-            - When replace_audio=True and video has audio, original audio is removed
-            - When replace_audio=False and video has audio, original and new audio are mixed
+            RuntimeError: FFmpeg 执行失败时抛出
         """
         self._ensure_ffmpeg()
 
@@ -519,28 +531,19 @@ class VideoService:
         scale_mode: str = "contain"
     ) -> str:
         """
-        Overlay a transparent image on top of video
-        
+        在视频上叠加透明图片（如渲染的 HTML 字幕层）
+
         Args:
-            video: Base video file path
-            overlay_image: Transparent overlay image path (e.g., rendered HTML with transparent background)
-            output: Output video file path
-            scale_mode: How to scale the base video to fit the overlay size
-                - "contain": Scale video to fit within overlay dimensions (letterbox/pillarbox)
-                - "cover": Scale video to cover overlay dimensions (may crop)
-                - "stretch": Stretch video to exact overlay dimensions
-        
+            video: 底视频文件路径
+            overlay_image: 透明叠加图片路径（如透明背景的 HTML 渲染结果）
+            output: 输出视频文件路径
+            scale_mode: 底视频缩放模式 —— "contain"（适配含黑边）、"cover"（裁剪填充）或 "stretch"（拉伸）
+
         Returns:
-            Path to the output video file
-        
+            输出视频文件路径
+
         Raises:
-            RuntimeError: If FFmpeg execution fails
-        
-        Note:
-            - Overlay image should have transparent background
-            - Video is scaled to match overlay dimensions based on scale_mode
-            - Final video size matches overlay image size
-            - Video codec is re-encoded to support overlay
+            RuntimeError: FFmpeg 执行失败时抛出
         """
         self._ensure_ffmpeg()
         logger.info(f"Overlaying image on video (scale_mode={scale_mode})")
@@ -606,31 +609,19 @@ class VideoService:
         fps: int = 30,
     ) -> str:
         """
-        Create video from static image and audio
-        
+        将静态图片与音频合成为视频，图片作为静态帧持续音频的整个时长
+
         Args:
-            image: Image file path
-            audio: Audio file path
-            output: Output video path
-            fps: Frames per second
-        
+            image: 图片文件路径
+            audio: 音频文件路径
+            output: 输出视频路径
+            fps: 帧率（默认 30）
+
         Returns:
-            Path to the output video
-        
+            输出视频文件路径
+
         Raises:
-            RuntimeError: If FFmpeg execution fails
-        
-        Note:
-            - Image is displayed as static frame for the duration of audio
-            - Video duration matches audio duration
-            - Useful for creating video segments from storyboard frames
-        
-        Example:
-            >>> compositor.create_video_from_image(
-            ...     "frame.png",
-            ...     "narration.mp3",
-            ...     "segment.mp4"
-            ... )
+            RuntimeError: FFmpeg 执行失败时抛出
         """
         self._ensure_ffmpeg()
         logger.info("Creating video from image and audio")
@@ -685,27 +676,22 @@ class VideoService:
         fade_out: float = 0.0,
     ) -> str:
         """
-        Add background music to video
-        
+        为视频添加背景音乐，与原音频混合
+
         Args:
-            video: Video file path
-            bgm: Background music file path
-            output: Output video file path
-            bgm_volume: BGM volume relative to original (0.0 to 1.0+)
-            loop: If True, loop BGM to match video duration
-            fade_in: BGM fade-in duration in seconds
-            fade_out: BGM fade-out duration in seconds (not yet implemented)
-        
+            video: 视频文件路径
+            bgm: 背景音乐文件路径
+            output: 输出视频文件路径
+            bgm_volume: BGM 音量（0.0 到 1.0+，默认 0.3）
+            loop: 是否循环 BGM 以匹配视频时长（默认 True）
+            fade_in: BGM 淡入时长（秒，默认 0.0）
+            fade_out: BGM 淡出时长（秒，默认 0.0，暂未实现）
+
         Returns:
-            Path to the output video file
-        
+            输出视频文件路径
+
         Raises:
-            RuntimeError: If FFmpeg execution fails
-        
-        Note:
-            - BGM is mixed with original video audio
-            - If loop=True, BGM repeats until video ends
-            - Fade effects are applied to BGM only
+            RuntimeError: FFmpeg 执行失败时抛出
         """
         self._ensure_ffmpeg()
         logger.info(f"Adding BGM to video (volume={bgm_volume}, loop={loop})")
@@ -770,20 +756,20 @@ class VideoService:
         mode: Literal["once", "loop"] = "loop"
     ) -> str:
         """
-        Internal helper to add BGM to video with path resolution
-        
+        内部辅助方法：解析 BGM 路径后调用 add_bgm 添加背景音乐
+
         Args:
-            video: Video file path
-            bgm_path: BGM path (can be preset name or custom path)
-            output: Output file path
-            volume: BGM volume (0.0-1.0)
-            mode: "once" or "loop"
-        
+            video: 视频文件路径
+            bgm_path: BGM 路径（可以是预设名称或自定义路径）
+            output: 输出文件路径
+            volume: BGM 音量（0.0 到 1.0，默认 0.2）
+            mode: 播放模式 —— "once"（单次）或 "loop"（循环，默认）
+
         Returns:
-            Path to output video
-        
+            输出视频文件路径
+
         Raises:
-            FileNotFoundError: If BGM file not found
+            FileNotFoundError: BGM 文件未找到时抛出
         """
         # Resolve BGM path (raises FileNotFoundError if not found)
         resolved_bgm = self._resolve_bgm_path(bgm_path)
@@ -801,18 +787,14 @@ class VideoService:
     
     def _get_unique_temp_path(self, prefix: str, original_filename: str) -> str:
         """
-        Generate unique temporary file path to avoid concurrent conflicts
-        
+        生成唯一临时文件路径以避免并发冲突
+
         Args:
-            prefix: Prefix for the temp file (e.g., "trimmed", "padded", "black_pad")
-            original_filename: Original filename to preserve in temp path
-        
+            prefix: 临时文件前缀（如 "trimmed", "padded", "black_pad"）
+            original_filename: 原始文件名，保留在临时路径中
+
         Returns:
-            Unique temporary file path with format: temp/{prefix}_{uuid}_{original_filename}
-        
-        Example:
-            >>> self._get_unique_temp_path("trimmed", "video.mp4")
-            >>> # Returns: "temp/trimmed_a3f2d8c1_video.mp4"
+            唯一临时文件路径，格式为 temp/{prefix}_{uuid8位}_{original_filename}
         """
         from pixelle_video.utils.os_util import get_temp_path
         
@@ -821,23 +803,18 @@ class VideoService:
     
     def _resolve_bgm_path(self, bgm_path: str) -> str:
         """
-        Resolve BGM path (filename or custom path) with custom override support
-        
-        Search priority:
-            1. Direct path (absolute or relative)
-            2. data/bgm/{filename} (custom)
-            3. bgm/{filename} (default)
-        
+        解析 BGM 路径，支持文件名和自定义路径，优先使用用户自定义覆盖
+
+        搜索优先级：直接路径 > data/bgm/（自定义） > bgm/（默认）
+
         Args:
-            bgm_path: Can be:
-                - Filename with extension (e.g., "default.mp3", "happy.mp3"): auto-resolved from bgm/ or data/bgm/
-                - Custom file path (absolute or relative)
-        
+            bgm_path: BGM 文件名字符串或自定义绝对/相对路径
+
         Returns:
-            Resolved absolute path
-        
+            解析后的绝对路径
+
         Raises:
-            FileNotFoundError: If BGM file not found
+            FileNotFoundError: BGM 文件未找到时抛出，提示已尝试的路径和可用文件列表
         """
         # Try direct path first (absolute or relative)
         if os.path.exists(bgm_path):
@@ -867,10 +844,10 @@ class VideoService:
     
     def _list_available_bgm(self) -> list[str]:
         """
-        List available BGM files (merged from bgm/ and data/bgm/)
-        
+        列出所有可用的 BGM 文件（合并 bgm/ 和 data/bgm/ 目录）
+
         Returns:
-            List of filenames (with extensions), sorted
+            音频文件名列表（含扩展名），按字母排序，仅包含 mp3/wav/ogg/flac/m4a/aac 格式
         """
         try:
             # Use resource API to get merged list
@@ -885,17 +862,20 @@ class VideoService:
     
     def _trim_video_to_duration(self, video: str, target_duration: float) -> str:
         """
-        Trim video to specified duration
-        
+        将视频裁切到指定时长，优先使用 stream copy 以加速
+
         Args:
-            video: Input video file path
-            target_duration: Target duration in seconds
-        
+            video: 输入视频文件路径
+            target_duration: 目标时长（秒）
+
         Returns:
-            Path to trimmed video (temp file)
-        
+            裁切后的视频文件路径（临时文件）
+
         Raises:
-            RuntimeError: If FFmpeg execution fails
+            RuntimeError: FFmpeg 执行失败时抛出
+
+        Side Effects:
+            在 temp/ 目录创建临时文件
         """
         output = self._get_unique_temp_path("trimmed", os.path.basename(video))
         
@@ -919,18 +899,21 @@ class VideoService:
     
     def _pad_video_to_duration(self, video: str, target_duration: float, pad_strategy: str = "freeze") -> str:
         """
-        Pad video to specified duration by extending the last frame or adding black frames
-        
+        将视频补足到指定时长，通过冻结最后一帧或添加黑帧实现
+
         Args:
-            video: Input video file path
-            target_duration: Target duration in seconds
-            pad_strategy: Padding strategy - "freeze" (freeze last frame) or "black" (black screen)
-        
+            video: 输入视频文件路径
+            target_duration: 目标时长（秒）
+            pad_strategy: 补足策略 —— "freeze"（冻结最后一帧）或 "black"（黑屏填充）
+
         Returns:
-            Path to padded video (temp file)
-        
+            补足后的视频文件路径（临时文件），若无需补足则返回原路径
+
         Raises:
-            RuntimeError: If FFmpeg execution fails
+            RuntimeError: FFmpeg 执行失败时抛出
+
+        Side Effects:
+            在 temp/ 目录创建临时文件
         """
         output = self._get_unique_temp_path("padded", os.path.basename(video))
         

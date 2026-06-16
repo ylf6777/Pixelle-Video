@@ -13,5 +13,21 @@
 """
 Pixelle-Video Utilities
 
-Utility functions and helpers.
+Utility functions and helpers for content generation, LLM interaction,
+file/path management, TTS, templates, and workflow resolution.
+
+Submodules:
+    - content_generators: Async content generation via LLM (titles, narrations, prompts)
+    - llm_util: LLM connection testing and model discovery
+    - os_util: File system, path, task directory, and resource management
+    - prompt_helper: Prompt construction helpers
+    - template_util: Template size parsing, listing, filtering, and path resolution
+    - tts_util: Edge TTS (text-to-speech) with retry and rate limiting
+    - workflow_util: Workflow JSON path resolution (runninghub/selfhost)
+
+Requires:
+    - Python 3.10+
+
+Side Effects:
+    - None (pure module, no imports trigger side effects)
 """

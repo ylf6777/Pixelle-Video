@@ -11,11 +11,19 @@
 # limitations under the License.
 
 """
-Task management for async operations
+异步任务管理子包
+
+提供视频生成等异步操作的任务生命周期管理。
+所有 API 模块通过 ``from api.tasks import task_manager`` 获取全局单例。
+
+导出:
+    - Task           — 任务 Pydantic 数据模型
+    - TaskStatus     — 任务状态枚举（PENDING/RUNNING/COMPLETED/FAILED/CANCELLED）
+    - TaskType       — 任务类型枚举（VIDEO_GENERATION）
+    - task_manager   — 全局 TaskManager 单例
 """
 
 from api.tasks.models import Task, TaskStatus, TaskType
 from api.tasks.manager import task_manager
 
 __all__ = ["Task", "TaskStatus", "TaskType", "task_manager"]
-

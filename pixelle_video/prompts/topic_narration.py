@@ -11,9 +11,11 @@
 # limitations under the License.
 
 """
-Topic narration generation prompt
+话题旁白生成提示词（Topic Narration Prompt）
 
-For generating narrations from a topic/theme.
+用于从话题/主题生成旁白。
+提示词指示 LLM 将话题展开为引人入胜、自然流畅的分镜旁白，
+适合 TTS 驱动的视频。
 """
 
 
@@ -138,16 +140,30 @@ def build_topic_narration_prompt(
     max_words: int
 ) -> str:
     """
-    Build topic narration prompt
-    
+    构建话题旁白生成提示词。
+
+    将用户提供的话题/主题填入 TOPIC_NARRATION_PROMPT 模板中，
+    要求 LLM 展开话题生成自然、有深度的短视频旁白。
+
     Args:
-        topic: Topic or theme
-        n_storyboard: Number of storyboard frames
-        min_words: Minimum word count
-        max_words: Maximum word count
-    
+        topic: 用户输入的话题或主题文本
+        n_storyboard: 需要生成的分镜数量
+        min_words: 每段旁白的最少字数
+        max_words: 每段旁白的最多字数
+
     Returns:
-        Formatted prompt
+        格式化后的完整提示词字符串
+
+    Raises:
+        KeyError: 如果模板变量名与 .format() 参数不匹配
+
+    Requires:
+        - topic 为非空字符串
+        - n_storyboard 为正整数
+        - min_words 和 max_words 为正整数且 min_words <= max_words
+
+    Side Effects:
+        无（纯函数，仅做字符串格式化）
     """
     return TOPIC_NARRATION_PROMPT.format(
         topic=topic,
@@ -155,4 +171,3 @@ def build_topic_narration_prompt(
         min_words=min_words,
         max_words=max_words
     )
-

@@ -29,22 +29,13 @@ from pixelle_video.tts_voices import speed_to_rate
 
 class TTSService(ComfyBaseService):
     """
-    TTS (Text-to-Speech) service - Workflow-based
-    
-    Uses ComfyKit to execute TTS workflows.
-    
-    Usage:
-        # Use default workflow
-        audio_path = await pixelle_video.tts(text="Hello, world!")
-        
-        # Use specific workflow
-        audio_path = await pixelle_video.tts(
-            text="你好，世界！",
-            workflow="tts_edge.json"
-        )
-        
-        # List available workflows
-        workflows = pixelle_video.tts.list_workflows()
+    TTS（文本转语音）服务 —— 支持本地 Edge TTS 和 ComfyUI 工作流两种推理模式
+
+    根据 inference_mode 配置或参数自动路由到本地或 ComfyUI 后端，统一返回音频文件路径。
+
+    Requires:
+        - 父类 ComfyBaseService 已初始化
+        - 本地模式需 edge_tts 可用，ComfyUI 模式需 config 中配置 default_workflow
     """
     
     WORKFLOW_PREFIX = "tts_"
@@ -53,11 +44,14 @@ class TTSService(ComfyBaseService):
     
     def __init__(self, config: dict, core=None):
         """
-        Initialize TTS service
-        
+        初始化 TTS 服务，以 "tts" 作为配置键继承 ComfyBaseService
+
         Args:
-            config: Full application config dict
-            core: PixelleVideoCore instance (for accessing shared ComfyKit)
+            config: 完整应用配置字典
+            core: PixelleVideoCore 实例（用于访问共享的 ComfyKit）
+
+        Side Effects:
+            调用父类 __init__ 设置 self.config, self.global_config 等属性
         """
         super().__init__(config, service_name="tts", core=core)
     
@@ -79,37 +73,24 @@ class TTSService(ComfyBaseService):
         **params
     ) -> str:
         """
-        Generate speech using local Edge TTS or ComfyUI workflow
-        
+        将文本转换为语音，根据 inference_mode 路由到本地 Edge TTS 或 ComfyUI 工作流
+
         Args:
-            text: Text to convert to speech
-            workflow: Workflow filename (for ComfyUI mode, default: from config)
-            comfyui_url: ComfyUI URL (optional, overrides config)
-            runninghub_api_key: RunningHub API key (optional, overrides config)
-            voice: Voice ID (for local mode: Edge TTS voice ID; for ComfyUI: workflow-specific)
-            speed: Speech speed multiplier (1.0 = normal, >1.0 = faster, <1.0 = slower)
-            inference_mode: Override inference mode ("local" or "comfyui", default: from config)
-            output_path: Custom output path (auto-generated if None)
-            **params: Additional workflow parameters
-        
+            text: 要转换为语音的文本
+            workflow: ComfyUI 模式的工作流 key（默认使用配置中的 default_workflow）
+            comfyui_url: ComfyUI URL（可选，覆盖配置）
+            runninghub_api_key: RunningHub API 密钥（可选，覆盖配置）
+            voice: 语音 ID（本地模式为 Edge TTS voice ID，ComfyUI 模式由工作流定义）
+            speed: 语速倍率（1.0 为正常，>1.0 加速，<1.0 减速）
+            inference_mode: 推理模式覆写 —— "local" 或 "comfyui"（默认从配置读取）
+            output_path: 自定义输出路径（None 时自动生成）
+            **params: 额外的工作流参数（仅 ComfyUI 模式）
+
         Returns:
-            Generated audio file path
-        
-        Examples:
-            # Local inference (Edge TTS)
-            audio_path = await pixelle_video.tts(
-                text="Hello, world!",
-                inference_mode="local",
-                voice="zh-CN-YunjianNeural",
-                speed=1.2
-            )
-            
-            # ComfyUI inference
-            audio_path = await pixelle_video.tts(
-                text="你好，世界！",
-                inference_mode="comfyui",
-                workflow="runninghub/tts_edge.json"
-            )
+            生成的音频文件路径
+
+        Raises:
+            Exception: TTS 生成失败时抛出
         """
         # Determine inference mode (param > config)
         mode = inference_mode or self.config.get("inference_mode", "local")
@@ -146,16 +127,22 @@ class TTSService(ComfyBaseService):
         output_path: Optional[str] = None,
     ) -> str:
         """
-        Generate speech using local Edge TTS
-        
+        使用本地 Edge TTS 引擎生成语音
+
         Args:
-            text: Text to convert to speech
-            voice: Edge TTS voice ID (default: from config)
-            speed: Speech speed multiplier (default: from config)
-            output_path: Custom output path (auto-generated if None)
-        
+            text: 要转换的文本
+            voice: Edge TTS 语音 ID（默认从配置 local.voice 读取）
+            speed: 语速倍率（默认从配置 local.speed 读取）
+            output_path: 自定义输出路径（None 时自动生成 output/<uuid>.mp3）
+
         Returns:
-            Generated audio file path
+            生成的音频文件路径
+
+        Raises:
+            Exception: Edge TTS 调用失败时抛出
+
+        Side Effects:
+            在 output/ 目录创建 MP3 文件
         """
         # Get config defaults
         local_config = self.config.get("local", {})
@@ -206,20 +193,23 @@ class TTSService(ComfyBaseService):
         **params
     ) -> str:
         """
-        Generate speech using ComfyUI workflow
-        
+        使用 ComfyUI 工作流生成语音，支持自部署和 RunningHub 两种后端
+
         Args:
-            workflow_info: Workflow info dict from _resolve_workflow()
-            text: Text to convert to speech
+            workflow_info: 从 _resolve_workflow() 返回的工作流信息字典
+            text: 要转换的文本
             comfyui_url: ComfyUI URL
-            runninghub_api_key: RunningHub API key
-            voice: Voice ID (workflow-specific)
-            speed: Speech speed multiplier (workflow-specific)
-            output_path: Custom output path (downloads if URL returned)
-            **params: Additional workflow parameters
-        
+            runninghub_api_key: RunningHub API 密钥
+            voice: 语音 ID（由具体工作流定义）
+            speed: 语速倍率（由具体工作流定义）
+            output_path: 自定义输出路径（若音频为 URL 且提供了 output_path 则下载到本地）
+            **params: 额外的工作流参数
+
         Returns:
-            Generated audio file path (local if output_path provided, otherwise URL)
+            生成的音频文件路径（提供了 output_path 则为本地路径，否则可能是 URL）
+
+        Raises:
+            Exception: 工作流执行失败或未生成音频文件时抛出
         """
         logger.info(f"🎙️  Using workflow: {workflow_info['key']}")
         

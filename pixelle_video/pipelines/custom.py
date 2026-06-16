@@ -11,12 +11,19 @@
 # limitations under the License.
 
 """
-Custom Video Generation Pipeline
+自定义视频生成流水线 — 参考模板
 
-Template pipeline for creating your own custom video generation workflows.
-This serves as a reference implementation showing how to extend BasePipeline.
+展示如何扩展 BasePipeline 创建自定义流水线。
+实际使用时复制此文件并修改即可。
 
-For real projects, copy this file and modify it according to your needs.
+Requires:
+    - pixelle_video.pipelines.base.BasePipeline: 抽象基类。
+    - self.core: PixelleVideoCore 实例（访问所有核心服务）。
+
+Side Effects:
+    - 创建 output/{task_id}/ 目录及中间文件。
+    - 调用 LLM/TTS/ComfyUI 或直连 API。
+    - 写入最终视频文件。
 """
 
 from datetime import datetime
@@ -38,43 +45,29 @@ from pixelle_video.models.storyboard import (
 
 class CustomPipeline(BasePipeline):
     """
-    Custom video generation pipeline template
-    
-    This is a template showing how to create your own pipeline with custom logic.
-    You can customize:
-    - Content processing logic
-    - Narration generation strategy
-    - Image prompt generation (conditional based on template)
-    - Frame composition
-    - Video assembly
-    
-    KEY OPTIMIZATION: Conditional Image Generation
-    -----------------------------------------------
-    This pipeline supports automatic detection of template image requirements.
-    If your template doesn't use {{image}}, the entire image generation pipeline
-    can be skipped, providing:
-      ⚡ Faster generation (no image API calls)
-      💰 Lower cost (no LLM calls for image prompts)
-      🚀 Reduced dependencies (no ComfyUI needed for text-only videos)
-    
-    Usage patterns:
-      1. Text-only videos: Use templates/1080x1920/simple.html
-      2. AI-generated images: Use templates with {{image}} placeholder
-      3. Custom logic: Modify template or override the detection logic in your subclass
-    
-    Example usage:
-        # 1. Create your own pipeline by copying this file
-        # 2. Modify the __call__ method with your custom logic
-        # 3. Register it in service.py or dynamically
-        
-        from pixelle_video.pipelines.custom import CustomPipeline
+    自定义视频生成流水线模板
+
+    展示如何扩展 BasePipeline 创建自己的流水线。支持条件式图片生成:
+    自动检测模板是否需要 {{image}} 占位符，不需要时跳过整个图片
+    生成流水线（更快、更省、无需 ComfyUI）。
+
+    可定制项: 内容处理逻辑、旁白策略、图片提示词生成、帧合成、视频组装。
+
+    Requires:
+        - pixelle_video.pipelines.base.BasePipeline: 抽象基类。
+        - self.core: PixelleVideoCore 实例。
+        - pixelle_video.utils.content_generators: 文案生成工具。
+
+    Side Effects:
+        - 创建 output/{task_id}/ 目录及中间文件。
+        - 调用 LLM API / TTS / ComfyUI 或直连 API。
+        - 写入最终视频文件。
+
+    Example:
         pixelle_video.pipelines["my_custom"] = CustomPipeline(pixelle_video)
-        
-        # 4. Use it
         result = await pixelle_video.generate_video(
-            text=your_content,
-            pipeline="my_custom",
-            # Your custom parameters here
+            text=content, pipeline="my_custom",
+            frame_template="1080x1920/default.html"
         )
     """
     
@@ -106,23 +99,39 @@ class CustomPipeline(BasePipeline):
         progress_callback: Optional[Callable[[ProgressEvent], None]] = None,
     ) -> VideoGenerationResult:
         """
-        Custom video generation workflow
-        
-        Customize this method to implement your own logic.
-        
+        执行自定义视频生成流水线
+
         Args:
-            text: Input text (customize meaning as needed)
-            custom_param_example: Your custom parameter
-            (other standard parameters...)
-        
+            text (str): 输入文本（含义由自定义逻辑定义）。
+            custom_param_example (str): 自定义参数示例。
+            tts_inference_mode (Optional[str]): TTS 模式 "local" 或 "comfyui"。
+            frame_template (Optional[str]): 帧模板路径。
+            progress_callback (Optional[Callable]): 进度回调函数。
+            output_path (Optional[str]): 输出路径。
+            bgm_path (Optional[str]): 背景音乐路径。
+            bgm_volume (float): BGM 音量（0-1）。
+
         Returns:
-            VideoGenerationResult
-        
-        Image Generation Logic:
-            - image_*.html templates → automatically generates images
-            - video_*.html templates → automatically generates videos
-            - static_*.html templates → skips media generation (faster, cheaper)
-            - To customize: Override the template type detection logic in your subclass
+            VideoGenerationResult: 包含视频路径、分镜表和元数据。
+
+        Requires:
+            - self.llm: LLMService 实例（文案/标题生成）。
+            - self.tts: TTSService 实例（语音合成）。
+            - self.media: MediaService 实例（图片/视频生成）。
+            - pixelle_video.utils.content_generators: 工具函数。
+            - pixelle_video.services.frame_html.HTMLFrameGenerator: 帧渲染。
+            - pixelle_video.services.video.VideoService: 视频拼接。
+
+        Side Effects:
+            - 创建 output/{task_id}/ 目录。
+            - 调用 LLM/TTS/ComfyUI API。
+            - 写入中间文件和最终视频。
+            - 持久化元数据和分镜数据。
+
+        图片生成逻辑:
+            - image_*.html 模板: 自动生成图片
+            - video_*.html 模板: 自动生成视频
+            - static_*.html 模板: 跳过媒体生成（更快更省）
         """
         logger.info("Starting CustomPipeline")
         logger.info(f"Input text length: {len(text)} chars")
