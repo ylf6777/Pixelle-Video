@@ -1,30 +1,10 @@
-{# 工作流浏览器主页 #}
+{# 工作流浏览器主页 — 分类在导航栏 #}
 {% extends "base.html" %}
 {% from "components/workflow_card.html" import render_workflow_card %}
 {% block content %}
 
-<section class="pv-hero">
-  <div class="pv-hero__bg" aria-hidden="true"></div>
-  <div class="pv-hero__content">
-    <h1 class="pv-hero__title">AI 工作流浏览器</h1>
-    <p class="pv-hero__subtitle">{{ workflows|length }} 个工作流 · {{ categories|length }} 个分类</p>
-  </div>
-</section>
-
-{# Alpine.js 筛选控制器 — x-data 在容器上，共享给 filter + cards #}
-<div class="pv-browser" x-data="workflowBrowser()" x-init="init()">
-
-  {# 筛选栏标签 #}
-  <nav class="pv-filter" role="tablist" aria-label="分类筛选">
-    <button class="pv-filter__tab" :class="{ 'pv-filter__tab--active': activeCategory === '' }"
-      @click="selectCategory('')" type="button">全部</button>
-    <template x-for="cat in categories" :key="cat">
-      <button class="pv-filter__tab" :class="{ 'pv-filter__tab--active': activeCategory === cat }"
-        @click="selectCategory(cat)" type="button"
-        x-text="cat === 'image' ? '文生图' : cat === 'video' ? '图生视频' : cat === 'digital_human' ? '数字人' : cat === 'audio' ? '音频' : cat === 'action' ? '动作迁移' : cat === 'analysis' ? '分析' : cat">
-      </button>
-    </template>
-  </nav>
+<div class="pv-browser" x-data="workflowBrowser()" x-init="init()"
+     @category-change.window="activeCategory=$event.detail;filter()">
 
   {# 搜索框 #}
   <div class="pv-search-bar">
@@ -32,7 +12,7 @@
       placeholder="搜索工作流..." class="pv-input pv-input--search">
   </div>
 
-  {# 卡片网格 — 服务端渲染 + Alpine.js show/hide 过滤 #}
+  {# 卡片网格 — 服务端渲染 + Alpine.js show/hide #}
   <section class="pv-masonry" id="workflow-grid">
     {% for wf in workflows %}
     <div class="pv-card"
@@ -45,13 +25,8 @@
     <div class="pv-empty" x-show="!hasVisible()" x-cloak>
       <div class="pv-empty__icon">🔍</div>
       <h2 class="pv-empty__title">没有找到匹配的工作流</h2>
-      <p class="pv-empty__text">尝试调整筛选条件或搜索关键词</p>
+      <p class="pv-empty__text">试试其他分类或搜索关键词</p>
     </div>
   </section>
 </div>
-
-{# 注入分类数据供 Alpine.js 使用 #}
-<script>
-  window.__CATEGORIES__ = {{ categories | tojson | safe }};
-</script>
 {% endblock %}

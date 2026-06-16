@@ -702,6 +702,57 @@
   background: var(--pv-accent-glow);
 }
 
+/* ---- 导航栏内部容器 ---- */
+.pv-navbar__inner {
+  display: flex;
+  align-items: center;
+  gap: var(--pv-space-5);
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ---- 分类标签（嵌入导航栏） ---- */
+.pv-nav-cats {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.pv-nav-cats::-webkit-scrollbar { display: none; }
+
+.pv-nav-cats__tab {
+  padding: 5px 14px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--pv-text-muted);
+  font-size: var(--pv-text-sm);
+  font-family: var(--pv-font-body);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--pv-duration-fast) var(--pv-ease);
+  font-weight: 500;
+}
+.pv-nav-cats__tab:hover {
+  color: var(--pv-text);
+  background: var(--pv-glass-hover-bg);
+}
+.pv-nav-cats__tab--active {
+  color: var(--pv-accent);
+  background: rgba(0,212,255,0.1);
+}
+
+/* ---- 导航栏右侧操作区 ---- */
+.pv-navbar__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--pv-space-2);
+  flex-shrink: 0;
+}
+
 /* ---- 响应式导航 ---- */
 @media (max-width: 767px) {
   .pv-navbar {
