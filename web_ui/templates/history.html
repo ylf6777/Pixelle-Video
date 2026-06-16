@@ -1,47 +1,38 @@
 {# 历史记录页 #}
 {% extends "base.html" %}
 {% block content %}
-<div class="pv-history">
-  <header class="pv-history__header">
-    <h1 class="pv-history__title">生成历史</h1>
-    <p class="pv-history__subtitle">{{ total }} 条记录</p>
-  </header>
+<div class="pv-browser">
+  <div class="pv-showcase-header">
+    <h2 class="pv-showcase__title">生成历史</h2>
+    <p class="pv-showcase__subtitle">{{ total }} 条记录</p>
+  </div>
 
   {% if tasks %}
-  <section class="pv-history__list">
+  <section class="pv-history-list">
     {% for task in tasks %}
-    <div class="pv-card pv-card--row">
-      <div class="pv-card__body">
-        <h3 class="pv-card__title">{{ task.title or '未命名' }}</h3>
-        <div class="pv-card__meta">
+    <div class="pv-history-item pv-card">
+      <div class="pv-history-item__main">
+        <h3 class="pv-history-item__title">{{ task.title or '未命名任务' }}</h3>
+        <div class="pv-history-item__meta">
           <span class="pv-badge pv-badge--{{ task.status }}">
-            {% if task.status == 'completed' %}✅ 已完成
-            {% elif task.status == 'failed' %}❌ 失败
-            {% elif task.status == 'running' %}⏳ 运行中
+            {% if task.status == 'completed' %}已完成
+            {% elif task.status == 'failed' %}失败
+            {% elif task.status == 'running' %}运行中
             {% else %}{{ task.status }}
             {% endif %}
           </span>
-          {% if task.duration %}
-          <span class="pv-card__meta-text">{{ '%.1f' | format(task.duration) }}秒</span>
-          {% endif %}
-          {% if task.created_at %}
-          <span class="pv-card__meta-text">{{ task.created_at[:10] }}</span>
-          {% endif %}
-          {% if task.n_frames %}
-          <span class="pv-card__meta-text">{{ task.n_frames }}帧</span>
-          {% endif %}
+          <span class="pv-history-item__date">{{ task.created_at[:10] if task.created_at else '' }}</span>
+          <span class="pv-history-item__duration">{{ '%.0f秒'|format(task.duration|float) if task.duration else '' }}</span>
+          <span class="pv-history-item__frames">{{ task.n_frames }}帧</span>
         </div>
       </div>
-      {% if task.video_path %}
-      <div class="pv-card__action">
-        <a href="/output/{{ task.task_id }}/final.mp4" class="pv-btn pv-btn--sm" target="_blank">查看视频</a>
+      <div class="pv-history-item__actions">
+        <button class="pv-btn-save"
+          hx-delete="/api/history/{{ task.task_id }}"
+          hx-target="closest .pv-history-item"
+          hx-swap="outerHTML"
+          hx-confirm="确认删除此记录？">删除</button>
       </div>
-      {% endif %}
-      <button class="pv-btn pv-btn--sm pv-btn--danger"
-              hx-delete="/api/history/{{ task.task_id }}"
-              hx-target="closest .pv-card--row"
-              hx-swap="outerHTML"
-              hx-confirm="确认删除此记录？">删除</button>
     </div>
     {% endfor %}
   </section>
@@ -50,11 +41,11 @@
   {% if total_pages > 1 %}
   <nav class="pv-pagination" aria-label="分页">
     {% if page > 1 %}
-    <a href="/history?page={{ page-1 }}" class="pv-btn pv-btn--sm">上一页</a>
+    <a href="/history?page={{ page-1 }}" class="pv-btn-save">上一页</a>
     {% endif %}
     <span class="pv-pagination__info">{{ page }} / {{ total_pages }}</span>
     {% if page < total_pages %}
-    <a href="/history?page={{ page+1 }}" class="pv-btn pv-btn--sm">下一页</a>
+    <a href="/history?page={{ page+1 }}" class="pv-btn-save">下一页</a>
     {% endif %}
   </nav>
   {% endif %}
@@ -63,7 +54,8 @@
   <div class="pv-empty">
     <div class="pv-empty__icon">📭</div>
     <h2 class="pv-empty__title">暂无生成历史</h2>
-    <p class="pv-empty__text">运行第一个工作流后，记录将显示在这里</p>
+    <p class="pv-empty__text">运行工作流后，记录将显示在这里</p>
+    <a href="/quick" class="pv-btn-save" style="display:inline-block;margin-top:16px;">去创作</a>
   </div>
   {% endif %}
 </div>

@@ -1057,6 +1057,111 @@
 .pv-btn-save:active { transform: translateY(0); }
 .pv-btn-save:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
 
+/* ---- 历史列表 ---- */
+.pv-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pv-space-3);
+}
+
+.pv-history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--pv-space-5);
+  gap: var(--pv-space-4);
+}
+
+.pv-history-item__main {
+  min-width: 0;
+  flex: 1;
+}
+
+.pv-history-item__title {
+  font-family: var(--pv-font-display);
+  font-size: var(--pv-text-lg);
+  font-weight: 600;
+  color: var(--pv-text);
+  margin-bottom: var(--pv-space-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pv-history-item__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--pv-space-3);
+}
+
+.pv-history-item__date,
+.pv-history-item__duration,
+.pv-history-item__frames {
+  font-size: var(--pv-text-xs);
+  color: var(--pv-text-faint);
+  font-family: var(--pv-font-mono);
+}
+
+.pv-history-item__actions {
+  flex-shrink: 0;
+}
+
+.pv-history-item__actions .pv-btn-save {
+  padding: 6px 16px;
+  font-size: var(--pv-text-sm);
+}
+
+.pv-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--pv-space-4);
+  margin-top: var(--pv-space-8);
+  padding-top: var(--pv-space-6);
+  border-top: 1px solid var(--pv-glass-border);
+}
+
+.pv-pagination__info {
+  font-size: var(--pv-text-sm);
+  color: var(--pv-text-muted);
+  font-family: var(--pv-font-mono);
+}
+
+.pv-pagination .pv-btn-save {
+  padding: 8px 20px;
+  font-size: var(--pv-text-sm);
+}
+
+@media (max-width: 767px) {
+  .pv-history-item {
+    flex-direction: column;
+    align-items: stretch;
+    padding: var(--pv-space-4);
+    gap: var(--pv-space-3);
+  }
+  .pv-history-item__title {
+    font-size: var(--pv-text-base);
+  }
+  .pv-history-item__actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+}
+
+.pv-badge--completed {
+  background: rgba(0,200,83,0.15);
+  color: var(--pv-success);
+}
+.pv-badge--failed {
+  background: rgba(255,23,68,0.15);
+  color: var(--pv-error);
+}
+.pv-badge--running {
+  background: rgba(0,212,255,0.15);
+  color: var(--pv-accent);
+}
+
 .pv-text-success { color: var(--pv-success); }
 .pv-text-error { color: var(--pv-error); }
 
