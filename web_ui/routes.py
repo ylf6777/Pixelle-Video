@@ -16,12 +16,16 @@ Web UI 路由模块 — FastAPI Router，挂载到现有 api/app.py。
 """
 
 from pathlib import Path
+import asyncio
+import json
 
 from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
+from loguru import logger
 
 from web_ui.workflow_registry import workflow_registry
+from web_ui.workflow_executor import EXECUTORS
 
 # ── Router 与模板引擎初始化 ─────────────────────────────────────
 
@@ -221,3 +225,131 @@ async def api_categories():
     """
     cats = sorted(set(w.category for w in workflow_registry.get_all()))
     return [{"id": c, "name": c} for c in cats]
+
+
+# ── 工作流执行 API ─────────────────────────────────────────────
+
+@router.post("/api/workflows/{workflow_id}/execute")
+async def api_execute_workflow(workflow_id: str, request: Request):
+    """
+    执行工作流，返回 task_id
+
+    Args:
+        workflow_id: 工作流 ID
+        request: FastAPI Request（读取 JSON body）
+
+    Returns:
+        {"task_id": str, "status": "submitted"}
+
+    Raises:
+        HTTPException(404): 工作流不存在
+        HTTPException(400): 参数校验失败
+    """
+    wf = workflow_registry.get_by_id(workflow_id)
+    if not wf:
+        raise HTTPException(404, f"工作流不存在: {workflow_id}")
+
+    executor = EXECUTORS.get(wf.source)
+    if not executor:
+        raise HTTPException(400, f"不支持的来源: {wf.source}")
+
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+
+    params = await executor.validate(wf, body)
+    task_id = await executor.execute(wf, params)
+
+    return JSONResponse({"task_id": task_id, "status": "submitted"})
+
+
+@router.get("/api/workflows/{workflow_id}/progress/{task_id}")
+async def api_progress_sse(workflow_id: str, task_id: str):
+    """
+    SSE 端点 — 推送工作流执行进度
+
+    Args:
+        workflow_id: 工作流 ID
+        task_id: execute 返回的任务 ID
+
+    Returns:
+        StreamingResponse: text/event-stream 流
+    """
+    wf = workflow_registry.get_by_id(workflow_id)
+    executor = EXECUTORS.get(wf.source) if wf else None
+    if not executor:
+        raise HTTPException(404, "工作流或执行器不存在")
+
+    async def event_stream():
+        for _ in range(60):  # 最多轮询 60 次
+            try:
+                progress = await executor.get_progress(task_id)
+                yield f"data: {json.dumps(progress, ensure_ascii=False)}\n\n"
+                if progress.get("status") in ("completed", "failed"):
+                    break
+            except Exception as e:
+                yield f"data: {json.dumps({'error': str(e)})}\n\n"
+                break
+            await asyncio.sleep(2)
+        yield "data: {\"status\": \"disconnected\"}\n\n"
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
+# ── 历史记录 API ──────────────────────────────────────────────
+
+@router.get("/api/history")
+async def api_history(page: int = 1, page_size: int = 20, status: str = ""):
+    """
+    获取历史记录列表
+
+    Args:
+        page: 页码（从 1 开始）
+        page_size: 每页条数
+        status: 状态筛选（可选）
+
+    Returns:
+        {"tasks": list, "total": int, "page": int, "page_size": int, "total_pages": int}
+    """
+    try:
+        from pixelle_video.service import pixelle_video
+
+        await pixelle_video.initialize()
+        persistence = pixelle_video.persistence
+        result = await persistence.list_tasks_paginated(
+            page=page, page_size=page_size,
+            status=status or None,
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Failed to load history: {e}")
+        return {"tasks": [], "total": 0, "page": page, "page_size": page_size, "total_pages": 0}
+
+
+@router.delete("/api/history/{task_id}")
+async def api_delete_history(task_id: str):
+    """
+    删除历史记录
+
+    Args:
+        task_id: 任务 ID
+
+    Returns:
+        {"deleted": bool}
+    """
+    try:
+        from pixelle_video.service import pixelle_video
+        await pixelle_video.initialize()
+        ok = await pixelle_video.persistence.delete_task(task_id)
+        return {"deleted": ok}
+    except Exception as e:
+        raise HTTPException(500, str(e))
