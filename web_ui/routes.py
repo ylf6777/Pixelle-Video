@@ -477,12 +477,31 @@ async def styles_page(request: Request):
 
 @router.get("/templates/{size}/{name}")
 async def serve_template(size: str, name: str):
-    """直接提供模板 HTML 文件"""
-    from fastapi.responses import FileResponse
+    """提供模板 HTML，替换占位符为示例文本"""
+    import re
     tpl_path = Path(f"templates/{size}/{name}")
-    if tpl_path.exists():
-        return FileResponse(str(tpl_path), media_type="text/html")
-    raise HTTPException(404, "模板不存在")
+    if not tpl_path.exists():
+        raise HTTPException(404, "模板不存在")
+    html = tpl_path.read_text(encoding="utf-8")
+    # 替换所有 {{...}} 占位符为示例文本
+    replacements = {
+        "{{title}}": "示例标题",
+        "{{subtitle}}": "示例副标题",
+        "{{narration}}": "示例旁白文本，用于展示模板排版效果。",
+        "{{image}}": "",
+        "{{author}}": "作者名",
+        "{{brand}}": "品牌名",
+        "{{describe}}": "示例描述文字",
+        "{{text}}": "示例文本",
+        "{{subtitle=作者}}": "作者名",
+    }
+    for k, v in replacements.items():
+        html = html.replace(k, v)
+    # 替换带默认值的占位符 {{key=default}} → default
+    html = re.sub(r"\{\{\w+=(.+?)\}\}", r"\1", html)
+    # 替换剩余未匹配的占位符为空
+    html = re.sub(r"\{\{.*?\}\}", "", html)
+    return HTMLResponse(html)
 
 
 @router.get("/storyboard", response_class=HTMLResponse)

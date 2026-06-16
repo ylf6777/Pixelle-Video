@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>风格模板测试页</title>
+<link rel="stylesheet" href="/static/css/tokens.css">
+<link rel="stylesheet" href="/static/css/reset.css">
+<link rel="stylesheet" href="/static/css/layout.css">
+<link rel="stylesheet" href="/static/css/components.css">
+<link rel="stylesheet" href="/static/css/animations.css">
+<link rel="stylesheet" href="/static/css/theme-light.css">
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<style>
+.pv-test-header { padding: 20px; text-align:center; }
+.pv-test-header h1 { font-family:var(--pv-font-display); font-size:var(--pv-text-2xl); color:var(--pv-accent); }
+.pv-test-header p { color:var(--pv-text-muted); margin-top:8px; }
+.pv-test-status { padding: 12px; margin: 16px auto; max-width: 600px; border-radius: 8px; text-align:center; font-size:14px; }
+.pv-test-status--ok { background: rgba(0,200,83,0.1); color: var(--pv-success); border: 1px solid rgba(0,200,83,0.3); }
+.pv-test-status--err { background: rgba(255,23,68,0.1); color: var(--pv-error); border: 1px solid rgba(255,23,68,0.3); }
+</style>
+</head>
+<body class="pv-canvas">
+<a href="#main" class="pv-skip-link">跳转到主内容</a>
+<main id="main" class="pv-browser">
+  <div class="pv-test-header">
+    <h1>风格模板 — 独立测试页</h1>
+    <p id="status">加载中...</p>
+  </div>
+
+  <div id="templateGrid" class="pv-masonry"></div>
+  <div id="errorLog" style="max-width:800px;margin:20px auto;font-size:13px"></div>
+</main>
+
+<script>
+const TEMPLATES = [
+  "image_default","image_blur_card","image_book","image_cartoon","image_elegant",
+  "image_excerpt","image_fashion_vintage","image_full","image_healing","image_health_preservation",
+  "image_life_insights","image_life_insights_light","image_long_text","image_modern","image_neon",
+  "image_psychology_card","image_purple","image_satirical_cartoon","image_simple_black",
+  "image_simple_line_drawing","video_default","video_healing","static_default","static_excerpt","asset_default"
+];
+
+const NAMES = {
+  "image_default":"默认图片","image_blur_card":"毛玻璃卡片","image_book":"书本翻页",
+  "image_cartoon":"卡通动漫","image_elegant":"优雅简约","image_excerpt":"文摘卡片",
+  "image_fashion_vintage":"时尚复古","image_full":"全屏大图","image_healing":"治愈温暖",
+  "image_health_preservation":"养生保健","image_life_insights":"生活感悟",
+  "image_life_insights_light":"生活感悟浅色","image_long_text":"长文本","image_modern":"现代简约",
+  "image_neon":"霓虹灯","image_psychology_card":"心理卡片","image_purple":"紫色梦幻",
+  "image_satirical_cartoon":"讽刺漫画","image_simple_black":"极简黑",
+  "image_simple_line_drawing":"简笔画","video_default":"默认视频","video_healing":"治愈视频",
+  "static_default":"静态默认","static_excerpt":"静态文摘","asset_default":"素材默认"
+};
+
+const COLORS = ['#667eea,#764ba2','#f093fb,#f5576c','#4facfe,#00f2fe','#43e97b,#38f9d7','#fa709a,#fee140'];
+
+let okCount = 0, errCount = 0;
+
+async function init() {
+  const grid = document.getElementById('templateGrid');
+  const status = document.getElementById('status');
+  const errLog = document.getElementById('errorLog');
+
+  for (let i = 0; i < TEMPLATES.length; i++) {
+    const key = TEMPLATES[i];
+    const name = NAMES[key] || key;
+    const url = '/templates/1080x1920/' + key + '.html';
+    const color = COLORS[i % COLORS.length];
+
+    // 验证模板可访问
+    try {
+      const r = await fetch(url);
+      const card = document.createElement('div');
+      card.className = 'pv-card pv-style-card';
+      if (r.ok) {
+        okCount++;
+        card.innerHTML = `
+          <div class="pv-card__thumb">
+            <div class="pv-card__thumb-grad" style="background:linear-gradient(135deg,${color})"></div>
+            <span class="pv-badge" style="position:absolute;top:8px;right:8px">${key.startsWith('video')?'视频':key.startsWith('static')?'静态':'图片'}</span>
+          </div>
+          <div class="pv-card__body">
+            <h3 class="pv-card__title">${name}</h3>
+            <p class="pv-card__desc">${key}.html</p>
+            <a href="${url}" target="_blank" class="pv-btn-save" style="padding:4px 12px;font-size:12px;text-decoration:none;display:inline-block;margin-top:8px">查看模板</a>
+            <span style="color:var(--pv-success);margin-left:8px;font-size:12px">✅ ${r.status}</span>
+          </div>`;
+      } else {
+        errCount++;
+        card.innerHTML = `
+          <div class="pv-card__thumb"><div class="pv-card__thumb-grad" style="background:#333"></div></div>
+          <div class="pv-card__body">
+            <h3 class="pv-card__title">${name}</h3>
+            <p class="pv-card__desc" style="color:var(--pv-error)">❌ HTTP ${r.status}</p>
+          </div>`;
+        errLog.innerHTML += `<div class="pv-test-status pv-test-status--err">${key}: HTTP ${r.status}</div>`;
+      }
+    } catch(e) {
+      errCount++;
+      card.innerHTML = `<div class="pv-card__body"><h3>${name}</h3><p style="color:var(--pv-error)">❌ ${e.message}</p></div>`;
+      errLog.innerHTML += `<div class="pv-test-status pv-test-status--err">${key}: ${e.message}</div>`;
+    }
+    grid.appendChild(card);
+  }
+
+  const cls = errCount === 0 ? 'pv-test-status--ok' : 'pv-test-status--err';
+  status.innerHTML = `<span class="pv-test-status ${cls}">✅ ${okCount} 成功 ❌ ${errCount} 失败 共 ${TEMPLATES.length} 个模板</span>`;
+  if (errCount === 0) {
+    errLog.innerHTML += '<div class="pv-test-status pv-test-status--ok">所有模板可正常访问</div>';
+  }
+}
+
+init();
+</script>
+</body>
+</html>
