@@ -1,10 +1,10 @@
 {# 风格模板展示页 #}
 {% extends "base.html" %}
 {% block content %}
-<div class="pv-browser" x-data="stylePicker()">
+<div class="pv-browser">
   <div class="pv-showcase-header">
     <h2 class="pv-showcase__title">画面模板</h2>
-    <p class="pv-showcase__subtitle">{{ styles|length }} 种模板 · 点击卡片查看效果</p>
+    <p class="pv-showcase__subtitle">{{ styles|length }} 种模板 · 点击卡片选中</p>
   </div>
 
   <div class="pv-showcase__cats" style="margin-bottom:20px">
@@ -15,28 +15,24 @@
     <button class="pv-showcase__cat" :class="{'pv-showcase__cat--active':filterCat==='其他'}" @click="filterCat='其他'">其他</button>
   </div>
 
-  <div class="pv-masonry">
+  <div class="pv-masonry" id="styleGrid">
     {% for s in styles %}
-    <div class="pv-card pv-style-card"
+    <div class="pv-card pv-style-card" data-key="{{ s.key }}"
          :class="{ 'pv-style-card--selected': selected === '{{ s.key }}' }"
          @click="select('{{ s.key }}')"
          x-show="!filterCat || filterCat==='{{ s.category }}'">
       <div class="pv-card__thumb">
         {% if s.preview %}
-        <img src="{{ s.preview }}" alt="{{ s.name }}" loading="lazy" style="width:100%;height:100%;object-fit:cover">
+        <img src="{{ s.preview }}" alt="{{ s.name }}" loading="lazy">
         {% else %}
-        <div class="pv-card__thumb-grad" style="background:linear-gradient(135deg,{{ loop.cycle('#667eea,#764ba2','#f093fb,#f5576c','#4facfe,#00f2fe') }})"></div>
+        <div class="pv-card__thumb-grad"></div>
         {% endif %}
         <span class="pv-badge pv-badge--{{ s.category }}" style="position:absolute;top:8px;right:8px;z-index:1">{{ s.category }}</span>
       </div>
       <div class="pv-card__body">
         <h3 class="pv-card__title">{{ s.name }}</h3>
         <p class="pv-card__desc">{{ s.desc }}</p>
-        <div style="display:flex;gap:8px;margin-top:8px">
-          <a href="/templates/1080x1920/{{ s.key }}.html" target="_blank"
-            class="pv-btn-save" style="padding:4px 12px;font-size:12px;text-decoration:none">查看模板</a>
-          <span class="pv-style-card__check" x-show="selected === '{{ s.key }}'">✓</span>
-        </div>
+        <span class="pv-style-card__check" x-show="selected === '{{ s.key }}'">✓ 已选中</span>
       </div>
     </div>
     {% endfor %}
