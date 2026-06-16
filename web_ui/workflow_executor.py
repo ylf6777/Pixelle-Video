@@ -59,12 +59,29 @@ class SelfhostExecutor(WorkflowExecutor):
             raise ValueError("prompt 参数不能为空")
         return {"prompt": prompt, **{k: v for k, v in params.items() if k != "prompt"}}
 
+    def _save_ref_image(self, ref_image_b64: str) -> str | None:
+        """将 base64 参考图保存为临时文件，返回路径"""
+        if not ref_image_b64 or "base64," not in ref_image_b64:
+            return None
+        import base64, tempfile
+        header, data = ref_image_b64.split("base64,", 1)
+        ext = ".png" if "png" in header else ".jpg"
+        tmp = tempfile.NamedTemporaryFile(suffix=ext, delete=False)
+        tmp.write(base64.b64decode(data))
+        tmp.close()
+        return tmp.name
+
     async def execute(self, meta, params: dict) -> str:
         task_id = str(uuid.uuid4())[:12]
         tasks = self._new_tasks()
         tasks[task_id] = {"status": "running", "step": "connecting", "progress": 0}
 
-        # 在后台线程执行（避免阻塞事件循环）
+        # 预保存参考图（在主线程完成文件 I/O）
+        ref_path = self._save_ref_image(params.pop("ref_image", ""))
+        if ref_path:
+            params["image"] = ref_path
+            logger.info(f"Reference image saved: {ref_path}")
+
         def _run():
             try:
                 from pixelle_video.service import pixelle_video

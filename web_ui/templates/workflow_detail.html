@@ -1,7 +1,8 @@
 {# 工作流详情/运行页 #}
 {% extends "base.html" %}
 {% block content %}
-<div class="pv-detail" x-data="executor('{{ workflow.id }}', '{{ workflow.source }}')">
+<div class="pv-detail"
+     x-data="executor('{{ workflow.id }}', '{{ workflow.source }}', '{{ workflow.category }}', '{{ workflow.media_type }}')">
   <nav class="pv-breadcrumb" aria-label="面包屑">
     <a href="/" class="pv-breadcrumb__link">工作流</a>
     <span class="pv-breadcrumb__sep">/</span>
@@ -22,23 +23,15 @@
             {% endif %}
           </span></dd>
         </div>
-        <div class="pv-detail__meta-item">
-          <dt>分类</dt><dd>{{ workflow.category }}</dd>
-        </div>
-        <div class="pv-detail__meta-item">
-          <dt>媒体类型</dt><dd>{{ workflow.media_type }}</dd>
-        </div>
+        <div class="pv-detail__meta-item"><dt>分类</dt><dd>{{ workflow.category }}</dd></div>
+        <div class="pv-detail__meta-item"><dt>媒体类型</dt><dd>{{ workflow.media_type }}</dd></div>
       </dl>
       {% if workflow.description %}
-      <div class="pv-detail__desc">
-        <h2>描述</h2><p>{{ workflow.description }}</p>
-      </div>
+      <div class="pv-detail__desc"><h2>描述</h2><p>{{ workflow.description }}</p></div>
       {% endif %}
       {% if workflow.tags %}
       <div class="pv-detail__tags">
-        {% for tag in workflow.tags %}
-        <span class="pv-card__tag">{{ tag }}</span>
-        {% endfor %}
+        {% for tag in workflow.tags %}<span class="pv-card__tag">{{ tag }}</span>{% endfor %}
       </div>
       {% endif %}
     </aside>
@@ -46,32 +39,67 @@
     <section class="pv-detail__run">
       <h2>运行工作流</h2>
       <form class="pv-run-form" @submit.prevent="execute">
+        {# Prompt（所有类型都需要）#}
         <label class="pv-run-form__label">
           提示词 (Prompt)
-          <textarea name="prompt" x-model="prompt" rows="3"
-            placeholder="输入生成提示词..." required
+          <textarea x-model="prompt" rows="3" required
+            placeholder="输入生成提示词..."
             class="pv-input pv-input--textarea"></textarea>
         </label>
+
+        {# 参考图片上传（video/digital_human/action 类型需要）#}
+        <label class="pv-run-form__label" x-show="needsImage">
+          参考图片（可选）
+          <input type="file" accept="image/*" @change="onImageSelected"
+            class="pv-input pv-input--file">
+          <img x-show="imagePreview" :src="imagePreview" class="pv-preview-img" alt="预览">
+        </label>
+
+        {# 参考视频上传（action 类型需要）#}
+        <label class="pv-run-form__label" x-show="needsVideo">
+          参考视频（可选）
+          <input type="file" accept="video/*" @change="onVideoSelected"
+            class="pv-input pv-input--file">
+          <video x-show="videoPreview" :src="videoPreview" class="pv-preview-img" controls></video>
+        </label>
+
         <button type="submit" class="pv-btn pv-btn--gradient pv-btn--block"
           :disabled="status === 'running'">
-          <span x-show="status !== 'running'">🚀 执行</span>
-          <span x-show="status === 'running'" class="pv-btn--loading">执行中...</span>
+          <span x-show="status !== 'running'">🚀 执行工作流</span>
+          <span x-show="status === 'running'">⏳ 执行中...</span>
         </button>
       </form>
 
-      {# 进度条 #}
-      <div class="pv-progress" x-show="status === 'running'" x-cloak>
-        <div class="pv-progress__bar" :style="`width:${progress}%`"></div>
-        <span class="pv-progress__text" x-text="step"></span>
+      {# 进度条 + 步骤标签 #}
+      <div class="pv-progress-wrap" x-show="status === 'running'" x-cloak>
+        <div class="pv-progress">
+          <div class="pv-progress__bar" :style="`width:${progress}%`"></div>
+        </div>
+        <div class="pv-progress__steps">
+          <span :class="stepClass('submitting')">提交</span>
+          <span :class="stepClass('generating')">生成</span>
+          <span :class="stepClass('completed')">完成</span>
+        </div>
+        <p class="pv-progress__text" x-text="stepLabel"></p>
       </div>
 
-      {# 结果 #}
+      {# 结果展示 #}
       <div class="pv-run-result" x-show="status === 'completed'" x-cloak>
-        <p class="pv-run-result__success">✅ 执行完成</p>
-        <p x-show="resultUrl">结果: <a :href="resultUrl" x-text="resultUrl"></a></p>
+        <h3>✅ 执行完成</h3>
+        <div x-show="mediaType === 'image' && resultUrl" class="pv-run-result__media">
+          <img :src="resultUrl" alt="生成图片" style="max-width:100%;border-radius:8px;">
+        </div>
+        <div x-show="mediaType === 'video' && resultUrl" class="pv-run-result__media">
+          <video :src="resultUrl" controls style="max-width:100%;border-radius:8px;"></video>
+        </div>
+        <p x-show="!resultUrl">任务已完成，结果可在历史记录中查看</p>
       </div>
+
+      {# 错误展示 #}
       <div class="pv-run-result pv-run-result--error" x-show="status === 'failed'" x-cloak>
-        <p>❌ <span x-text="errorMessage"></span></p>
+        <h3>❌ 执行失败</h3>
+        <p x-text="errorMessage"></p>
+        <button class="pv-btn pv-btn--sm" @click="status='idle';errorMessage=''">重试</button>
       </div>
     </section>
   </div>
@@ -79,49 +107,84 @@
 
 <script>
 document.addEventListener('alpine:init', () => {
-  Alpine.data('executor', (workflowId, source) => ({
+  Alpine.data('executor', (workflowId, source, category, mediaType) => ({
     prompt: '',
-    status: 'idle',
-    progress: 0,
-    step: '',
-    resultUrl: '',
-    errorMessage: '',
+    status: 'idle', progress: 0, step: '', currentStep: '',
+    resultUrl: '', errorMessage: '', mediaType: mediaType,
+    imageBase64: '', imagePreview: '', videoPreview: '',
     eventSource: null,
 
+    get needsImage() {
+      return ['video', 'digital_human', 'action'].includes(this.mediaType) ||
+             ['video', 'digital_human', 'action'].includes(category);
+    },
+    get needsVideo() {
+      return category === 'action';
+    },
+    get stepLabel() {
+      const m = { submitting: '提交任务中...', generating: '正在生成，请耐心等待...',
+                  completed: '生成完成！', connecting: '连接服务器...', error: '出错了' };
+      return m[this.currentStep] || this.step || '处理中...';
+    },
+
+    stepClass(name) {
+      const order = ['submitting', 'generating', 'completed'];
+      const idx = order.indexOf(this.currentStep);
+      const n = order.indexOf(name);
+      return n < idx ? 'pv-progress__step--done' : n === idx ? 'pv-progress__step--active' : '';
+    },
+
+    onImageSelected(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => { this.imageBase64 = reader.result; this.imagePreview = reader.result; };
+      reader.readAsDataURL(file);
+    },
+
+    onVideoSelected(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      this.videoPreview = URL.createObjectURL(file);
+    },
+
     async execute() {
-      this.status = 'running'; this.progress = 0; this.step = '提交中...';
+      this.status = 'running'; this.progress = 0; this.step = '提交中...'; this.currentStep = 'submitting';
       try {
+        const body = { prompt: this.prompt };
+        if (this.imageBase64) body.ref_image = this.imageBase64;
         const r = await fetch(`/api/workflows/${workflowId}/execute`, {
           method: 'POST', headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({prompt: this.prompt})
+          body: JSON.stringify(body)
         });
-        if (!r.ok) { const e = await r.json(); throw new Error(e.detail || '提交失败'); }
+        if (!r.ok) { const e = await r.json(); throw new Error(e.detail || e.message || '提交失败'); }
         const {task_id} = await r.json();
-        this.listenProgress(workflowId, task_id);
+        this.pollProgress(workflowId, task_id);
       } catch(e) {
         this.status = 'failed'; this.errorMessage = e.message;
       }
     },
 
-    listenProgress(wfId, taskId) {
-      this.eventSource = new EventSource(`/api/workflows/${wfId}/progress/${taskId}`);
-      this.eventSource.onmessage = (e) => {
-        const d = JSON.parse(e.data);
-        if (d.error) { this.status = 'failed'; this.errorMessage = d.error; this.eventSource.close(); return; }
-        this.progress = d.progress || this.progress;
-        this.step = d.step || this.step;
-        if (d.status === 'completed') {
-          this.status = 'completed'; this.progress = 100;
-          this.resultUrl = d.result_url || '';
-          this.eventSource.close();
-        } else if (d.status === 'failed') {
-          this.status = 'failed'; this.errorMessage = d.error || '执行失败';
-          this.eventSource.close();
-        } else if (d.status === 'disconnected') {
-          this.eventSource.close();
-        }
+    async pollProgress(wfId, taskId) {
+      const poll = async () => {
+        try {
+          const r = await fetch(`/api/progress/${taskId}?workflow_id=${wfId}`);
+          const d = await r.json();
+          if (d.error) { this.status = 'failed'; this.errorMessage = d.error; return; }
+          this.progress = d.progress || this.progress;
+          this.currentStep = d.step || this.currentStep;
+          if (d.status === 'completed') {
+            this.status = 'completed'; this.progress = 100;
+            this.resultUrl = d.result_url || '';
+            return;
+          }
+          if (d.status === 'failed') {
+            this.status = 'failed'; this.errorMessage = d.error || '执行失败'; return;
+          }
+          if (this.status === 'running') setTimeout(poll, 2000);
+        } catch(e) { setTimeout(poll, 2000); }
       };
-      this.eventSource.onerror = () => { this.eventSource.close(); };
+      poll();
     }
   }));
 });

@@ -301,15 +301,34 @@ async def api_progress_sse(workflow_id: str, task_id: str):
             await asyncio.sleep(2)
         yield "data: {\"status\": \"disconnected\"}\n\n"
 
-    return StreamingResponse(
-        event_stream(),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            "X-Accel-Buffering": "no",
-        },
-    )
+@router.get("/api/progress/{task_id}")
+async def api_progress_poll(workflow_id: str = "", task_id: str = ""):
+    """
+    轮询模式 — 直接返回 JSON 进度
+
+    Args:
+        task_id: execute 返回的任务 ID
+        workflow_id: 工作流 ID（可选，用于查找 executor）
+
+    Returns:
+        JSONResponse: {"progress": int, "step": str, "status": str}
+    """
+    executor = None
+    if workflow_id:
+        wf = workflow_registry.get_by_id(workflow_id)
+        if wf:
+            executor = EXECUTORS.get(wf.source)
+
+    if not executor:
+        # fallback: try all executors
+        for ex in EXECUTORS.values():
+            progress = await ex.get_progress(task_id)
+            if progress.get("step") != "unknown":
+                return JSONResponse(progress)
+        return JSONResponse({"progress": 0, "step": "unknown", "status": "running"})
+
+    progress = await executor.get_progress(task_id)
+    return JSONResponse(progress)
 
 
 # ── 历史记录 API ──────────────────────────────────────────────
