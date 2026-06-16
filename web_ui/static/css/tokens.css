@@ -34,7 +34,7 @@
 
   /* ---- 字体 ---- */
   --pv-font-display: 'Space Grotesk', sans-serif;
-  --pv-font-body: 'DM Sans', sans-serif;
+  --pv-font-body: 'DM Sans', "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", sans-serif;
   --pv-font-mono: 'JetBrains Mono', monospace;
 
   /* ---- 字号 ---- */

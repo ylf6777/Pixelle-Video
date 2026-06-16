@@ -1385,6 +1385,16 @@
   resize: vertical; outline: none; line-height: 1.6;
 }
 .pv-quick__prompt::placeholder { color: var(--pv-text-faint); }
+
+.pv-quick__generate {
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: var(--pv-space-4); margin-top: var(--pv-space-4);
+}
+.pv-quick__btn {
+  font-family: "Microsoft YaHei","PingFang SC","Hiragino Sans GB","Source Han Sans CN","Noto Sans SC",sans-serif;
+  font-size: 16px; padding: 10px 32px;
+}
+
 .pv-quick__actions {
   display: flex; align-items: center; gap: var(--pv-space-4); margin-top: var(--pv-space-4);
 }

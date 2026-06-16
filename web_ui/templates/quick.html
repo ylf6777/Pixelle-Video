@@ -53,18 +53,19 @@
           </label>
         </div>
 
-        <div class="pv-quick__actions">
-          <span class="pv-quick__hint">Ctrl+Enter 快速生成</span>
-          <button class="pv-btn-save" @click="generate()" :disabled="generating || !prompt.trim()">
-            <span x-text="generating ? '生成中...' : '生成'"></span>
-          </button>
-        </div>
-
         {# 参考图预览 #}
         <div class="pv-quick__refs" x-show="ref1Preview || ref2Preview">
           <img x-show="ref1Preview" :src="ref1Preview" class="pv-quick__ref-thumb" alt="参考图1">
           <img x-show="ref2Preview" :src="ref2Preview" class="pv-quick__ref-thumb" alt="参考图2">
         </div>
+      </div>
+
+      {# 生成按钮 — 文本框外部右侧 #}
+      <div class="pv-quick__generate">
+        <span class="pv-quick__hint">Ctrl+Enter</span>
+        <button class="pv-btn-save pv-quick__btn" @click="generate()" :disabled="generating || !prompt.trim()">
+          生成
+        </button>
       </div>
 
       {# 视频上传进度 #}
