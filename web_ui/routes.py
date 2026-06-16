@@ -123,32 +123,16 @@ async def workflow_detail(request: Request, workflow_id: str):
     )
 
 
-@router.get("/history", response_class=HTMLResponse)
-async def history(request: Request, page: int = 1):
+@router.get("/history")
+async def history_redirect():
     """
-    生成历史页面 — 从持久化服务加载真实数据
+    301 永久重定向：/history → /notes
 
-    Args:
-        request: FastAPI Request 对象。
-        page (int): 页码，从 1 开始。默认 1。
-
-    Returns:
-        HTMLResponse: 渲染后的 history.html，含分页数据。
-
-    Template Context:
-        request, tasks, page, page_size, total, total_pages
+    原历史页面已迁移到 /notes。
+    此重定向保留至少 30 天以确保兼容性。
     """
-    data = {"tasks": [], "total": 0, "page": page, "page_size": 20, "total_pages": 0}
-    try:
-        from pixelle_video.service import pixelle_video
-        await pixelle_video.initialize()
-        data = await pixelle_video.persistence.list_tasks_paginated(
-            page=page, page_size=20, sort_by="created_at", sort_order="desc"
-        )
-    except Exception as e:
-        logger.warning(f"无法加载历史: {e}")
-
-    return templates.TemplateResponse("history.html", {"request": request, **data})
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/notes", status_code=301)
 
 
 # ── API 路由（JSON） ────────────────────────────────────────────
@@ -564,6 +548,20 @@ async def api_uploaded_works(page: int = 1, page_size: int = 12):
     """获取上传成功的作品列表（分页）"""
     from web_ui.works_storage import get_uploaded
     return get_uploaded(page=page, page_size=page_size)
+
+
+@router.get("/api/notes")
+async def api_notes_new(page: int = 1, page_size: int = 20, status: str = ""):
+    """获取历史记录（新路径 /api/notes）"""
+    try:
+        from pixelle_video.service import pixelle_video
+        await pixelle_video.initialize()
+        return await pixelle_video.persistence.list_tasks_paginated(
+            page=page, page_size=page_size, status=status or None,
+        )
+    except Exception as e:
+        logger.error(f"Failed to load history: {e}")
+        return {"tasks": [], "total": 0, "page": page, "page_size": page_size, "total_pages": 0}
 
 
 @router.get("/api/history")
