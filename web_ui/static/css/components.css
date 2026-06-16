@@ -649,7 +649,6 @@
   background: rgba(13, 13, 31, 0.72);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--pv-glass-border);
   transition: background var(--pv-duration-fast) var(--pv-ease);
 }
 
@@ -749,6 +748,7 @@
 .pv-catbar {
   background: var(--pv-canvas);
   border-bottom: 1px solid var(--pv-glass-border);
+  padding: 16px 0 10px;
 }
 
 .pv-catbar__inner {
