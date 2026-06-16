@@ -445,6 +445,12 @@ async def storyboard_page(request: Request):
     return templates.TemplateResponse("storyboard.html", {"request": request})
 
 
+@router.get("/debug/storyboard", response_class=HTMLResponse)
+async def debug_storyboard_page(request: Request):
+    """分镜调试页面"""
+    return templates.TemplateResponse("debug_storyboard.html", {"request": request})
+
+
 @router.post("/api/storyboard/generate")
 async def api_generate_storyboard(request: Request):
     """LLM 生成分镜脚本"""
@@ -453,7 +459,6 @@ async def api_generate_storyboard(request: Request):
     body = await request.json()
     article = body.get("article", "").strip()
     media_type = body.get("media_type", "image")
-    n_scenes = body.get("n_scenes", 5)
 
     if not article:
         raise HTTPException(400, "请输入文章内容")
@@ -464,7 +469,6 @@ async def api_generate_storyboard(request: Request):
             llm_service=pixelle_video.llm,
             article=article,
             media_type=media_type,
-            n_storyboard=n_scenes,
         )
         return JSONResponse({"scenes": scenes, "total": len(scenes)})
     except Exception as e:

@@ -1,0 +1,95 @@
+{# 分镜调试页面 #}
+{% extends "base.html" %}
+{% block content %}
+<div class="pv-browser">
+  <div class="pv-showcase-header"><h2 class="pv-showcase__title">分镜调试</h2></div>
+
+  <div class="pv-notes-form pv-card">
+    <textarea id="article" rows="4" placeholder="输入文案..." class="pv-input pv-input--textarea" style="min-height:120px">小猫在阳光下的花园里追逐蝴蝶</textarea>
+    <div class="pv-notes-form__actions">
+      <select id="mediaType" class="pv-input" style="width:auto"><option value="image">图片</option><option value="video">视频</option></select>
+      <button class="pv-btn-save" id="btnGenerate">生成分镜</button>
+    </div>
+  </div>
+
+  <div id="log" class="pv-card" style="margin-top:16px;padding:16px;background:#111;font-family:monospace;font-size:13px;color:#0f0;max-height:300px;overflow:auto;white-space:pre-wrap"></div>
+
+  <div id="resultArea" style="margin-top:16px;display:none">
+    <div class="pv-showcase-header"><h2 class="pv-showcase__title">分镜结果 (<span id="count">0</span>个)</h2></div>
+    <div id="sceneList"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const btn = document.getElementById('btnGenerate');
+  const logEl = document.getElementById('log');
+  const resultArea = document.getElementById('resultArea');
+  const sceneList = document.getElementById('sceneList');
+  const countEl = document.getElementById('count');
+
+  function log(msg, data) {
+    const time = new Date().toLocaleTimeString();
+    const line = `[${time}] ${msg}` + (data !== undefined ? ' ' + JSON.stringify(data).slice(0,200) : '');
+    logEl.textContent += line + '\n';
+    logEl.scrollTop = logEl.scrollHeight;
+    console.log(line);
+  }
+
+  btn.addEventListener('click', async () => {
+    const article = document.getElementById('article').value.trim();
+    const mediaType = document.getElementById('mediaType').value;
+    log('STEP1: 文本框取值', {len:article.length,preview:article.slice(0,50)});
+    log('STEP2: 按钮点击触发 OK');
+
+    if (!article) { log('FAIL: 文案为空'); return; }
+
+    btn.textContent = '生成中...'; btn.disabled = true;
+    const body = JSON.stringify({article, media_type:mediaType});
+    log('STEP3: 发送请求', {url:'/api/storyboard/generate',bodyLen:body.length});
+
+    try {
+      const r = await fetch('/api/storyboard/generate', {method:'POST',headers:{'Content-Type':'application/json'},body});
+      log('STEP4: 接口返回', {status:r.status,ok:r.ok});
+      const d = await r.json();
+      log('STEP5: 解析JSON', {scenes:d.scenes?d.scenes.length:'undefined', total:d.total});
+
+      if (d.scenes && d.scenes.length > 0) {
+        log('STEP6: 开始渲染', {count:d.scenes.length});
+        sceneList.innerHTML = '';
+        d.scenes.forEach((s, i) => {
+          const nar = s.narration || (typeof s === 'string' ? s : '');
+          const ip = s.image_prompts || s.image_prompt || '';
+          const ipStr = Array.isArray(ip) ? ip.join(', ') : ip;
+          const card = document.createElement('div');
+          card.className = 'pv-scene-card pv-card';
+          card.innerHTML = `
+            <div class="pv-scene-card__header">
+              <span class="pv-scene-card__num">#${i+1}</span>
+            </div>
+            <div class="pv-scene-card__body">
+              <label><span>旁白</span>
+                <textarea class="pv-input pv-input--textarea" rows="2">${nar.replace(/</g,'&lt;')}</textarea>
+              </label>
+              <label><span>画面提示词</span>
+                <textarea class="pv-input pv-input--textarea" rows="2">${ipStr.replace(/</g,'&lt;')}</textarea>
+              </label>
+            </div>`;
+          sceneList.appendChild(card);
+        });
+        countEl.textContent = d.scenes.length;
+        resultArea.style.display = 'block';
+        log('STEP7: 渲染完成 OK');
+      } else {
+        log('FAIL: scenes为空', d);
+      }
+    } catch(e) {
+      log('FAIL: 异常', e.message);
+    }
+    btn.textContent = '生成分镜'; btn.disabled = false;
+  });
+
+  log('调试页面就绪，点击"生成分镜"开始测试');
+})();
+</script>
+{% endblock %}
